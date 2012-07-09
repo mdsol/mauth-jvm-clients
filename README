@@ -1,0 +1,6 @@
+Java Client for MAuth
+------------------------
+
+This is a standalone MAuth client for use by internal Medidata teams and authorized 3rd parties.
+
+It is built as an Eclipse project and contains all dependencies within the lib/ directory
