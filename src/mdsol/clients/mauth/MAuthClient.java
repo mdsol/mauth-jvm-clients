@@ -12,6 +12,7 @@ package mdsol.clients.mauth;
 import java.io.*;
 import java.net.*;
 import java.security.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
@@ -50,6 +51,8 @@ public class MAuthClient
     // Cache for private keys (TODO: may only have one key, need to see if better remove it)
     private Map<String, PrivateKey> _privateKeys = new HashMap<String, PrivateKey>();
 
+    // Default constructor
+    public MAuthClient() {}
     //=======================================================================================
     /**
      * 
@@ -170,29 +173,9 @@ public class MAuthClient
         
         // Compare the decrypted signature and the recreated signature hash
         // If both match, the request is valid
-        boolean result = compareByteArrays(messageDigest_bytes, decryptedHexMsg_bytes);
+        boolean result = Arrays.equals(messageDigest_bytes, decryptedHexMsg_bytes);
 
         return result;
-    }
-    
-    //=======================================================================================
-    /**
-     * 
-     * @param array1
-     * @param array2
-     * @return
-     */
-    //=======================================================================================
-    private boolean compareByteArrays(byte[] array1, byte[] array2)
-    {
-        if (array1.length != array2.length)
-            return false;
-            
-        for (int i=0; i<array1.length; i++)
-            if (array1[i]!=array2[i])
-                return false;
-        
-        return true;
     }
     
     //=======================================================================================
