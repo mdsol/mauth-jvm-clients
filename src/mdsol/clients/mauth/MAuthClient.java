@@ -19,7 +19,10 @@ import java.util.TimeZone;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -121,6 +124,34 @@ public class MAuthClient
         return header.substring(4, pos);
     }
     
+    public HttpServletResponseCustomWrapper getSignedResponse(HttpServletResponseCustomWrapper response) throws Exception
+    {
+    	String statusCodeString = String.valueOf(response.getStatus());
+    	String body = response.getBody();
+        String epochTime = getEpochTime();
+    	Map<String, String> headers = getSignedResponseHeaders(statusCodeString, body, _appId, epochTime);
+    	
+    	response.addHeader("x-mws-authentication", headers.get("x-mws-authentication"));
+    	response.addHeader("x-mws-time", headers.get("x-mws-time"));
+    	
+    	return response;
+    }
+    
+    public Map<String, String> getSignedResponseHeaders(String statusCodeString, String body, String appId, String epochTime) throws Exception
+    {
+    	String stringToSign = statusCodeString + "\n" +
+    	body + "\n" +
+        appId + "\n" +
+        epochTime;
+    	
+    	String xMwsAuthentication = signMessageString(stringToSign);
+    	Map<String, String> headers = new HashMap<String, String>();
+    	headers.put("x-mws-authentication", xMwsAuthentication);
+    	headers.put("x-mws-time", epochTime);
+    	
+    	return headers;    	
+    }
+    
     //=======================================================================================
    /**
     * 
@@ -137,7 +168,7 @@ public class MAuthClient
         String epochTime = request.getHeader("x-mws-time");
         String verb = request.getMethod();
         String resourceUrl = request.getRequestURI().toString();
-        String body = "";
+        String body = ((HttpServletRequestCustomWrapper)request).getBody();
         
         return validateRequest(signatureInHeader, epochTime, verb, resourceUrl, body, appId);
     }
