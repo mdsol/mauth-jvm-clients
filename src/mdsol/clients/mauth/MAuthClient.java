@@ -12,6 +12,7 @@ package mdsol.clients.mauth;
 import java.io.*;
 import java.net.*;
 import java.security.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
@@ -19,6 +20,8 @@ import java.util.Date;
 import java.text.SimpleDateFormat;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -50,6 +53,8 @@ public class MAuthClient
     // Cache for private keys (TODO: may only have one key, need to see if better remove it)
     private Map<String, PrivateKey> _privateKeys = new HashMap<String, PrivateKey>();
 
+    // Default constructor
+    public MAuthClient() {}
     //=======================================================================================
     /**
      * 
@@ -64,7 +69,7 @@ public class MAuthClient
     {
         init(mAuthUrl, mAuthRequestUrlPath, securityTokensUrl, appId, privateKeyFilePath);
     }
-    
+	
     //=======================================================================================
     /**
      * 
@@ -96,7 +101,7 @@ public class MAuthClient
      * @return
      */
     //=======================================================================================
-    private String getSignatureInHeader(String header)
+    public String getSignatureInHeader(String header)
     {
         int pos = header.indexOf(":");
         if (pos < 0)
@@ -112,31 +117,38 @@ public class MAuthClient
      * @return
      */
     //=======================================================================================
-    private String getAppIdInHeader(String header)
+    public String getAppIdInHeader(String header)
     {
         int pos = header.indexOf(":");
         return header.substring(4, pos);
     }
     
-    //=======================================================================================
-   /**
-    * 
-    * @param request
-    * @return
-    * @throws Exception
-    */
-    //=======================================================================================
-    public boolean validateRequest(HttpServletRequest request) throws Exception
+    public HttpServletResponse getSignedResponse(HttpServletResponse response) throws Exception
     {
-        String xMwsAuthentication = request.getHeader("x-mws-authentication");
-        String signatureInHeader = getSignatureInHeader(xMwsAuthentication);
-        String appId = getAppIdInHeader(xMwsAuthentication);
-        String epochTime = request.getHeader("x-mws-time");
-        String verb = request.getMethod();
-        String resourceUrl = request.getRequestURI().toString();
-        String body = "";
-        
-        return validateRequest(signatureInHeader, epochTime, verb, resourceUrl, body, appId);
+    	String statusCodeString = ""; //String.valueOf(response.getStatus());
+    	String body = ""; //response.getBody();
+        String epochTime = getEpochTime();
+    	Map<String, String> headers = getSignedResponseHeaders(statusCodeString, body, _appId, epochTime);
+    	
+    	response.addHeader("x-mws-authentication", headers.get("x-mws-authentication"));
+    	response.addHeader("x-mws-time", headers.get("x-mws-time"));
+    	
+    	return response;
+    }
+    
+    public Map<String, String> getSignedResponseHeaders(String statusCodeString, String body, String appId, String epochTime) throws Exception
+    {
+    	String stringToSign = statusCodeString + "\n" +
+    	body + "\n" +
+        appId + "\n" +
+        epochTime;
+    	
+    	String xMwsAuthentication = signMessageString(stringToSign);
+    	Map<String, String> headers = new HashMap<String, String>();
+    	headers.put("x-mws-authentication", xMwsAuthentication);
+    	headers.put("x-mws-time", epochTime);
+    	
+    	return headers;    	
     }
     
     //=======================================================================================
@@ -170,29 +182,9 @@ public class MAuthClient
         
         // Compare the decrypted signature and the recreated signature hash
         // If both match, the request is valid
-        boolean result = compareByteArrays(messageDigest_bytes, decryptedHexMsg_bytes);
+        boolean result = Arrays.equals(messageDigest_bytes, decryptedHexMsg_bytes);
 
         return result;
-    }
-    
-    //=======================================================================================
-    /**
-     * 
-     * @param array1
-     * @param array2
-     * @return
-     */
-    //=======================================================================================
-    private boolean compareByteArrays(byte[] array1, byte[] array2)
-    {
-        if (array1.length != array2.length)
-            return false;
-            
-        for (int i=0; i<array1.length; i++)
-            if (array1[i]!=array2[i])
-                return false;
-        
-        return true;
     }
     
     //=======================================================================================
