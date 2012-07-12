@@ -19,10 +19,9 @@ import java.util.TimeZone;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -70,7 +69,7 @@ public class MAuthClient
     {
         init(mAuthUrl, mAuthRequestUrlPath, securityTokensUrl, appId, privateKeyFilePath);
     }
-    
+	
     //=======================================================================================
     /**
      * 
@@ -102,7 +101,7 @@ public class MAuthClient
      * @return
      */
     //=======================================================================================
-    private String getSignatureInHeader(String header)
+    public String getSignatureInHeader(String header)
     {
         int pos = header.indexOf(":");
         if (pos < 0)
@@ -118,16 +117,16 @@ public class MAuthClient
      * @return
      */
     //=======================================================================================
-    private String getAppIdInHeader(String header)
+    public String getAppIdInHeader(String header)
     {
         int pos = header.indexOf(":");
         return header.substring(4, pos);
     }
     
-    public HttpServletResponseCustomWrapper getSignedResponse(HttpServletResponseCustomWrapper response) throws Exception
+    public HttpServletResponse getSignedResponse(HttpServletResponse response) throws Exception
     {
-    	String statusCodeString = String.valueOf(response.getStatus());
-    	String body = response.getBody();
+    	String statusCodeString = ""; //String.valueOf(response.getStatus());
+    	String body = ""; //response.getBody();
         String epochTime = getEpochTime();
     	Map<String, String> headers = getSignedResponseHeaders(statusCodeString, body, _appId, epochTime);
     	
@@ -150,27 +149,6 @@ public class MAuthClient
     	headers.put("x-mws-time", epochTime);
     	
     	return headers;    	
-    }
-    
-    //=======================================================================================
-   /**
-    * 
-    * @param request
-    * @return
-    * @throws Exception
-    */
-    //=======================================================================================
-    public boolean validateRequest(HttpServletRequest request) throws Exception
-    {
-        String xMwsAuthentication = request.getHeader("x-mws-authentication");
-        String signatureInHeader = getSignatureInHeader(xMwsAuthentication);
-        String appId = getAppIdInHeader(xMwsAuthentication);
-        String epochTime = request.getHeader("x-mws-time");
-        String verb = request.getMethod();
-        String resourceUrl = request.getRequestURI().toString();
-        String body = ((HttpServletRequestCustomWrapper)request).getBody();
-        
-        return validateRequest(signatureInHeader, epochTime, verb, resourceUrl, body, appId);
     }
     
     //=======================================================================================
