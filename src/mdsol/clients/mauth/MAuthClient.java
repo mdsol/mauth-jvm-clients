@@ -43,7 +43,8 @@ public class MAuthClient
 {
     //Below are the only config strings to be updated before executing this code:
     private String _appId;
-    private String _privateKeyFilePath;
+    private String _publicKey;
+    private String _privateKey;
     private String _mAuthUrl;
     private String _mAuthRequestUrlPath;
     private String _securityTokensUrl;
@@ -63,11 +64,12 @@ public class MAuthClient
      * @param securityTokensUrl
      * @param appId
      * @param privateKeyFilePath
+     * @throws Exception 
      */
     //=======================================================================================
-    public MAuthClient(String mAuthUrl, String mAuthRequestUrlPath, String securityTokensUrl, String appId, String privateKeyFilePath)
+    public MAuthClient(String mAuthUrl, String mAuthRequestUrlPath, String securityTokensUrl, String appId, String publicKey, String privateKey) throws Exception
     {
-        init(mAuthUrl, mAuthRequestUrlPath, securityTokensUrl, appId, privateKeyFilePath);
+        init(mAuthUrl, mAuthRequestUrlPath, securityTokensUrl, appId, publicKey, privateKey);
     }
 	
     //=======================================================================================
@@ -79,12 +81,27 @@ public class MAuthClient
      * @param appId
      * @param privateKeyFilePath
      * @return
+     * @throws Exception 
      */
     //=======================================================================================
-    public boolean init(String mAuthUrl, String mAuthRequestUrlPath, String securityTokensUrl, String appId, String privateKeyFilePath)
+    public boolean init(String mAuthUrl, String mAuthRequestUrlPath, String securityTokensUrl, String appId, String publicKey, String privateKey) throws Exception
     {
-        _appId = appId;
-        _privateKeyFilePath = privateKeyFilePath;
+    	if (null==mAuthUrl || mAuthUrl.equals(""))
+    		throw new Exception("Cannot initialize MAuth client: mAuthUrl cannot be null");
+    	if (null==mAuthRequestUrlPath || mAuthRequestUrlPath.equals(""))
+    		throw new Exception("Cannot initialize MAuth client: mAuthRequestUrlPath cannot be null");
+    	if (null==securityTokensUrl || securityTokensUrl.equals(""))
+    		throw new Exception("Cannot initialize MAuth client: securityTokensUrl cannot be null");
+    	if (null==appId || appId.equals(""))
+    		throw new Exception("Cannot initialize MAuth client: appId cannot be null");
+    	if (null==publicKey || publicKey.equals(""))
+    		throw new Exception("Cannot initialize MAuth client: publicKey cannot be null");
+    	if (null==privateKey || privateKey.equals(""))
+    		throw new Exception("Cannot initialize MAuth client: privateKey cannot be null");
+
+    	_appId = appId;
+        _publicKey = publicKey;
+        _privateKey = privateKey;
         _mAuthUrl = mAuthUrl;
         _mAuthRequestUrlPath = mAuthRequestUrlPath;
         _securityTokensUrl = securityTokensUrl;
@@ -356,7 +373,7 @@ public class MAuthClient
         //Get the hex equivalent of message digest.
         byte[] md_hex_bytes = getHex(messageDigest.digest()).getBytes();
         
-        PrivateKey key = getPrivateKey(_privateKeyFilePath);
+        PrivateKey key = getPrivateKey(_appId);
         
         if (null == key)
         {
@@ -379,11 +396,11 @@ public class MAuthClient
      * @return
      */
     //=======================================================================================
-    private PrivateKey getPrivateKey(String privateKeyFilePath)
+    private PrivateKey getPrivateKey(String appId)
     {
-        if (_privateKeys.containsKey(privateKeyFilePath))
+        if (_privateKeys.containsKey(appId))
         {
-            return _privateKeys.get(privateKeyFilePath);
+            return _privateKeys.get(appId);
         }       
         
         //Get private key and encrypt hex message digest with it.
@@ -391,7 +408,7 @@ public class MAuthClient
         PrivateKey key = null;
         try
         {
-            reader = new PEMReader(new FileReader(privateKeyFilePath));
+            reader = new PEMReader(new StringReader(_privateKey));
             KeyPair r = (KeyPair) reader.readObject();
             key = r.getPrivate();
 
@@ -402,7 +419,7 @@ public class MAuthClient
         }
         finally
         {
-            _privateKeys.put(privateKeyFilePath, key);
+            _privateKeys.put(appId, key);
             try
             {
                 if (reader != null)
