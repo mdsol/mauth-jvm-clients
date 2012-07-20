@@ -147,7 +147,7 @@ public class MAuthClient
     {
     	String statusCodeString = "";
     	String body = "";
-        String epochTime = getEpochTime();
+        String epochTime = String.valueOf(getEpochTime());
     	Map<String, String> headers = getSignedResponseHeaders(statusCodeString, body, _appId, epochTime);
     	
     	response.addHeader("x-mws-authentication", headers.get("x-mws-authentication"));
@@ -206,6 +206,12 @@ public class MAuthClient
     		throw new Exception("validateRequest error: parameter body cannot be null");
     	if (null==appId || appId.equals(""))
     		throw new Exception("validateRequest error: parameter appId cannot be null");
+    	
+    	// Check epoc time is not older than 5 minutes
+    	long currentEpoc = getEpochTime();
+    	long lEpocTime = Long.valueOf(epochTime);
+    	if ((currentEpoc - lEpocTime) > 300)
+    		throw new Exception("validateRequest error: epoc time is older than 5 minutes");
     	
     	
     	// We need the public key of the appId from which the request comes from (this appId is part of the mAuth header x-mws-authentication)
@@ -316,7 +322,7 @@ public class MAuthClient
     public Map<String, String> generateHeaders(String verb, String resourceUrl, String body, String appId) throws Exception
     {
     	// Get epoch time for now
-        String epochTime = getEpochTime();
+        String epochTime = String.valueOf(getEpochTime());
         
         // Use the http request's parameters to generate a base64encoded/encrypted/signed request 
         String encryptedHexMsg_base64 = signMessageString(verb, resourceUrl, body, appId, epochTime);
@@ -571,10 +577,10 @@ public class MAuthClient
     /**
      * This method gets difference in seconds between 1970/1/1 and today(UTC time).
      *
-     * @return: String epoch seconds.
+     * @return: epoch time in seconds.
      */
      //=================================================================================
-    private String getEpochTime()
+    private long getEpochTime()
     {
         SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy hh:mm:ss a");
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -587,7 +593,7 @@ public class MAuthClient
         }
         catch (Exception ignore) { }
         
-        return String.valueOf(epochSec);
+        return epochSec;
     }
     
     
@@ -634,5 +640,17 @@ public class MAuthClient
             hex.append(HEXES.charAt((b & 0xF0) >> 4)).append(HEXES.charAt((b & 0x0F)));
         }
         return hex.toString();
+    }
+    
+    //================================================================================================
+    /**
+     * This method returns the number of elements in the public key cache.
+     *
+     * @return number of elements in public key cache
+     */
+     //=================================================================================================    
+    public int getPublicKeyCacheSize()
+    {
+    	return _publicKeys.size();
     }
 }
