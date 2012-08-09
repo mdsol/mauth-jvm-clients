@@ -34,7 +34,6 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
 
-
 //========================================================================
 //========================================================================
 public class MAuthClient
@@ -47,7 +46,8 @@ public class MAuthClient
     private String _securityTokensUrl;
     
     // Cache for public keys
-    private Map<String, PublicKey> _publicKeys = new HashMap<String, PublicKey>();
+    private static Map<String, PublicKey> _publicKeys = new HashMap<String, PublicKey>();
+   
     // Cache for private keys (TODO: may only have one key, need to see if better remove it)
     private Map<String, PrivateKey> _privateKeys = new HashMap<String, PrivateKey>();
 
@@ -202,8 +202,8 @@ public class MAuthClient
     		throw new Exception("validateRequest error: parameter verb cannot be null");
     	if (null==resourceUrl || resourceUrl.equals(""))
     		throw new Exception("validateRequest error: parameter resourceUrl cannot be null");
-    	if (null==body || body.equals(""))
-    		throw new Exception("validateRequest error: parameter body cannot be null");
+    	if ( (null==body || body.equals("")) && (! "GET".equalsIgnoreCase(verb)))
+    		throw new Exception("validateRequest error: parameter body cannot be null: " + verb);
     	if (null==appId || appId.equals(""))
     		throw new Exception("validateRequest error: parameter appId cannot be null");
     	
@@ -233,7 +233,7 @@ public class MAuthClient
         // Compare the decrypted signature and the recreated signature hashes
         // If both match, the request was signed by the requesting application and hence the request is valid
         boolean result = Arrays.equals(messageDigest_bytes, decryptedHexMsg_bytes);
-
+ 
         return result;
     }
     
@@ -279,19 +279,20 @@ public class MAuthClient
         // Get a PublicKey Object from the text version of the public key
         PEMReader reader = null;
         PublicKey key = null;
-        try {
+        try 
+        {
             reader = new PEMReader(new StringReader(publicKeyString));
             key = (PublicKey) reader.readObject();
+         
+            // Add public key to cache
+            _publicKeys.put(appId, key);
         }
         catch (Exception ex)
         {
         	throw new Exception("Unable to create public key for: " + appId, ex);
         }
         finally
-        {
-            // Add public key to cache
-            _publicKeys.put(appId, key);
-            
+        {      
             // Cleanup
             try
             {
