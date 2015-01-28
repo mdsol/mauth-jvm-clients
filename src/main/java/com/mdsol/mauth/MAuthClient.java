@@ -1,4 +1,4 @@
-package mdsol.clients.mauth;
+package com.mdsol.mauth;
 
 /**
  * This class implements a set of utilities to be used as a client for several mAuth operations.
