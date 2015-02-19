@@ -14,33 +14,26 @@ import org.bouncycastle.openssl.PEMReader;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.MessageDigest;
-import java.security.PrivateKey;
-import java.security.Security;
+import java.security.*;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @author jprice
- *
  */
 public class MAuthRequestSigner {
 
   private final String _appUUID;
-  private final String _privateKeyString;
   private final PrivateKey _privateKey;
 
   public MAuthRequestSigner(String appUUID, String privateKey) throws IOException {
     _appUUID = appUUID;
-    _privateKeyString = privateKey;
 
     // Generate the private key from the string
     Security.addProvider(new BouncyCastleProvider());
     PEMReader reader = null;
     try {
-      reader = new PEMReader(new StringReader(_privateKeyString));
+      reader = new PEMReader(new StringReader(privateKey));
       KeyPair kp = (KeyPair) reader.readObject();
       _privateKey = kp.getPrivate();
     } finally {
@@ -52,10 +45,11 @@ public class MAuthRequestSigner {
 
   /**
    * Generates the mAuth headers with the provided request data.
-   * 
+   * <p/>
    * NOTE: mAuth headers are time sensitive. The headers must be verified by the receiving service
    * within 5 minutes of being generated, or the request will fail.
-   * @param httpVerb The HTTP verb of the request, e.g. GET or POST
+   *
+   * @param httpVerb    The HTTP verb of the request, e.g. GET or POST
    * @param requestPath The path of the request, not including protocol, host or query parameters.
    * @param requestBody The body of the request
    * @return
@@ -63,8 +57,8 @@ public class MAuthRequestSigner {
    * @throws IOException
    * @throws CryptoException
    */
-  public Map<String, String> generateHeaders(String httpVerb, String requestPath, String requestBody)
-      throws GeneralSecurityException, IOException, CryptoException {
+  public Map<String, String> generateHeaders(String httpVerb, String requestPath,
+    String requestBody) throws GeneralSecurityException, IOException, CryptoException {
     if (null == requestBody) {
       requestBody = "";
     }
@@ -72,7 +66,7 @@ public class MAuthRequestSigner {
     String epochTimeString = String.valueOf(System.currentTimeMillis() / 1000);
 
     String unencryptedHeaderString =
-        generatedUnencryptedHeaderString(httpVerb, requestPath, requestBody, epochTimeString);
+      generateUnencryptedHeaderString(httpVerb, requestPath, requestBody, epochTimeString);
     String encryptedHeaderString = encryptHeaderString(unencryptedHeaderString);
 
     HashMap<String, String> headers = new HashMap<String, String>();
@@ -83,16 +77,17 @@ public class MAuthRequestSigner {
 
   /**
    * Adds the mAuth headers to the provided HttpMethod object.
-   * 
+   * <p/>
    * NOTE: mAuth headers are time sensitive. The headers must be verified by the receiving service
    * within 5 minutes of being generated, or the request will fail.
+   *
    * @param request
    * @throws IOException
    * @throws GeneralSecurityException
    * @throws CryptoException
    */
-  public void signRequest(HttpMethod request) throws IOException, GeneralSecurityException,
-      CryptoException {
+  public void signRequest(HttpMethod request)
+    throws IOException, GeneralSecurityException, CryptoException {
     String httpVerb = request.getName();
     String body = "";
     if (httpVerb.equals("POST")) {
@@ -105,15 +100,13 @@ public class MAuthRequestSigner {
     }
   }
 
-  private String generatedUnencryptedHeaderString(String httpVerb, String resourceUrl, String body,
-      String epochTime) {
-    String unencryptedHeaderString =
-        httpVerb + "\n" + resourceUrl + "\n" + body + "\n" + _appUUID + "\n" + epochTime;
-    return unencryptedHeaderString;
+  private String generateUnencryptedHeaderString(String httpVerb, String resourceUrl, String body,
+    String epochTime) {
+    return httpVerb + "\n" + resourceUrl + "\n" + body + "\n" + _appUUID + "\n" + epochTime;
   }
 
-  private String encryptHeaderString(String unencryptedString) throws GeneralSecurityException,
-      IOException, CryptoException {
+  private String encryptHeaderString(String unencryptedString)
+    throws GeneralSecurityException, IOException, CryptoException {
     // Get digest
     MessageDigest md = MessageDigest.getInstance("SHA-512", "BC");
     byte[] digestedString = md.digest(unencryptedString.getBytes());
@@ -124,9 +117,8 @@ public class MAuthRequestSigner {
     // encrypt
     PKCS1Encoding encryptEngine = new PKCS1Encoding(new RSAEngine());
     encryptEngine.init(true, PrivateKeyFactory.createKey(_privateKey.getEncoded()));
-    byte[] encryptedStringBytes =
-        encryptEngine.processBlock(hexEncodedString.getBytes(), 0,
-            hexEncodedString.getBytes().length);
+    byte[] encryptedStringBytes = encryptEngine
+      .processBlock(hexEncodedString.getBytes(), 0, hexEncodedString.getBytes().length);
 
     // Base64 encode
     String encryptedHeaderString = new String(Base64.encodeBase64(encryptedStringBytes), "UTF-8");
