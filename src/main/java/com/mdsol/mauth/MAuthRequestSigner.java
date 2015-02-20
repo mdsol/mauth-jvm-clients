@@ -26,7 +26,7 @@ public class MAuthRequestSigner {
   private final String _appUUID;
   private final PrivateKey _privateKey;
 
-  public MAuthRequestSigner(String appUUID, String privateKey) throws IOException {
+  public MAuthRequestSigner(String appUUID, String privateKey) throws SecurityException, IOException {
     _appUUID = appUUID;
 
     // Generate the private key from the string
@@ -36,6 +36,10 @@ public class MAuthRequestSigner {
       reader = new PEMReader(new StringReader(privateKey));
       KeyPair kp = (KeyPair) reader.readObject();
       _privateKey = kp.getPrivate();
+    } catch (Exception caughtEx) {
+      SecurityException ex = new SecurityException("Unable to process private key string");
+      ex.initCause(caughtEx);
+      throw ex;
     } finally {
       if (reader != null) {
         reader.close();
@@ -69,7 +73,7 @@ public class MAuthRequestSigner {
       generateUnencryptedHeaderString(httpVerb, requestPath, requestBody, epochTimeString);
     String encryptedHeaderString = encryptHeaderString(unencryptedHeaderString);
 
-    HashMap<String, String> headers = new HashMap<String, String>();
+    HashMap<String, String> headers = new HashMap<>();
     headers.put("x-mws-authentication", "MWS " + _appUUID + ":" + encryptedHeaderString);
     headers.put("x-mws-time", epochTimeString);
     return headers;
