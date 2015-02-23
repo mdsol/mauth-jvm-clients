@@ -24,6 +24,19 @@ import java.util.UUID;
  */
 public class MAuthRequestSigner {
 
+  private static EpochTime _epochTime;
+  {
+    _epochTime = new CurrentEpochTime();
+  }
+
+  /**
+   * Allows replacement of the EpochTime object used for constructing headers, for testing purposes only
+   * @param epochTime An object of a class the implements the EpochTime interface
+   */
+  public static void setEpochTime(EpochTime epochTime) {
+    _epochTime = epochTime;
+  }
+
   private final UUID _appUUID;
   private final PrivateKey _privateKey;
 
@@ -76,7 +89,7 @@ public class MAuthRequestSigner {
       requestBody = "";
     }
     // mAuth uses an epoch time measured in seconds
-    String epochTimeString = String.valueOf(System.currentTimeMillis() / 1000);
+    String epochTimeString = String.valueOf(_epochTime.getSeconds());
 
     String unencryptedHeaderString =
       generateUnencryptedHeaderString(httpVerb, requestPath, requestBody, epochTimeString);
