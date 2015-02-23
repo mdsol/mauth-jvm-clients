@@ -62,34 +62,32 @@ public class MAuthClient
     // Default constructor
     public MAuthClient() {}
     
-    //=======================================================================================
     /**
      * 
      * @param mAuthUrl
      * @param mAuthRequestUrlPath
      * @param securityTokensUrl
      * @param appId
-     * @param privateKeyFilePath
+     * @param publicKey
+     * @param privateKey
      * @throws Exception
      */
-    //=======================================================================================
     public MAuthClient(String mAuthUrl, String mAuthRequestUrlPath, String securityTokensUrl, String appId, String publicKey, String privateKey) throws Exception
     {
         init(mAuthUrl, mAuthRequestUrlPath, securityTokensUrl, appId, publicKey, privateKey);
     }
 	
-    //=======================================================================================
     /**
      * 
      * @param mAuthUrl
      * @param mAuthRequestUrlPath
      * @param securityTokensUrl
      * @param appId
-     * @param privateKeyFilePath
+     * @param publicKey
+     * @param privateKey
      * @return
      * @throws Exception
      */
-    //=======================================================================================
     public boolean init(String mAuthUrl, String mAuthRequestUrlPath, String securityTokensUrl, String appId, String publicKey, String privateKey) throws Exception
     {
     	if (null==mAuthUrl || mAuthUrl.equals("")) {
@@ -123,14 +121,12 @@ public class MAuthClient
         return true;
     }
     
-    //=======================================================================================
     /**
      * Get signature portion of http header based on mAuth specification
      * 
      * @param header the mAuth header x-mws-authentication
      * @return signature portion in header
      */
-    //=======================================================================================
     public String getSignatureInHeader(String header)
     {
         int pos = header.indexOf(":");
@@ -141,14 +137,12 @@ public class MAuthClient
         return header.substring(pos+1);
     }
     
-    //=======================================================================================
     /**
      * Get appId portion of http header based on mAuth specification
      * 
      * @param header the mAuth header x-mws-authentication
      * @return appId portion in header
      */
-    //=======================================================================================
     public String getAppIdInHeader(String header)
     {
         int pos = header.indexOf(":");
@@ -187,7 +181,6 @@ public class MAuthClient
     	return headers;
     }
     
-    //=======================================================================================
     /**
      * Validates an incoming http request which contains mAuth headers.
      * The validation process consists on recreating the mAuth hashed signature
@@ -206,7 +199,6 @@ public class MAuthClient
      * @return true or false indicating if the request if valid or not with respect to mAuth
      * @throws Exception
      */
-    //=======================================================================================
     public Boolean validateRequest(String signatureInHeader, String epochTime, String verb, String resourceUrl, String body, String appId) throws Exception
     {
     	// Perform routine validations of parameters
@@ -260,7 +252,6 @@ public class MAuthClient
         return result;
     }
     
-    //=======================================================================================
     /**
      * Gets a public key, of a requesting appId, from the mAuth service, and caches it
      * 
@@ -268,7 +259,6 @@ public class MAuthClient
      * @return public key object of the appId
      * @throws Exception
      */
-    //=======================================================================================
     private PublicKey getPublicKey(String appId) throws Exception
     {
     	// If key is in cache just return it
@@ -330,7 +320,6 @@ public class MAuthClient
         return key;
     }
     
-     //=======================================================================================
     /**
      * Generate a map with the mAuth http headers after signing an http request's
      * parameters
@@ -342,7 +331,6 @@ public class MAuthClient
      * @return
      * @throws Exception
      */
-    //=======================================================================================
     public Map<String, String> generateHeaders(String verb, String resourceUrl, String body, String appId) throws Exception
     {
     	// Get epoch time for now
@@ -359,7 +347,6 @@ public class MAuthClient
         
     }
     
-    //=======================================================================================
     /**
      * Get a SHA-512 message digest object from a byte array
      * 
@@ -367,7 +354,6 @@ public class MAuthClient
      * @return message digest object
      * @throws NoSuchAlgorithmException
      */
-    //=======================================================================================
     private MessageDigest getMessageDigest(byte[] rawMessage) throws NoSuchAlgorithmException
     {
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-512");
@@ -376,7 +362,6 @@ public class MAuthClient
         return messageDigest;
     }
     
-    //=======================================================================================
     /**
      * Construct a string to be signed, according to mAuth specifications
      * 
@@ -387,7 +372,6 @@ public class MAuthClient
      * @param epochTime
      * @return string ready to be signed by mAuth
      */
-    //=======================================================================================
     private String getStringToSign(String verb, String resourceUrl, String body, String appId, String epochTime)
     {
         String stringToSign =
@@ -400,7 +384,6 @@ public class MAuthClient
         return stringToSign;
     }
     
-    //=======================================================================================
     /**
      * Sign an mAuth request based on its parameters
      * 
@@ -412,7 +395,6 @@ public class MAuthClient
      * @return a base64encoded(encrypted(signed prepared)) string
      * @throws Exception
      */
-    //=======================================================================================
     public String signMessageString(String verb, String resourceUrl, String body, String appId, String epochTime) throws Exception
     {
     	// Get the string to sign based on parameters
@@ -421,7 +403,6 @@ public class MAuthClient
         return signMessageString(stringToSign);
     }
     
-    //=======================================================================================
     /**
      * Sign an mAuth request based on a string prepared from its parameters
      * 
@@ -429,7 +410,6 @@ public class MAuthClient
      * @return a base64encoded(encrypted(signed prepared)) string
      * @throws Exception
      */
-    //=======================================================================================
     public String signMessageString(String stringToSign) throws Exception
     {
         //get US-ASCII encoded string to sign bytes
@@ -456,7 +436,6 @@ public class MAuthClient
         return encryptedHexMsg_base64;
     }
     
-    //=======================================================================================
     /**
      * Gets a private key object from the text version of the private key, and caches it.
      * Typically the private key will belong to a signer appId which in
@@ -466,7 +445,6 @@ public class MAuthClient
      * @return a private key object of the appId
      * @throws Exception
      */
-    //=======================================================================================
     private PrivateKey getPrivateKey(String appId) throws Exception
     {
     	// If private key in cache just return it
@@ -505,18 +483,16 @@ public class MAuthClient
         return key;
     }
 
-    //=======================================================================================
     /**
      * This method makes call to mAuth invokeApi and process returned result.
      *
-     * @param url -Resource URL.
-     * @param params_header -collection(Hashtable<Key, value> ) of header key-value pair.
-     * @param content -A String object representing body of http request.
-     * @param method -request method, either GET or POST.
-     * @return result form the mAuth call.
-     * @throws Exception.
+     * @param url Resource URL
+     * @param params_header collection(Hashtable<Key, value> ) of header key-value pair
+     * @param content A String object representing body of http request
+     * @param method request method, either GET or POST
+     * @return result form the mAuth call
+     * @throws Exception
      */
-    //=======================================================================================
     public synchronized String callmAuth(String url, Map<String, String> params_header, String content, String method) throws Exception
     {
         StringBuffer res = new StringBuffer("");
@@ -543,20 +519,20 @@ public class MAuthClient
     }
     
     
-    //=======================================================================================
     /**
      * This method makes the actual http request.
      *
      * Parameters:
      *
-     * @param sURL -Resource URL.
-     * @param params_header -collection(Hashtable<Key, value> ) of header key-value pair.
-     * @param content -A String object representing body of http request.
-     * @param method -request method, either GET or POST.
-     * @return HttpURLConnection object.
-     * @throws MalformedURLException, URISyntaxException, IOException.
+     * @param sURL Resource URL
+     * @param params_header collection(Hashtable<Key, value> ) of header key-value pair
+     * @param content A String object representing body of http request
+     * @param method request method, either GET or POST
+     * @return HttpURLConnection object
+     * @throws MalformedURLException
+     * @throws URISyntaxException
+     * @throws IOException
      */
-    //=======================================================================================
     private HttpURLConnection invokeApi(String sURL, Map<String, String> params_header, String content, String method)
             throws MalformedURLException, URISyntaxException, IOException
     {
@@ -597,13 +573,11 @@ public class MAuthClient
         return conn;
     }
     
-    //================================================================================
     /**
      * This method gets difference in seconds between 1970/1/1 and today(UTC time).
      *
-     * @return: epoch time in seconds.
+     * @return epoch time in seconds
      */
-     //=================================================================================
     private long getEpochTime()
     {
         SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy hh:mm:ss a");
@@ -621,15 +595,13 @@ public class MAuthClient
     }
     
     
-    //========================================================================================
     /**
      * This method reads InputSteam and returns content as String.
      *
-     * @param InputStream object.
-     * @return String containing stream contents.
-     * @throws IOException.
+     * @param stream
+     * @return String containing stream contents
+     * @throws IOException
      */
-     //==========================================================================================
     public String readToEnd(InputStream stream) throws IOException
     {
         int c = 0;
@@ -642,14 +614,12 @@ public class MAuthClient
         return b.toString();
     }
     
-    //================================================================================================
     /**
      * This method returns hex string equivalent of byte array.
      *
-     * @param raw - byte[] object.
-     * @return HEX String.
+     * @param raw - byte[] object
+     * @return HEX String
      */
-     //=================================================================================================
     public String getHex(byte[] raw)
     {
         if (raw == null)
@@ -666,13 +636,11 @@ public class MAuthClient
         return hex.toString();
     }
     
-    //================================================================================================
     /**
      * This method returns the number of elements in the public key cache.
      *
      * @return number of elements in public key cache
      */
-     //=================================================================================================
     public int getPublicKeyCacheSize()
     {
     	return _publicKeys.size();
