@@ -40,10 +40,8 @@ import javax.servlet.http.HttpServletResponse;
  * from other applications.
  * 
  * @author Ricardo Chavarria
- * @deprecated Use {@link MAuthRequestSigner}
  * 
  */
-@Deprecated
 public class MAuthClient
 {
     private String _appId;
@@ -330,7 +328,10 @@ public class MAuthClient
      * @param appId
      * @return
      * @throws Exception
+     *
+     * @deprecated Use {@link MAuthRequestSigner#generateHeaders}
      */
+    @Deprecated
     public Map<String, String> generateHeaders(String verb, String resourceUrl, String body, String appId) throws Exception
     {
     	// Get epoch time for now
