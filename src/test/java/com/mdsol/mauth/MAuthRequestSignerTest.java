@@ -21,7 +21,10 @@ import java.util.UUID;
  */
 public class MAuthRequestSignerTest {
 
-  private static final long TEST_EPOCH_TIME = 1424697700L;
+  private static String MAUTH_TIME_HEADER = "x-mws-time";
+  private static String MAUTH_AUTHENTICATION_HEADER = "x-mws-authentication";
+
+  private static final long TEST_EPOCH_TIME = 1424700000L;
   private static String privateKeyString;
   private final UUID testUUID = UUID.fromString("2a6790ab-f6c6-45be-86fc-9e9be76ec12a");
 
@@ -37,7 +40,7 @@ public class MAuthRequestSignerTest {
 
   @Before
   public void setUp() throws Exception {
-    mAuthRequestSigner = new MAuthRequestSigner(testUUID,privateKeyString);
+    mAuthRequestSigner = new MAuthRequestSigner(testUUID, privateKeyString);
     EpochTime testEpochTime = new TestEpochTime(TEST_EPOCH_TIME);
     MAuthRequestSigner.setEpochTime(testEpochTime);
   }
@@ -54,7 +57,7 @@ public class MAuthRequestSignerTest {
   @Test
   public final void generateHeadersIncludesTimeHeaderWithCorrectTime() throws Exception {
     Map<String, String> headers = mAuthRequestSigner.generateHeaders("GET", "/", "");
-    assertEquals(String.valueOf(TEST_EPOCH_TIME), headers.get("x-mws-time"));
+    assertEquals(String.valueOf(TEST_EPOCH_TIME), headers.get(MAUTH_TIME_HEADER));
   }
 
 }
