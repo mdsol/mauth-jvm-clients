@@ -119,6 +119,7 @@ public class MAuthRequestSigner {
     if (httpVerb.equals("POST")) {
       ByteArrayOutputStream oStream = new ByteArrayOutputStream();
       ((PostMethod) request).getRequestEntity().writeRequest(oStream);
+      body = oStream.toString();
     }
     Map<String, String> mauthHeaders = generateHeaders(httpVerb, request.getURI().getPath(), body);
     for (String key : mauthHeaders.keySet()) {
