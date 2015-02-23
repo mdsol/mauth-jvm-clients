@@ -17,25 +17,33 @@ import java.io.StringReader;
 import java.security.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author jprice
  */
 public class MAuthRequestSigner {
 
-  private final String _appUUID;
+  private final UUID _appUUID;
   private final PrivateKey _privateKey;
 
-  public MAuthRequestSigner(String appUUID, String privateKey) throws SecurityException, IOException {
+  public MAuthRequestSigner(UUID appUUID, PrivateKey privateKey) {
     _appUUID = appUUID;
+    _privateKey = privateKey;
+  }
 
-    // Generate the private key from the string
+  public MAuthRequestSigner(UUID appUUID, String privateKey) throws SecurityException, IOException {
+    this(appUUID, getPrivateKeyFromString(privateKey));
+  }
+
+  private static PrivateKey getPrivateKeyFromString(String privateKey) throws SecurityException, IOException {
     Security.addProvider(new BouncyCastleProvider());
     PEMReader reader = null;
+    PrivateKey pk = null;
     try {
       reader = new PEMReader(new StringReader(privateKey));
       KeyPair kp = (KeyPair) reader.readObject();
-      _privateKey = kp.getPrivate();
+      pk = kp.getPrivate();
     } catch (Exception caughtEx) {
       SecurityException ex = new SecurityException("Unable to process private key string");
       ex.initCause(caughtEx);
@@ -45,6 +53,7 @@ public class MAuthRequestSigner {
         reader.close();
       }
     }
+    return pk;
   }
 
   /**
@@ -74,7 +83,7 @@ public class MAuthRequestSigner {
     String encryptedHeaderString = encryptHeaderString(unencryptedHeaderString);
 
     HashMap<String, String> headers = new HashMap<>();
-    headers.put("x-mws-authentication", "MWS " + _appUUID + ":" + encryptedHeaderString);
+    headers.put("x-mws-authentication", "MWS " + _appUUID.toString() + ":" + encryptedHeaderString);
     headers.put("x-mws-time", epochTimeString);
     return headers;
   }
@@ -106,7 +115,7 @@ public class MAuthRequestSigner {
 
   private String generateUnencryptedHeaderString(String httpVerb, String resourceUrl, String body,
     String epochTime) {
-    return httpVerb + "\n" + resourceUrl + "\n" + body + "\n" + _appUUID + "\n" + epochTime;
+    return httpVerb + "\n" + resourceUrl + "\n" + body + "\n" + _appUUID.toString() + "\n" + epochTime;
   }
 
   private String encryptHeaderString(String unencryptedString)
