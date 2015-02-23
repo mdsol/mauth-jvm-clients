@@ -1,7 +1,7 @@
 package com.mdsol.mauth;
 
 /**
- * Created by jprice on 23/02/15.
+ * @author Jonathan Price <jprice@mdsol.com>
  */
 public class CurrentEpochTime implements EpochTime {
   @Override
