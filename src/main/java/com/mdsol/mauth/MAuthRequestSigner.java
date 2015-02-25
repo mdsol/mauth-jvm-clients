@@ -1,20 +1,18 @@
 package com.mdsol.mauth;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.util.EntityUtils;
 import org.bouncycastle.crypto.CryptoException;
-import org.bouncycastle.crypto.encodings.PKCS1Encoding;
-import org.bouncycastle.crypto.engines.RSAEngine;
-import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMReader;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.security.*;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.Security;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -24,25 +22,35 @@ import java.util.UUID;
  */
 public class MAuthRequestSigner {
 
-  private static EpochTime _epochTime;
-  {
-    _epochTime = new CurrentEpochTime();
+  private static EpochTime epochTime = new CurrentEpochTime();
+
+  public static MAuthRequestSigner getDefaultRequestSigner() {
+    return defaultRequestSigner;
   }
+
+  public static void setDefaultRequestSigner(MAuthRequestSigner defaultRequestSigner) {
+    MAuthRequestSigner.defaultRequestSigner = defaultRequestSigner;
+  }
+
+  private static MAuthRequestSigner defaultRequestSigner = null;
 
   /**
    * Allows replacement of the EpochTime object used for constructing headers, for testing purposes only
    * @param epochTime An object of a class the implements the EpochTime interface
    */
   public static void setEpochTime(EpochTime epochTime) {
-    _epochTime = epochTime;
+    MAuthRequestSigner.epochTime = epochTime;
   }
 
   private final UUID _appUUID;
   private final PrivateKey _privateKey;
 
+  private final MAuthSignatureHelper _mAuthSignatureHelper;
+
   public MAuthRequestSigner(UUID appUUID, PrivateKey privateKey) {
     _appUUID = appUUID;
     _privateKey = privateKey;
+    _mAuthSignatureHelper = new MAuthSignatureHelper();
   }
 
   public MAuthRequestSigner(UUID appUUID, String privateKey) throws SecurityException, IOException {
@@ -51,20 +59,14 @@ public class MAuthRequestSigner {
 
   private static PrivateKey getPrivateKeyFromString(String privateKey) throws SecurityException, IOException {
     Security.addProvider(new BouncyCastleProvider());
-    PEMReader reader = null;
-    PrivateKey pk = null;
-    try {
-      reader = new PEMReader(new StringReader(privateKey));
+    PrivateKey pk;
+    try (PEMReader reader = new PEMReader(new StringReader(privateKey))) {
       KeyPair kp = (KeyPair) reader.readObject();
       pk = kp.getPrivate();
     } catch (Exception caughtEx) {
       SecurityException ex = new SecurityException("Unable to process private key string");
       ex.initCause(caughtEx);
       throw ex;
-    } finally {
-      if (reader != null) {
-        reader.close();
-      }
     }
     return pk;
   }
@@ -89,11 +91,13 @@ public class MAuthRequestSigner {
       requestBody = "";
     }
     // mAuth uses an epoch time measured in seconds
-    String epochTimeString = String.valueOf(_epochTime.getSeconds());
+    String epochTimeString = String.valueOf(epochTime.getSeconds());
 
     String unencryptedHeaderString =
-      generateUnencryptedHeaderString(httpVerb, requestPath, requestBody, epochTimeString);
-    String encryptedHeaderString = encryptHeaderString(unencryptedHeaderString);
+      _mAuthSignatureHelper.generateUnencryptedHeaderString(_appUUID, httpVerb, requestPath,
+        requestBody, epochTimeString);
+    String encryptedHeaderString = _mAuthSignatureHelper.encryptHeaderString(_privateKey,
+      unencryptedHeaderString);
 
     HashMap<String, String> headers = new HashMap<>();
     headers.put("x-mws-authentication", "MWS " + _appUUID.toString() + ":" + encryptedHeaderString);
@@ -112,45 +116,17 @@ public class MAuthRequestSigner {
    * @throws GeneralSecurityException
    * @throws CryptoException
    */
-  public void signRequest(HttpMethod request)
+  public void signRequest(HttpUriRequest request)
     throws IOException, GeneralSecurityException, CryptoException {
-    String httpVerb = request.getName();
+    String httpVerb = request.getMethod();
     String body = "";
     if (httpVerb.equals("POST")) {
-      ByteArrayOutputStream oStream = new ByteArrayOutputStream();
-      ((PostMethod) request).getRequestEntity().writeRequest(oStream);
-      body = oStream.toString();
+      body = EntityUtils.toString(((HttpPost) request).getEntity());
     }
     Map<String, String> mauthHeaders = generateHeaders(httpVerb, request.getURI().getPath(), body);
     for (String key : mauthHeaders.keySet()) {
-      request.addRequestHeader(key, mauthHeaders.get(key));
+      request.addHeader(key, mauthHeaders.get(key));
     }
-  }
-
-  private String generateUnencryptedHeaderString(String httpVerb, String resourceUrl, String body,
-    String epochTime) {
-    return httpVerb + "\n" + resourceUrl + "\n" + body + "\n" + _appUUID.toString() + "\n" + epochTime;
-  }
-
-  private String encryptHeaderString(String unencryptedString)
-    throws GeneralSecurityException, IOException, CryptoException {
-    // Get digest
-    MessageDigest md = MessageDigest.getInstance("SHA-512", "BC");
-    byte[] digestedString = md.digest(unencryptedString.getBytes());
-
-    // Convert to hex
-    String hexEncodedString = Hex.encodeHexString(digestedString);
-
-    // encrypt
-    PKCS1Encoding encryptEngine = new PKCS1Encoding(new RSAEngine());
-    encryptEngine.init(true, PrivateKeyFactory.createKey(_privateKey.getEncoded()));
-    byte[] encryptedStringBytes = encryptEngine
-      .processBlock(hexEncodedString.getBytes(), 0, hexEncodedString.getBytes().length);
-
-    // Base64 encode
-    String encryptedHeaderString = new String(Base64.encodeBase64(encryptedStringBytes), "UTF-8");
-
-    return encryptedHeaderString;
   }
 
 }

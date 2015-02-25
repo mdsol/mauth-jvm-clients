@@ -3,10 +3,10 @@ package com.mdsol.mauth;
 /**
  * @author Jonathan Price <jprice@mdsol.com>
  */
-public class TestEpochTime implements EpochTime {
+public class MockEpochTime implements EpochTime {
   private final long seconds;
 
-  public TestEpochTime(long seconds) {
+  public MockEpochTime(long seconds) {
     this.seconds = seconds;
   }
 
