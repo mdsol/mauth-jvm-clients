@@ -2,36 +2,6 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
- <repositories>
-    <repository>
-      <id>central</id>
-      <name>all-repos-release</name>
-      <url>http://mdsol-maven-sandbox.imedidata.net/artifactory/all-repos-release</url>
-    </repository>
-    <repository>
-      <id>snapshot</id>
-      <name>snapshot</name>
-      <url>http://mdsol-maven-sandbox.imedidata.net/artifactory/snapshot</url>
-      <snapshots>
-        <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
-      </snapshots>
-    </repository>
-  </repositories>
-        
-  <pluginRepositories>
-    <pluginRepository>
-      <id>central</id>
-      <name>all-repos-release</name>
-      <url>http://mdsol-maven-sandbox.imedidata.net/artifactory/all-repos-release</url>
-    </pluginRepository>
-    <pluginRepository>
-      <id>snapshot</id>
-      <name>snapshot</name>
-      <url>http://mdsol-maven-sandbox.imedidata.net/artifactory/snapshot</url>
-    </pluginRepository>
-  </pluginRepositories>
-
   <groupId>com.mdsol.clients</groupId>
   <artifactId>mauth-client</artifactId>
   <version>2015.1.0-SNAPSHOT</version>
@@ -42,8 +12,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-  <maven.compiler.source>1.8</maven.compiler.source>
-  <maven.compiler.target>1.8</maven.compiler.target>
+  <maven.compiler.source>1.7</maven.compiler.source>
+  <maven.compiler.target>1.7</maven.compiler.target>
   </properties>
 
   <dependencies>
