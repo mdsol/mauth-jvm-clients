@@ -1,6 +1,6 @@
 package com.mdsol.mauth;
 
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.util.EntityUtils;
 import org.bouncycastle.crypto.CryptoException;
@@ -96,6 +96,7 @@ public class MAuthRequestSigner {
     String unencryptedHeaderString =
       _mAuthSignatureHelper.generateUnencryptedHeaderString(_appUUID, httpVerb, requestPath,
         requestBody, epochTimeString);
+    System.out.println("Original: " + unencryptedHeaderString);
     String encryptedHeaderString = _mAuthSignatureHelper.encryptHeaderString(_privateKey,
       unencryptedHeaderString);
 
@@ -120,8 +121,8 @@ public class MAuthRequestSigner {
     throws IOException, GeneralSecurityException, CryptoException {
     String httpVerb = request.getMethod();
     String body = "";
-    if (httpVerb.equals("POST")) {
-      body = EntityUtils.toString(((HttpPost) request).getEntity());
+    if (request instanceof HttpEntityEnclosingRequest) {
+      body = EntityUtils.toString(((HttpEntityEnclosingRequest) request).getEntity());
     }
     Map<String, String> mauthHeaders = generateHeaders(httpVerb, request.getURI().getPath(), body);
     for (String key : mauthHeaders.keySet()) {
