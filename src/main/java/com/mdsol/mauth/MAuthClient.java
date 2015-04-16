@@ -1,41 +1,47 @@
-package mdsol.clients.mauth;
+package com.mdsol.mauth;
+
+import org.apache.commons.codec.binary.Base64;
+import org.bouncycastle.crypto.encodings.PKCS1Encoding;
+import org.bouncycastle.crypto.engines.RSAEngine;
+import org.bouncycastle.crypto.util.PrivateKeyFactory;
+import org.bouncycastle.crypto.util.PublicKeyFactory;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMReader;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.StringReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.security.KeyPair;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Security;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TimeZone;
+
+import javax.servlet.http.HttpServletResponse;
+
 
 /**
  * This class implements a set of utilities to be used as a client for several mAuth operations.
  * Primarily it can be used to create mAuth signatures and also to validate mAuth signatures coming
  * from other applications.
  * 
- *  Created by Ricardo Chavarria on July 4th, 2012
+ * @author Ricardo Chavarria
  * 
  */
-
-import java.io.*;
-import java.net.*;
-import java.security.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.Date;
-import java.text.SimpleDateFormat;
-
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.codec.binary.Base64;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMReader;
-import org.bouncycastle.crypto.encodings.PKCS1Encoding;
-import org.bouncycastle.crypto.util.PrivateKeyFactory;
-import org.bouncycastle.crypto.util.PublicKeyFactory;
-import org.bouncycastle.crypto.CipherParameters;
-import org.bouncycastle.crypto.engines.RSAEngine;
-
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-
-
-//========================================================================
-//========================================================================
 public class MAuthClient
 {
     private String _appId;
@@ -49,53 +55,57 @@ public class MAuthClient
     private static Map<String, PublicKey> _publicKeys = new HashMap<String, PublicKey>();
    
     // Cache for private keys (TODO: may only have one key, need to see if better remove it)
-    private Map<String, PrivateKey> _privateKeys = new HashMap<String, PrivateKey>();
+    private final Map<String, PrivateKey> _privateKeys = new HashMap<String, PrivateKey>();
 
     // Default constructor
     public MAuthClient() {}
     
-    //=======================================================================================
     /**
      * 
      * @param mAuthUrl
      * @param mAuthRequestUrlPath
      * @param securityTokensUrl
      * @param appId
-     * @param privateKeyFilePath
-     * @throws Exception 
+     * @param publicKey
+     * @param privateKey
+     * @throws Exception
      */
-    //=======================================================================================
     public MAuthClient(String mAuthUrl, String mAuthRequestUrlPath, String securityTokensUrl, String appId, String publicKey, String privateKey) throws Exception
     {
         init(mAuthUrl, mAuthRequestUrlPath, securityTokensUrl, appId, publicKey, privateKey);
     }
 	
-    //=======================================================================================
     /**
      * 
      * @param mAuthUrl
      * @param mAuthRequestUrlPath
      * @param securityTokensUrl
      * @param appId
-     * @param privateKeyFilePath
+     * @param publicKey
+     * @param privateKey
      * @return
-     * @throws Exception 
+     * @throws Exception
      */
-    //=======================================================================================
     public boolean init(String mAuthUrl, String mAuthRequestUrlPath, String securityTokensUrl, String appId, String publicKey, String privateKey) throws Exception
     {
-    	if (null==mAuthUrl || mAuthUrl.equals(""))
-    		throw new Exception("Cannot initialize MAuth client: mAuthUrl cannot be null");
-    	if (null==mAuthRequestUrlPath || mAuthRequestUrlPath.equals(""))
-    		throw new Exception("Cannot initialize MAuth client: mAuthRequestUrlPath cannot be null");
-    	if (null==securityTokensUrl || securityTokensUrl.equals(""))
-    		throw new Exception("Cannot initialize MAuth client: securityTokensUrl cannot be null");
-    	if (null==appId || appId.equals(""))
-    		throw new Exception("Cannot initialize MAuth client: appId cannot be null");
-    	if (null==publicKey || publicKey.equals(""))
-    		throw new Exception("Cannot initialize MAuth client: publicKey cannot be null");
-    	if (null==privateKey || privateKey.equals(""))
-    		throw new Exception("Cannot initialize MAuth client: privateKey cannot be null");
+    	if (null==mAuthUrl || mAuthUrl.equals("")) {
+        throw new Exception("Cannot initialize MAuth client: mAuthUrl cannot be null");
+      }
+    	if (null==mAuthRequestUrlPath || mAuthRequestUrlPath.equals("")) {
+        throw new Exception("Cannot initialize MAuth client: mAuthRequestUrlPath cannot be null");
+      }
+    	if (null==securityTokensUrl || securityTokensUrl.equals("")) {
+        throw new Exception("Cannot initialize MAuth client: securityTokensUrl cannot be null");
+      }
+    	if (null==appId || appId.equals("")) {
+        throw new Exception("Cannot initialize MAuth client: appId cannot be null");
+      }
+    	if (null==publicKey || publicKey.equals("")) {
+        throw new Exception("Cannot initialize MAuth client: publicKey cannot be null");
+      }
+    	if (null==privateKey || privateKey.equals("")) {
+        throw new Exception("Cannot initialize MAuth client: privateKey cannot be null");
+      }
 
     	_appId = appId;
         _publicKey = publicKey;
@@ -109,36 +119,34 @@ public class MAuthClient
         return true;
     }
     
-    //=======================================================================================
     /**
      * Get signature portion of http header based on mAuth specification
      * 
      * @param header the mAuth header x-mws-authentication
      * @return signature portion in header
      */
-    //=======================================================================================
     public String getSignatureInHeader(String header)
     {
         int pos = header.indexOf(":");
-        if (pos < 0)
-            return "";
+        if (pos < 0) {
+          return "";
+        }
         
         return header.substring(pos+1);
     }
     
-    //=======================================================================================
     /**
      * Get appId portion of http header based on mAuth specification
      * 
      * @param header the mAuth header x-mws-authentication
      * @return appId portion in header
      */
-    //=======================================================================================
     public String getAppIdInHeader(String header)
     {
         int pos = header.indexOf(":");
-        if (pos < 0)
-            return "";
+        if (pos < 0) {
+          return "";
+        }
         
         return header.substring(4, pos);
     }
@@ -168,10 +176,9 @@ public class MAuthClient
     	headers.put("x-mws-authentication", xMwsAuthentication);
     	headers.put("x-mws-time", epochTime);
     	
-    	return headers;    	
+    	return headers;
     }
     
-    //=======================================================================================
     /**
      * Validates an incoming http request which contains mAuth headers.
      * The validation process consists on recreating the mAuth hashed signature
@@ -190,28 +197,34 @@ public class MAuthClient
      * @return true or false indicating if the request if valid or not with respect to mAuth
      * @throws Exception
      */
-    //=======================================================================================
     public Boolean validateRequest(String signatureInHeader, String epochTime, String verb, String resourceUrl, String body, String appId) throws Exception
     {
     	// Perform routine validations of parameters
-    	if (null==signatureInHeader || signatureInHeader.equals(""))
-    		throw new Exception("validateRequest error: parameter signatureInHeader cannot be null");
-    	if (null==epochTime || epochTime.equals(""))
-    		throw new Exception("validateRequest error: parameter epochTime cannot be null");
-    	if (null==verb || verb.equals(""))
-    		throw new Exception("validateRequest error: parameter verb cannot be null");
-    	if (null==resourceUrl || resourceUrl.equals(""))
-    		throw new Exception("validateRequest error: parameter resourceUrl cannot be null");
-    	if ( (null==body || body.equals("")) && (! "GET".equalsIgnoreCase(verb)))
-    		throw new Exception("validateRequest error: parameter body cannot be null: " + verb);
-    	if (null==appId || appId.equals(""))
-    		throw new Exception("validateRequest error: parameter appId cannot be null");
+    	if (null==signatureInHeader || signatureInHeader.equals("")) {
+        throw new Exception("validateRequest error: parameter signatureInHeader cannot be null");
+      }
+    	if (null==epochTime || epochTime.equals("")) {
+        throw new Exception("validateRequest error: parameter epochTime cannot be null");
+      }
+    	if (null==verb || verb.equals("")) {
+        throw new Exception("validateRequest error: parameter verb cannot be null");
+      }
+    	if (null==resourceUrl || resourceUrl.equals("")) {
+        throw new Exception("validateRequest error: parameter resourceUrl cannot be null");
+      }
+    	if ( (null==body || body.equals("")) && (! "GET".equalsIgnoreCase(verb))) {
+        throw new Exception("validateRequest error: parameter body cannot be null: " + verb);
+      }
+    	if (null==appId || appId.equals("")) {
+        throw new Exception("validateRequest error: parameter appId cannot be null");
+      }
     	
     	// Check epoc time is not older than 5 minutes
     	long currentEpoc = getEpochTime();
     	long lEpocTime = Long.valueOf(epochTime);
-    	if ((currentEpoc - lEpocTime) > 300)
-    		throw new Exception("validateRequest error: epoc time is older than 5 minutes");
+    	if ((currentEpoc - lEpocTime) > 300) {
+        throw new Exception("validateRequest error: epoc time is older than 5 minutes");
+      }
     	
     	
     	// We need the public key of the appId from which the request comes from (this appId is part of the mAuth header x-mws-authentication)
@@ -222,10 +235,10 @@ public class MAuthClient
 
         // Decrypt the signature with public key from requesting application
         PKCS1Encoding decryptEngine = new PKCS1Encoding(new RSAEngine());
-        decryptEngine.init(false, (CipherParameters) PublicKeyFactory.createKey(key.getEncoded()));
+        decryptEngine.init(false, PublicKeyFactory.createKey(key.getEncoded()));
         byte[] decryptedHexMsg_bytes = decryptEngine.processBlock(encryptedSignature, 0, encryptedSignature.length);
         
-        // Recreate the plaintext signature, based on the incoming request parameters, and hash it   
+        // Recreate the plaintext signature, based on the incoming request parameters, and hash it
         String stringToSign = getStringToSign(verb, resourceUrl, body, appId, epochTime);
         byte[] stringToSign_bytes = stringToSign.getBytes("US-ASCII");
         byte[] messageDigest_bytes = getHex(getMessageDigest(stringToSign_bytes).digest()).getBytes();
@@ -237,7 +250,6 @@ public class MAuthClient
         return result;
     }
     
-    //=======================================================================================
     /**
      * Gets a public key, of a requesting appId, from the mAuth service, and caches it
      * 
@@ -245,7 +257,6 @@ public class MAuthClient
      * @return public key object of the appId
      * @throws Exception
      */
-    //=======================================================================================
     private PublicKey getPublicKey(String appId) throws Exception
     {
     	// If key is in cache just return it
@@ -279,7 +290,7 @@ public class MAuthClient
         // Get a PublicKey Object from the text version of the public key
         PEMReader reader = null;
         PublicKey key = null;
-        try 
+        try
         {
             reader = new PEMReader(new StringReader(publicKeyString));
             key = (PublicKey) reader.readObject();
@@ -292,7 +303,7 @@ public class MAuthClient
         	throw new Exception("Unable to create public key for: " + appId, ex);
         }
         finally
-        {      
+        {
             // Cleanup
             try
             {
@@ -304,13 +315,12 @@ public class MAuthClient
             catch (Exception ignore) { }
         }
         
-        return key;     
+        return key;
     }
     
-     //=======================================================================================
     /**
      * Generate a map with the mAuth http headers after signing an http request's
-     * parameters 
+     * parameters
      * 
      * @param verb
      * @param resourceUrl
@@ -318,14 +328,16 @@ public class MAuthClient
      * @param appId
      * @return
      * @throws Exception
+     *
+     * @deprecated Use {@link MAuthRequestSigner#generateHeaders}
      */
-    //=======================================================================================
+    @Deprecated
     public Map<String, String> generateHeaders(String verb, String resourceUrl, String body, String appId) throws Exception
     {
     	// Get epoch time for now
         String epochTime = String.valueOf(getEpochTime());
         
-        // Use the http request's parameters to generate a base64encoded/encrypted/signed request 
+        // Use the http request's parameters to generate a base64encoded/encrypted/signed request
         String encryptedHexMsg_base64 = signMessageString(verb, resourceUrl, body, appId, epochTime);
         
         Map<String, String> headers = new HashMap<String, String>();
@@ -336,7 +348,6 @@ public class MAuthClient
         
     }
     
-    //=======================================================================================
     /**
      * Get a SHA-512 message digest object from a byte array
      * 
@@ -344,16 +355,14 @@ public class MAuthClient
      * @return message digest object
      * @throws NoSuchAlgorithmException
      */
-    //=======================================================================================
     private MessageDigest getMessageDigest(byte[] rawMessage) throws NoSuchAlgorithmException
     {
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-512");
         messageDigest.update(rawMessage);
         
-        return messageDigest;       
+        return messageDigest;
     }
     
-    //=======================================================================================
     /**
      * Construct a string to be signed, according to mAuth specifications
      * 
@@ -364,7 +373,6 @@ public class MAuthClient
      * @param epochTime
      * @return string ready to be signed by mAuth
      */
-    //=======================================================================================
     private String getStringToSign(String verb, String resourceUrl, String body, String appId, String epochTime)
     {
         String stringToSign =
@@ -377,7 +385,6 @@ public class MAuthClient
         return stringToSign;
     }
     
-    //=======================================================================================
     /**
      * Sign an mAuth request based on its parameters
      * 
@@ -389,7 +396,6 @@ public class MAuthClient
      * @return a base64encoded(encrypted(signed prepared)) string
      * @throws Exception
      */
-    //=======================================================================================
     public String signMessageString(String verb, String resourceUrl, String body, String appId, String epochTime) throws Exception
     {
     	// Get the string to sign based on parameters
@@ -398,7 +404,6 @@ public class MAuthClient
         return signMessageString(stringToSign);
     }
     
-    //=======================================================================================
     /**
      * Sign an mAuth request based on a string prepared from its parameters
      * 
@@ -406,7 +411,6 @@ public class MAuthClient
      * @return a base64encoded(encrypted(signed prepared)) string
      * @throws Exception
      */
-    //=======================================================================================
     public String signMessageString(String stringToSign) throws Exception
     {
         //get US-ASCII encoded string to sign bytes
@@ -425,7 +429,7 @@ public class MAuthClient
         }
 
         PKCS1Encoding encryptEngine = new PKCS1Encoding(new RSAEngine());
-        encryptEngine.init(true, (CipherParameters) PrivateKeyFactory.createKey(key.getEncoded()));
+        encryptEngine.init(true, PrivateKeyFactory.createKey(key.getEncoded()));
         byte[] encryptedHexMsg_bytes = encryptEngine.processBlock(md_hex_bytes, 0, md_hex_bytes.length);
 
         String encryptedHexMsg_base64 = new String(Base64.encodeBase64(encryptedHexMsg_bytes), "UTF-8");
@@ -433,7 +437,6 @@ public class MAuthClient
         return encryptedHexMsg_base64;
     }
     
-    //=======================================================================================
     /**
      * Gets a private key object from the text version of the private key, and caches it.
      * Typically the private key will belong to a signer appId which in
@@ -441,16 +444,15 @@ public class MAuthClient
      * 
      * @param appId the appId for which we want the privat key object
      * @return a private key object of the appId
-     * @throws Exception 
+     * @throws Exception
      */
-    //=======================================================================================
     private PrivateKey getPrivateKey(String appId) throws Exception
     {
     	// If private key in cache just return it
         if (_privateKeys.containsKey(appId))
         {
             return _privateKeys.get(appId);
-        }       
+        }
         
         //Get a private key object from the text version in the private member _privateKey
         PEMReader reader = null;
@@ -482,18 +484,16 @@ public class MAuthClient
         return key;
     }
 
-    //=======================================================================================
     /**
      * This method makes call to mAuth invokeApi and process returned result.
      *
-     * @param url -Resource URL. 
-     * @param params_header -collection(Hashtable<Key, value> ) of header key-value pair.
-     * @param content -A String object representing body of http request.  
-     * @param method -request method, either GET or POST.
-     * @return result form the mAuth call.
-     * @throws Exception.
+     * @param url Resource URL
+     * @param params_header collection(Hashtable<Key, value> ) of header key-value pair
+     * @param content A String object representing body of http request
+     * @param method request method, either GET or POST
+     * @return result form the mAuth call
+     * @throws Exception
      */
-    //=======================================================================================
     public synchronized String callmAuth(String url, Map<String, String> params_header, String content, String method) throws Exception
     {
         StringBuffer res = new StringBuffer("");
@@ -520,20 +520,20 @@ public class MAuthClient
     }
     
     
-    //=======================================================================================
     /**
      * This method makes the actual http request.
      *
      * Parameters:
      *
-     * @param sURL -Resource URL. 
-     * @param params_header -collection(Hashtable<Key, value> ) of header key-value pair. 
-     * @param content -A String object representing body of http request.  
-     * @param method -request method, either GET or POST.
-     * @return HttpURLConnection object.
-     * @throws MalformedURLException, URISyntaxException, IOException.
+     * @param sURL Resource URL
+     * @param params_header collection(Hashtable<Key, value> ) of header key-value pair
+     * @param content A String object representing body of http request
+     * @param method request method, either GET or POST
+     * @return HttpURLConnection object
+     * @throws MalformedURLException
+     * @throws URISyntaxException
+     * @throws IOException
      */
-    //=======================================================================================
     private HttpURLConnection invokeApi(String sURL, Map<String, String> params_header, String content, String method)
             throws MalformedURLException, URISyntaxException, IOException
     {
@@ -574,13 +574,11 @@ public class MAuthClient
         return conn;
     }
     
-    //================================================================================
     /**
      * This method gets difference in seconds between 1970/1/1 and today(UTC time).
      *
-     * @return: epoch time in seconds.
+     * @return epoch time in seconds
      */
-     //=================================================================================
     private long getEpochTime()
     {
         SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy hh:mm:ss a");
@@ -598,15 +596,13 @@ public class MAuthClient
     }
     
     
-    //========================================================================================
     /**
      * This method reads InputSteam and returns content as String.
      *
-     * @param InputStream object.
-     * @return String containing stream contents.
-     * @throws IOException.
+     * @param stream
+     * @return String containing stream contents
+     * @throws IOException
      */
-     //==========================================================================================
     public String readToEnd(InputStream stream) throws IOException
     {
         int c = 0;
@@ -619,15 +615,13 @@ public class MAuthClient
         return b.toString();
     }
     
-    //================================================================================================
     /**
      * This method returns hex string equivalent of byte array.
      *
-     * @param raw - byte[] object.
-     * @return HEX String.
+     * @param raw - byte[] object
+     * @return HEX String
      */
-     //=================================================================================================
-    public String getHex(byte[] raw) 
+    public String getHex(byte[] raw)
     {
         if (raw == null)
         {
@@ -643,13 +637,11 @@ public class MAuthClient
         return hex.toString();
     }
     
-    //================================================================================================
     /**
      * This method returns the number of elements in the public key cache.
      *
      * @return number of elements in public key cache
      */
-     //=================================================================================================    
     public int getPublicKeyCacheSize()
     {
     	return _publicKeys.size();
