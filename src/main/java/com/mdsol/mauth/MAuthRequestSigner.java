@@ -96,7 +96,6 @@ public class MAuthRequestSigner {
     String unencryptedHeaderString =
       _mAuthSignatureHelper.generateUnencryptedHeaderString(_appUUID, httpVerb, requestPath,
         requestBody, epochTimeString);
-    System.out.println("Original: " + unencryptedHeaderString);
     String encryptedHeaderString = _mAuthSignatureHelper.encryptHeaderString(_privateKey,
       unencryptedHeaderString);
 
