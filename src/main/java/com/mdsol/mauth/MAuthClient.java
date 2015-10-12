@@ -44,6 +44,8 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class MAuthClient
 {
+    private EpochTime currentEpochTime = new CurrentEpochTime();
+    
     private String _appId;
     private String _publicKey;
     private String _privateKey;
@@ -155,8 +157,9 @@ public class MAuthClient
     {
     	String statusCodeString = "";
     	String body = "";
-        String epochTime = String.valueOf(getEpochTime());
-    	Map<String, String> headers = getSignedResponseHeaders(statusCodeString, body, _appId, epochTime);
+    	
+        String epochTimeAsString = String.valueOf(currentEpochTime.getSeconds());
+    	Map<String, String> headers = getSignedResponseHeaders(statusCodeString, body, _appId, epochTimeAsString);
     	
     	response.addHeader("x-mws-authentication", headers.get("x-mws-authentication"));
     	response.addHeader("x-mws-time", headers.get("x-mws-time"));
@@ -220,7 +223,7 @@ public class MAuthClient
       }
     	
     	// Check epoc time is not older than 5 minutes
-    	long currentEpoc = getEpochTime();
+    	long currentEpoc = currentEpochTime.getSeconds();
     	long lEpocTime = Long.valueOf(epochTime);
     	if ((currentEpoc - lEpocTime) > 300) {
         throw new Exception("validateRequest error: epoc time is older than 5 minutes");
@@ -502,7 +505,6 @@ public class MAuthClient
         HttpURLConnection conn = invokeApi(sURL, params_header, content, method);
         int lastResponseCode = conn.getResponseCode();
         String lastResponseMessage = conn.getResponseMessage();
-        System.out.println("lastResponseCode=" + lastResponseCode + " lastResponseMessage=" + lastResponseMessage);
         if (lastResponseCode >= 200 && lastResponseCode < 300)
         {
             InputStream strm = conn.getInputStream();
@@ -645,5 +647,13 @@ public class MAuthClient
     public int getPublicKeyCacheSize()
     {
     	return _publicKeys.size();
+    }
+    
+    /**
+     * Allows replacement of the EpochTime object used for constructing headers, for testing purposes only
+     * @param epochTime An object of a class the implements the EpochTime interface
+     */
+    void setEpochTime(EpochTime epochTime) {
+      this.currentEpochTime = epochTime;
     }
 }
