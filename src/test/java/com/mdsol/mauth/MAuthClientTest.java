@@ -131,6 +131,7 @@ public class MAuthClientTest {
     MAuthClient client = createClientUsingValidTestConfiguration();
     EpochTime remoteTime = mockEpochTime(Long.valueOf(CLIENT_X_MWS_TIME_HEADER_VALUE) + 3);
     client.setEpochTime(remoteTime);
+    MAuthRequestSigner.setEpochTime(remoteTime);
 
     // Act
     client.validateRequest(CLIENT_REQUEST_SIGNATURE, CLIENT_X_MWS_TIME_HEADER_VALUE,

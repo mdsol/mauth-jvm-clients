@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -271,7 +272,8 @@ public class MAuthClient
         // Generate url to call mAuth api
         String completeMAuthResourceUrlPath = _mAuthRequestUrlPath + String.format(_securityTokensUrl, appId); //this appId is the appId of the app we want the public key from
         // Generate mAuth headers (sign request)
-        Map<String, String> headers = generateHeaders("GET", completeMAuthResourceUrlPath, "", _appId); // notice the appId here is _appId, which is our appId not the appId of the app we want the public key from
+        MAuthRequestSigner signer = new MAuthRequestSigner(UUID.fromString(_appId), _privateKey);
+        Map<String, String> headers = signer.generateHeaders("GET", completeMAuthResourceUrlPath, ""); 
         
         // Call mAuth api
         String res = callmAuth(_mAuthUrl + completeMAuthResourceUrlPath, headers, "", "GET");
@@ -322,36 +324,6 @@ public class MAuthClient
     }
     
     /**
-     * Generate a map with the mAuth http headers after signing an http request's
-     * parameters
-     * 
-     * @param verb
-     * @param resourceUrl
-     * @param body
-     * @param appId
-     * @return
-     * @throws Exception
-     *
-     * @deprecated Use {@link MAuthRequestSigner#generateHeaders}
-     */
-    @Deprecated
-    public Map<String, String> generateHeaders(String verb, String resourceUrl, String body, String appId) throws Exception
-    {
-    	// Get epoch time for now
-        String epochTime = String.valueOf(currentEpochTime.getSeconds());
-        
-        // Use the http request's parameters to generate a base64encoded/encrypted/signed request
-        String encryptedHexMsg_base64 = signMessageString(verb, resourceUrl, body, appId, epochTime);
-        
-        Map<String, String> headers = new HashMap<String, String>();
-        headers.put("x-mws-authentication", "MWS " + appId + ":" + encryptedHexMsg_base64);
-        headers.put("x-mws-time", epochTime);
-        
-        return headers;
-        
-    }
-    
-    /**
      * Get a SHA-512 message digest object from a byte array
      * 
      * @param rawMessage the raw byte array
@@ -386,25 +358,6 @@ public class MAuthClient
           + epochTime;
         
         return stringToSign;
-    }
-    
-    /**
-     * Sign an mAuth request based on its parameters
-     * 
-     * @param verb
-     * @param resourceUrl
-     * @param body
-     * @param appId
-     * @param epochTime
-     * @return a base64encoded(encrypted(signed prepared)) string
-     * @throws Exception
-     */
-    public String signMessageString(String verb, String resourceUrl, String body, String appId, String epochTime) throws Exception
-    {
-    	// Get the string to sign based on parameters
-        String stringToSign = getStringToSign(verb, resourceUrl, body, appId, epochTime);
-        
-        return signMessageString(stringToSign);
     }
     
     /**
