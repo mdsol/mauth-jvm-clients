@@ -1,5 +1,6 @@
 package com.mdsol.mauth;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
@@ -9,9 +10,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.HttpPost;
-import org.bouncycastle.openssl.PEMReader;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -20,17 +22,16 @@ import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.security.PublicKey;
 
 import javax.servlet.http.HttpServletResponse;
 
-// @RunWith(PowerMockRunner.class)
-// @PrepareForTest(MAuthClient.class)
 public class MAuthClientTest {
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
+
+  private static final String X_MWS_TIME_HEADER_NAME = "X-Mws-Time";
+  private static final String X_MWS_AUTHENTICATION_HEADER_NAME = "X-Mws-Authentication";
 
   private static final String CLIENT_APP_ID = "162a4b03-4db9-4631-9d1f-d7195f37128d";
 
@@ -45,27 +46,25 @@ public class MAuthClientTest {
   private static final String CLIENT_REQUEST_PATH = "/resource/path";
   private static final String CLIENT_REQUEST_BODY = "message here";
   private static final String CLIENT_X_MWS_TIME_HEADER_VALUE = "1444672122";
-
-  private static final String CLIENT_UNICODE_REQUEST_SIGNATURE =
-      "5abfJo+LAj/t+27lS8EYU5g8o5pehn518i14/7YZiF2VY4hV4G/33gz5Uae"
-          + "qpSd/G8UH3vl2HDV1oxF8H9CC51wSssHDs31jruKzbAz/bgtnSeTvSfT2XygmKxQ4pmHQC5dAaLfkSiL2KyUxY1dpqjPxoj82F1HlVrr6UTgMkEqEhNBYiY"
-          + "yWAeJHE05Uc+uScef2iOomOzUcXjh1q8LtJqP2555jj8U9gJlMax0xFB1lumnK4U4VcMZ0R2JPCE2MfcIASeDOrPTMzj12MTvCTLtDBiQsgA2+fqGCEcISeQ4"
-          + "jdkd7/Fr6wD91D0KgSidlDvZWV1DBQPa5xPDzW1H24A==";
-  private static final String CLIENT_UNICODE_REQUEST_METHOD = HttpPost.METHOD_NAME;
-  private static final String CLIENT_UNICODE_REQUEST_PATH = "/resource/path";
-  private static final String CLIENT_UNICODE_REQUEST_BODY =
-      "Message with some Unicode characters inside: ș吉ń艾ęتあù";
-  private static final String CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE = "1444726041";
-
-  private static final String X_MWS_TIME_HEADER_NAME = "X-Mws-Time";
-  private static final String X_MWS_AUTHENTICATION_HEADER_NAME = "X-Mws-Authentication";
   private static final String CLIENT_X_MWS_AUTHENTICATION_HEADER_VALUE =
       "MWS " + CLIENT_APP_ID + ":" + CLIENT_REQUEST_SIGNATURE;
+
+  private static final String CLIENT_UNICODE_REQUEST_SIGNATURE =
+      "uJ2HR9ntb9v+5cbx8X5y/SYuQCTGz+f9jxk2AJCR02mrW/nWspN1H9jvC6Y"
+          + "AF0W4TJMCWFAXV3rHG5OPnc2aEGGvSddmfW/Bkhx09IA2dRRTQ9JHdSxrQH9BGGkAP"
+          + "0gMUPdP1/WiJvRh9jcEiAUJ4gmpYzL78PCJVI2uAkZm3czmiqXvXYhQmRD0KjurRfecEwA"
+          + "k3VNvSbdWgoO5BM4PTTZULhjU4clfCti6+0X93ffZQGxkjcSEtIeaz2tci/YUtsYDfbfVeqX"
+          + "2M3//w0OCpcBlHYXuGh9S8I1D2DCcjvC08GMJPj8HIOte0nnsIcFr5SRdfxH+5xgW7OCdUfSsKw==";
+  private static final String CLIENT_UNICODE_REQUEST_METHOD = HttpPost.METHOD_NAME;
+  private static final String CLIENT_UNICODE_REQUEST_PATH = "/resource/path";
+  private static final String CLIENT_UNICODE_REQUEST_BODY = "Message with some Unicode characters inside: ș吉ń艾ęتあù";
+  private static final String CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE = "1444748974";
 
   private static final String MAUTH_BASE_URL = "http://localhost:9001";
   private static final String MAUTH_URL_PATH = "/mauth/v1";
   private static final String SECURITY_TOKENS_PATH = "/security_tokens/%s.json";
   private static final String RESOURCE_APP_UUID = "92a1869e-c80d-4f06-8775-6c4ebb0758e0";
+
   private final String PUBLIC_KEY;
   private final String PRIVATE_KEY;
 
@@ -122,6 +121,31 @@ public class MAuthClientTest {
     EpochTime epochTime = mock(EpochTime.class);
     when(epochTime.getSeconds()).thenReturn(seconds);
     return epochTime;
+  }
+
+  @Test
+  public void validatingValidRequestShouldSendCorrectRequestForPublicKeyToMauthServer()
+      throws Exception {
+    // Arrange
+    FakeMAuthServer.return200();
+    MAuthClient client = createClientUsingValidTestConfiguration();
+    EpochTime remoteTime = mockEpochTime(Long.valueOf(CLIENT_X_MWS_TIME_HEADER_VALUE) + 3);
+    client.setEpochTime(remoteTime);
+
+    // Act
+    client.validateRequest(CLIENT_REQUEST_SIGNATURE, CLIENT_X_MWS_TIME_HEADER_VALUE,
+        CLIENT_REQUEST_METHOD, CLIENT_REQUEST_PATH, CLIENT_REQUEST_BODY, CLIENT_APP_ID);
+
+    // Assert
+    WireMock.verify(getRequestedFor(
+        WireMock.urlEqualTo(String.format(MAUTH_URL_PATH + SECURITY_TOKENS_PATH, CLIENT_APP_ID)))
+            .withHeader(X_MWS_TIME_HEADER_NAME.toLowerCase(), WireMock.equalTo("1444672125"))
+            .withHeader(X_MWS_AUTHENTICATION_HEADER_NAME.toLowerCase(), WireMock.equalTo(
+                "MWS 92a1869e-c80d-4f06-8775-6c4ebb0758e0:lTMYNWPaG42sN26tzopSrlGgPrc7xmwIZ6"
+                    + "eMu7v/nOM/F4JnKIadUmnaijnh0T2rbhx1m1Nr5qGNT/Q8xZDb4kkCLsxAeYn/12NRFtMwDzE80Z"
+                    + "sLWaTkEOl8rv1PHDV/B8abvkwuOiqq5MQ7fmRcw80oA6lRtwBkIRGIGT9a48CJSoV28n4jwNHxPpKL"
+                    + "ao8qmHvq2PzrJJyx9FqJII28ii1vvNmlQ4I0ZJQHCXEvdZkVnJ2tA8jo88nEJ8roGcRwUtX9qkIE6SpW"
+                    + "C2knHI5nj8GV12XaBMXZC0pLrBFykwJirTXMGLFlajniWSs+vCI0xPSrZ99Xj7xPNH5I+D2SJg==")));
   }
 
   @Test

@@ -54,7 +54,7 @@ public class MAuthClient
     private String _securityTokensUrl;
     
     // Cache for public keys
-    private static Map<String, PublicKey> _publicKeys = new HashMap<String, PublicKey>();
+    private Map<String, PublicKey> _publicKeys = new HashMap<String, PublicKey>();
    
     // Cache for private keys (TODO: may only have one key, need to see if better remove it)
     private final Map<String, PrivateKey> _privateKeys = new HashMap<String, PrivateKey>();
@@ -243,7 +243,7 @@ public class MAuthClient
         
         // Recreate the plaintext signature, based on the incoming request parameters, and hash it
         String stringToSign = getStringToSign(verb, resourceUrl, body, appId, epochTime);
-        byte[] stringToSign_bytes = stringToSign.getBytes("US-ASCII");
+        byte[] stringToSign_bytes = stringToSign.getBytes("UTF-8");
         byte[] messageDigest_bytes = getHex(getMessageDigest(stringToSign_bytes).digest()).getBytes();
         
         // Compare the decrypted signature and the recreated signature hashes
@@ -338,7 +338,7 @@ public class MAuthClient
     public Map<String, String> generateHeaders(String verb, String resourceUrl, String body, String appId) throws Exception
     {
     	// Get epoch time for now
-        String epochTime = String.valueOf(getEpochTime());
+        String epochTime = String.valueOf(currentEpochTime.getSeconds());
         
         // Use the http request's parameters to generate a base64encoded/encrypted/signed request
         String encryptedHexMsg_base64 = signMessageString(verb, resourceUrl, body, appId, epochTime);
