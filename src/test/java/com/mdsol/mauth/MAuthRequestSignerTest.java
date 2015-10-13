@@ -43,7 +43,7 @@ public class MAuthRequestSignerTest {
   @BeforeClass
   public static void setUpClass() throws Exception {
     privateKeyString =
-      IOUtils.toString(MAuthRequestSigner.class.getResourceAsStream("privatekey.pem"), "UTF-8");
+      IOUtils.toString(MAuthRequestSigner.class.getResourceAsStream("/keys/privatekey.pem"), "UTF-8");
     EpochTime testEpochTime = new MockEpochTime(TEST_EPOCH_TIME);
     MAuthRequestSigner.setEpochTime(testEpochTime);
   }
