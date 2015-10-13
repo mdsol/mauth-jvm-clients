@@ -530,28 +530,6 @@ public class MAuthClient
     }
     
     /**
-     * This method gets difference in seconds between 1970/1/1 and today(UTC time).
-     *
-     * @return epoch time in seconds
-     */
-    private long getEpochTime()
-    {
-        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy hh:mm:ss a");
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String utcTime = sdf.format(new Date());
-        long epochSec = 0;
-        try
-        {
-            Date curdate = sdf.parse(utcTime);
-            epochSec = curdate.getTime() / 1000; //getTime returns time in millisec since 1/1/1970
-        }
-        catch (Exception ignore) { }
-        
-        return epochSec;
-    }
-    
-    
-    /**
      * This method reads InputSteam and returns content as String.
      *
      * @param stream
