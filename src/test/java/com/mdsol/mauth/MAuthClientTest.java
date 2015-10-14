@@ -33,7 +33,7 @@ public class MAuthClientTest {
   private static final String X_MWS_TIME_HEADER_NAME = "X-Mws-Time";
   private static final String X_MWS_AUTHENTICATION_HEADER_NAME = "X-Mws-Authentication";
 
-  private static final String CLIENT_APP_ID = "162a4b03-4db9-4631-9d1f-d7195f37128d";
+  private static final String CLIENT_APP_ID = FakeMAuthServer.EXISTING_CLIENT_APP_UUID;
 
   private static final String CLIENT_REQUEST_SIGNATURE =
       "fFQzIOo4S1MxxmEDB9v7v0IYNytnS3I5aHNeJfEfFe1v1gTE/cH36BfLG"
