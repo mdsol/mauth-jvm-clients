@@ -502,13 +502,11 @@ public class MAuthClient
         conn.setRequestMethod(method);
         
         //Set http headers
-        int contentlen = 0;
         if (params_header != null)
         {
             for (String key : params_header.keySet())
             {
                 String v = params_header.get(key);
-                contentlen = contentlen + v.length();
                 conn.addRequestProperty(key.toString(), v.toString());
                 
                 System.out.println("setting header..key=" + key.toString() + " value=" + v.toString());
