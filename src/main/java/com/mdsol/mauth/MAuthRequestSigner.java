@@ -5,12 +5,13 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.util.EntityUtils;
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMReader;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.security.GeneralSecurityException;
-import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.Security;
 import java.util.HashMap;
@@ -24,6 +25,8 @@ public class MAuthRequestSigner {
 
   private static EpochTime epochTime = new CurrentEpochTime();
 
+  private static JcaPEMKeyConverter keyConverter = new JcaPEMKeyConverter().setProvider("BC");
+
   public static MAuthRequestSigner getDefaultRequestSigner() {
     return defaultRequestSigner;
   }
@@ -35,7 +38,9 @@ public class MAuthRequestSigner {
   private static MAuthRequestSigner defaultRequestSigner = null;
 
   /**
-   * Allows replacement of the EpochTime object used for constructing headers, for testing purposes only
+   * Allows replacement of the EpochTime object used for constructing headers, for testing purposes
+   * only
+   * 
    * @param epochTime An object of a class the implements the EpochTime interface
    */
   public static void setEpochTime(EpochTime epochTime) {
@@ -57,12 +62,12 @@ public class MAuthRequestSigner {
     this(appUUID, getPrivateKeyFromString(privateKey));
   }
 
-  private static PrivateKey getPrivateKeyFromString(String privateKey) throws SecurityException, IOException {
+  private static PrivateKey getPrivateKeyFromString(String privateKey)
+      throws SecurityException, IOException {
     Security.addProvider(new BouncyCastleProvider());
     PrivateKey pk;
-    try (PEMReader reader = new PEMReader(new StringReader(privateKey))) {
-      KeyPair kp = (KeyPair) reader.readObject();
-      pk = kp.getPrivate();
+    try (PEMParser parser = new PEMParser(new StringReader(privateKey))) {
+      pk = keyConverter.getPrivateKey(((PEMKeyPair) parser.readObject()).getPrivateKeyInfo());
     } catch (Exception caughtEx) {
       SecurityException ex = new SecurityException("Unable to process private key string");
       ex.initCause(caughtEx);
@@ -77,7 +82,7 @@ public class MAuthRequestSigner {
    * NOTE: mAuth headers are time sensitive. The headers must be verified by the receiving service
    * within 5 minutes of being generated, or the request will fail.
    *
-   * @param httpVerb    The HTTP verb of the request, e.g. GET or POST
+   * @param httpVerb The HTTP verb of the request, e.g. GET or POST
    * @param requestPath The path of the request, not including protocol, host or query parameters.
    * @param requestBody The body of the request
    * @return
@@ -86,18 +91,17 @@ public class MAuthRequestSigner {
    * @throws CryptoException
    */
   public Map<String, String> generateHeaders(String httpVerb, String requestPath,
-    String requestBody) throws GeneralSecurityException, IOException, CryptoException {
+      String requestBody) throws GeneralSecurityException, IOException, CryptoException {
     if (null == requestBody) {
       requestBody = "";
     }
     // mAuth uses an epoch time measured in seconds
     String epochTimeString = String.valueOf(epochTime.getSeconds());
 
-    String unencryptedHeaderString =
-      _mAuthSignatureHelper.generateUnencryptedHeaderString(_appUUID, httpVerb, requestPath,
-        requestBody, epochTimeString);
-    String encryptedHeaderString = _mAuthSignatureHelper.encryptHeaderString(_privateKey,
-      unencryptedHeaderString);
+    String unencryptedHeaderString = _mAuthSignatureHelper.generateUnencryptedHeaderString(_appUUID,
+        httpVerb, requestPath, requestBody, epochTimeString);
+    String encryptedHeaderString =
+        _mAuthSignatureHelper.encryptHeaderString(_privateKey, unencryptedHeaderString);
 
     HashMap<String, String> headers = new HashMap<>();
     headers.put("x-mws-authentication", "MWS " + _appUUID.toString() + ":" + encryptedHeaderString);
@@ -117,7 +121,7 @@ public class MAuthRequestSigner {
    * @throws CryptoException
    */
   public void signRequest(HttpUriRequest request)
-    throws IOException, GeneralSecurityException, CryptoException {
+      throws IOException, GeneralSecurityException, CryptoException {
     String httpVerb = request.getMethod();
     String body = "";
     if (request instanceof HttpEntityEnclosingRequest) {

@@ -15,7 +15,7 @@
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
 
-        <bouncycastle.version>1.43</bouncycastle.version>
+        <bouncycastle.version>1.53</bouncycastle.version>
         <commons.codec.version>1.9</commons.codec.version>
         <commons.io.version>1.4</commons.io.version>
         <jackson.version>1.7.6</jackson.version>
@@ -30,7 +30,7 @@
     <dependencies>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk16</artifactId>
+            <artifactId>bcpkix-jdk15on</artifactId>
             <version>${bouncycastle.version}</version>
         </dependency>
         <dependency>
