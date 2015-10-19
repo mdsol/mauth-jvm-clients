@@ -12,33 +12,17 @@ import org.apache.http.ParseException;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.util.EntityUtils;
 import org.bouncycastle.crypto.CryptoException;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
-import java.security.Security;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class MAuthRequestSigner implements MAuthSigner {
 
-  static {
-    Security.addProvider(new BouncyCastleProvider());
-  }
-
   private static EpochTime epochTime = new CurrentEpochTime();
-
-  public static MAuthRequestSigner getDefaultRequestSigner() {
-    return defaultRequestSigner;
-  }
-
-  public static void setDefaultRequestSigner(MAuthRequestSigner defaultRequestSigner) {
-    MAuthRequestSigner.defaultRequestSigner = defaultRequestSigner;
-  }
-
-  private static MAuthRequestSigner defaultRequestSigner = null;
 
   /**
    * Allows replacement of the EpochTime object used for constructing headers, for testing purposes
@@ -50,16 +34,16 @@ public class MAuthRequestSigner implements MAuthSigner {
     MAuthRequestSigner.epochTime = epochTime;
   }
 
-  private final UUID _appUUID;
-  private final PrivateKey _privateKey;
+  private final UUID appUUID;
+  private final PrivateKey privateKey;
 
-  public MAuthRequestSigner(UUID appUUID, PrivateKey privateKey) {
-    _appUUID = appUUID;
-    _privateKey = privateKey;
+  public MAuthRequestSigner(UUID appUUID, String privateKey) {
+    this(appUUID, getPrivateKeyFromString(privateKey));
   }
 
-  public MAuthRequestSigner(UUID appUUID, String privateKey) throws SecurityException, IOException {
-    this(appUUID, getPrivateKeyFromString(privateKey));
+  public MAuthRequestSigner(UUID appUUID, PrivateKey privateKey) {
+    this.appUUID = appUUID;
+    this.privateKey = privateKey;
   }
 
   /**
@@ -82,19 +66,19 @@ public class MAuthRequestSigner implements MAuthSigner {
     // mAuth uses an epoch time measured in seconds
     String epochTimeString = String.valueOf(epochTime.getSeconds());
 
-    String unencryptedHeaderString = MAuthSignatureHelper.generateUnencryptedHeaderString(_appUUID,
+    String unencryptedHeaderString = MAuthSignatureHelper.generateUnencryptedHeaderString(appUUID,
         httpVerb, requestPath, requestBody, epochTimeString);
 
     String encryptedHeaderString;
     try {
       encryptedHeaderString =
-          MAuthSignatureHelper.encryptHeaderString(_privateKey, unencryptedHeaderString);
+          MAuthSignatureHelper.encryptHeaderString(privateKey, unencryptedHeaderString);
     } catch (GeneralSecurityException | IOException | CryptoException e) {
       throw new MAuthSigningException(e);
     }
 
     HashMap<String, String> headers = new HashMap<>();
-    headers.put("x-mws-authentication", "MWS " + _appUUID.toString() + ":" + encryptedHeaderString);
+    headers.put("x-mws-authentication", "MWS " + appUUID.toString() + ":" + encryptedHeaderString);
     headers.put("x-mws-time", epochTimeString);
 
     return headers;

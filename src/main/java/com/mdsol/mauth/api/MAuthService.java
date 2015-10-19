@@ -1,22 +1,19 @@
 package com.mdsol.mauth.api;
 
 import com.mdsol.mauth.domain.MAuthRequest;
+import com.mdsol.mauth.exceptions.MAuthSigningException;
+import com.mdsol.mauth.exceptions.MAuthValidationException;
 
 import org.apache.http.client.methods.HttpUriRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 public interface MAuthService {
 
-  boolean validate(MAuthRequest mauthRequest);
+  boolean validate(MAuthRequest mAuthRequest) throws MAuthValidationException;
 
-  /**
-   * Appends necessary MAuth headers to the request
-   */
-  void signRequest(HttpServletRequest request);
+  public Map<String, String> generateHeaders(String httpVerb, String requestPath,
+      String requestBody) throws MAuthSigningException;
 
-  /**
-   * Overloaded version of signRequest which works with Apache HttpClient
-   */
-  void signRequest(HttpUriRequest httpUriRequest);
+  public void signRequest(HttpUriRequest request) throws MAuthSigningException;
 }

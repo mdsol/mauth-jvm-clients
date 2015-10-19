@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 
 public class MAuthHttpClient implements MAuthClient {
 
@@ -29,15 +30,15 @@ public class MAuthHttpClient implements MAuthClient {
 
   private final PublicKeyResponseHandler publicKeyResponseHandler = new PublicKeyResponseHandler();
 
-  MAuthHttpClient(MAuthConfiguration configuration, MAuthSigner signer) {
+  public MAuthHttpClient(MAuthConfiguration configuration, MAuthSigner signer) {
     this.configuration = configuration;
     this.signer = signer;
   }
 
   @Override
-  public PublicKey getPublicKey(String appId) {
+  public PublicKey getPublicKey(UUID appUUID) {
     String requestUrlPath = configuration.getMauthRequestUrlPath()
-        + String.format(configuration.getSecurityTokensUrl(), appId);
+        + String.format(configuration.getSecurityTokensUrl(), appUUID.toString());
     Map<String, String> headers = signer.generateHeaders("GET", requestUrlPath, "");
     String requestUrl = configuration.getMauthUrl() + requestUrlPath;
     String publicKeyAsString = get(requestUrl, headers, publicKeyResponseHandler);
