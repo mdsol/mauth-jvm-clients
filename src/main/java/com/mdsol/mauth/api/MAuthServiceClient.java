@@ -17,6 +17,10 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import java.security.Security;
 import java.util.Map;
 
+/**
+ * Thread-safe implementation of MAuthService which delegates responsibilities to the
+ * {@link MAuthValidator} and {@link MAuthSigner}.
+ */
 public class MAuthServiceClient implements MAuthService {
 
   static {
