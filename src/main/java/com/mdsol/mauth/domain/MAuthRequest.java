@@ -50,7 +50,7 @@ public class MAuthRequest {
 
   public static final class Builder {
 
-    private String appId;
+    private UUID appUUID;
     private String requestSignature;
     private byte[] messagePayload;
     private String httpMethod;
@@ -61,8 +61,8 @@ public class MAuthRequest {
       return new Builder();
     }
 
-    public Builder withAppId(String appId) {
-      this.appId = appId;
+    public Builder withAppUUID(UUID appUUID) {
+      this.appUUID = appUUID;
       return this;
     }
 
@@ -94,7 +94,7 @@ public class MAuthRequest {
     public MAuthRequest build() {
       final String exceptionMessageTemplate = "%s cannot be null or empty.";
 
-      if (StringUtils.isBlank(appId)) {
+      if (appUUID == null) {
         throw new IllegalArgumentException(
             String.format(exceptionMessageTemplate, "Application UUID"));
       }
@@ -123,7 +123,7 @@ public class MAuthRequest {
         throw new IllegalArgumentException(
             String.format(exceptionMessageTemplate, "Resource path"));
       }
-      return new MAuthRequest(UUID.fromString(appId), requestSignature, messagePayload, httpMethod,
+      return new MAuthRequest(appUUID, requestSignature, messagePayload, httpMethod,
           Long.parseLong(requestTime), resourcePath);
     }
   }
