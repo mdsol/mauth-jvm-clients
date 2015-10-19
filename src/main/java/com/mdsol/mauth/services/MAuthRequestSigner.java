@@ -46,18 +46,6 @@ public class MAuthRequestSigner implements MAuthSigner {
     this.privateKey = privateKey;
   }
 
-  /**
-   * Generates the mAuth headers with the provided request data.
-   * <p/>
-   * NOTE: mAuth headers are time sensitive. The headers must be verified by the receiving service
-   * within 5 minutes of being generated, or the request will fail.
-   *
-   * @param httpVerb The HTTP verb of the request, e.g. GET or POST
-   * @param requestPath The path of the request, not including protocol, host or query parameters.
-   * @param requestBody The body of the request
-   * @return
-   * @throws MAuthSigningException
-   */
   public Map<String, String> generateHeaders(String httpVerb, String requestPath,
       String requestBody) throws MAuthSigningException {
     if (null == requestBody) {
@@ -84,15 +72,6 @@ public class MAuthRequestSigner implements MAuthSigner {
     return headers;
   }
 
-  /**
-   * Adds the mAuth headers to the provided HttpMethod object.
-   * <p/>
-   * NOTE: mAuth headers are time sensitive. The headers must be verified by the receiving service
-   * within 5 minutes of being generated, or the request will fail.
-   *
-   * @param request
-   * @throws MAuthSigningException
-   */
   public void signRequest(HttpUriRequest request) throws MAuthSigningException {
     String httpVerb = request.getMethod();
     String body = "";
