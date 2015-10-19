@@ -1,11 +1,12 @@
-package com.mdsol.mauth.services;
+package com.mdsol.mauth.internals.signer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.mdsol.mauth.MockEpochTime;
 import com.mdsol.mauth.exceptions.MAuthKeyException;
-import com.mdsol.mauth.utils.EpochTime;
+import com.mdsol.mauth.internals.signer.MAuthRequestSigner;
+import com.mdsol.mauth.internals.utils.EpochTime;
+import com.mdsol.mauth.utils.MockEpochTime;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.HttpGet;
@@ -22,7 +23,7 @@ import java.util.UUID;
 
 
 /**
- * Tests for {@link com.mdsol.mauth.services.MAuthRequestSigner}
+ * Tests for {@link com.mdsol.mauth.internals.signer.MAuthRequestSigner}
  *
  * @author Jonathan Price <jprice@mdsol.com>
  */

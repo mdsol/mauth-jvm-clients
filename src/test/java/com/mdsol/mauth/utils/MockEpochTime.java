@@ -1,6 +1,6 @@
-package com.mdsol.mauth;
+package com.mdsol.mauth.utils;
 
-import com.mdsol.mauth.utils.EpochTime;
+import com.mdsol.mauth.internals.utils.EpochTime;
 
 /**
  * @author Jonathan Price <jprice@mdsol.com>

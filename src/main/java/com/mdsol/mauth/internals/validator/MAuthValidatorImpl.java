@@ -1,9 +1,10 @@
-package com.mdsol.mauth.services;
+package com.mdsol.mauth.internals.validator;
 
 import com.mdsol.mauth.domain.MAuthRequest;
 import com.mdsol.mauth.exceptions.MAuthValidationException;
-import com.mdsol.mauth.utils.EpochTime;
-import com.mdsol.mauth.utils.MAuthSignatureHelper;
+import com.mdsol.mauth.internals.client.MAuthClient;
+import com.mdsol.mauth.internals.utils.EpochTime;
+import com.mdsol.mauth.internals.utils.MAuthSignatureHelper;
 
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;

@@ -1,4 +1,4 @@
-package com.mdsol.mauth.utils;
+package com.mdsol.mauth.internals.utils;
 
 /**
  * @author Jonathan Price <jprice@mdsol.com>

@@ -1,11 +1,11 @@
-package com.mdsol.mauth.services;
+package com.mdsol.mauth.internals.signer;
 
-import static com.mdsol.mauth.utils.MAuthKeysHelper.getPrivateKeyFromString;
+import static com.mdsol.mauth.internals.utils.MAuthKeysHelper.getPrivateKeyFromString;
 
 import com.mdsol.mauth.exceptions.MAuthSigningException;
-import com.mdsol.mauth.utils.CurrentEpochTime;
-import com.mdsol.mauth.utils.EpochTime;
-import com.mdsol.mauth.utils.MAuthSignatureHelper;
+import com.mdsol.mauth.internals.utils.CurrentEpochTime;
+import com.mdsol.mauth.internals.utils.EpochTime;
+import com.mdsol.mauth.internals.utils.MAuthSignatureHelper;
 
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.ParseException;

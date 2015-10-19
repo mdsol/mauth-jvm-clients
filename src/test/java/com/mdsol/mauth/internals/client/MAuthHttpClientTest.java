@@ -1,10 +1,12 @@
-package com.mdsol.mauth.services;
+package com.mdsol.mauth.internals.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 
-import com.mdsol.mauth.FakeMAuthServer;
-import com.mdsol.mauth.MockEpochTime;
 import com.mdsol.mauth.domain.MAuthConfiguration;
+import com.mdsol.mauth.internals.client.MAuthHttpClient;
+import com.mdsol.mauth.internals.signer.MAuthRequestSigner;
+import com.mdsol.mauth.utils.FakeMAuthServer;
+import com.mdsol.mauth.utils.MockEpochTime;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 

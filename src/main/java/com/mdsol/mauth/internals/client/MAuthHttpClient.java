@@ -1,8 +1,9 @@
-package com.mdsol.mauth.services;
+package com.mdsol.mauth.internals.client;
 
 import com.mdsol.mauth.domain.MAuthConfiguration;
 import com.mdsol.mauth.exceptions.MAuthHttpClientException;
-import com.mdsol.mauth.utils.MAuthKeysHelper;
+import com.mdsol.mauth.internals.signer.MAuthSigner;
+import com.mdsol.mauth.internals.utils.MAuthKeysHelper;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;

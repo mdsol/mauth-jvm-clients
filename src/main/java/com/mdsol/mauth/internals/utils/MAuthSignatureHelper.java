@@ -1,4 +1,4 @@
-package com.mdsol.mauth.utils;
+package com.mdsol.mauth.internals.utils;
 
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 

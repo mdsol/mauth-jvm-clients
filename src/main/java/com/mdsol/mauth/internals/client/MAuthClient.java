@@ -1,4 +1,4 @@
-package com.mdsol.mauth.services;
+package com.mdsol.mauth.internals.client;
 
 import java.security.PublicKey;
 import java.util.UUID;

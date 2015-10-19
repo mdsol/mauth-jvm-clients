@@ -1,15 +1,18 @@
-package com.mdsol.mauth.services;
+package com.mdsol.mauth.internals.validator;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.mdsol.mauth.FakeMAuthServer;
-import com.mdsol.mauth.MockEpochTime;
 import com.mdsol.mauth.domain.MAuthRequest;
 import com.mdsol.mauth.exceptions.MAuthValidationException;
-import com.mdsol.mauth.utils.MAuthKeysHelper;
+import com.mdsol.mauth.internals.client.MAuthClient;
+import com.mdsol.mauth.internals.signer.MAuthRequestSigner;
+import com.mdsol.mauth.internals.utils.MAuthKeysHelper;
+import com.mdsol.mauth.internals.validator.MAuthValidatorImpl;
+import com.mdsol.mauth.utils.FakeMAuthServer;
+import com.mdsol.mauth.utils.MockEpochTime;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.HttpPost;

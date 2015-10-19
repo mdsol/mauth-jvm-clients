@@ -1,16 +1,15 @@
-package com.mdsol.mauth.api.impl;
+package com.mdsol.mauth.api;
 
-import com.mdsol.mauth.api.MAuthService;
 import com.mdsol.mauth.domain.MAuthConfiguration;
 import com.mdsol.mauth.domain.MAuthRequest;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
-import com.mdsol.mauth.services.MAuthHttpClient;
-import com.mdsol.mauth.services.MAuthRequestSigner;
-import com.mdsol.mauth.services.MAuthSigner;
-import com.mdsol.mauth.services.MAuthValidator;
-import com.mdsol.mauth.services.MAuthValidatorImpl;
-import com.mdsol.mauth.utils.CurrentEpochTime;
-import com.mdsol.mauth.utils.EpochTime;
+import com.mdsol.mauth.internals.client.MAuthHttpClient;
+import com.mdsol.mauth.internals.signer.MAuthRequestSigner;
+import com.mdsol.mauth.internals.signer.MAuthSigner;
+import com.mdsol.mauth.internals.utils.CurrentEpochTime;
+import com.mdsol.mauth.internals.utils.EpochTime;
+import com.mdsol.mauth.internals.validator.MAuthValidator;
+import com.mdsol.mauth.internals.validator.MAuthValidatorImpl;
 
 import org.apache.http.client.methods.HttpUriRequest;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;

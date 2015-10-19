@@ -10,10 +10,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.mdsol.mauth.FakeMAuthServer;
+import com.mdsol.mauth.internals.signer.MAuthRequestSigner;
+import com.mdsol.mauth.internals.utils.EpochTime;
 import com.mdsol.mauth.legacy.MAuthClient;
-import com.mdsol.mauth.services.MAuthRequestSigner;
-import com.mdsol.mauth.utils.EpochTime;
+import com.mdsol.mauth.utils.FakeMAuthServer;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 

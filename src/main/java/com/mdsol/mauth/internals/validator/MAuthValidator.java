@@ -1,4 +1,4 @@
-package com.mdsol.mauth.services;
+package com.mdsol.mauth.internals.validator;
 
 import com.mdsol.mauth.domain.MAuthRequest;
 
