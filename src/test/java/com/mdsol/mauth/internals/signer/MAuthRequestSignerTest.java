@@ -4,11 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.mdsol.mauth.exceptions.MAuthKeyException;
-import com.mdsol.mauth.internals.signer.MAuthSignerImpl;
 import com.mdsol.mauth.internals.utils.EpochTime;
+import com.mdsol.mauth.utils.FixturesLoader;
 import com.mdsol.mauth.utils.MockEpochTime;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -47,9 +46,7 @@ public class MAuthRequestSignerTest {
 
   @BeforeClass
   public static void setUpClass() throws Exception {
-    privateKeyString = IOUtils.toString(
-        MAuthSignerImpl.class.getClassLoader().getResourceAsStream("keys/privatekey.pem"),
-        "UTF-8");
+    privateKeyString = FixturesLoader.getPrivateKey();
     EpochTime testEpochTime = new MockEpochTime(TEST_EPOCH_TIME);
     MAuthSignerImpl.setEpochTime(testEpochTime);
   }

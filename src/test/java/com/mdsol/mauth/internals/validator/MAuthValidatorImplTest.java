@@ -8,13 +8,11 @@ import static org.mockito.Mockito.when;
 import com.mdsol.mauth.domain.MAuthRequest;
 import com.mdsol.mauth.exceptions.MAuthValidationException;
 import com.mdsol.mauth.internals.client.MAuthClient;
-import com.mdsol.mauth.internals.signer.MAuthSignerImpl;
 import com.mdsol.mauth.internals.utils.MAuthKeysHelper;
-import com.mdsol.mauth.internals.validator.MAuthValidatorImpl;
 import com.mdsol.mauth.utils.FakeMAuthServer;
+import com.mdsol.mauth.utils.FixturesLoader;
 import com.mdsol.mauth.utils.MockEpochTime;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.HttpPost;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.AfterClass;
@@ -24,7 +22,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.Security;
 import java.util.UUID;
@@ -58,7 +55,7 @@ public class MAuthValidatorImplTest {
       "Message with some Unicode characters inside: ș吉ń艾ęتあù";
   private static final String CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE = "1444748974";
 
-  private final String PUBLIC_KEY;
+  private final String PUBLIC_KEY = FixturesLoader.getPublicKey();
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
@@ -66,17 +63,12 @@ public class MAuthValidatorImplTest {
   @BeforeClass
   public static void setup() {
     FakeMAuthServer.start(9001);
+    Security.addProvider(new BouncyCastleProvider());
   }
 
   @AfterClass
   public static void tearDown() {
     FakeMAuthServer.stop();
-  }
-
-  public MAuthValidatorImplTest() throws IOException {
-    PUBLIC_KEY =
-        IOUtils.toString(MAuthSignerImpl.class.getResourceAsStream("/keys/publickey.pem"));
-    Security.addProvider(new BouncyCastleProvider());
   }
 
   @Test

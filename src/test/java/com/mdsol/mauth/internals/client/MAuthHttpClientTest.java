@@ -9,10 +9,10 @@ import com.mdsol.mauth.domain.MAuthConfiguration;
 import com.mdsol.mauth.exceptions.MAuthHttpClientException;
 import com.mdsol.mauth.internals.signer.MAuthSignerImpl;
 import com.mdsol.mauth.utils.FakeMAuthServer;
+import com.mdsol.mauth.utils.FixturesLoader;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 
-import org.apache.commons.io.IOUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -21,7 +21,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
-import java.io.IOException;
 import java.security.Security;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,25 +43,18 @@ public class MAuthHttpClientTest {
   private static final UUID RESOURCE_APP_UUID =
       UUID.fromString("92a1869e-c80d-4f06-8775-6c4ebb0758e0");
 
-  private final String PUBLIC_KEY;
-  private final String PRIVATE_KEY;
+  private final String PUBLIC_KEY = FixturesLoader.getPublicKey();
+  private final String PRIVATE_KEY = FixturesLoader.getPrivateKey();
 
   @BeforeClass
   public static void setup() {
     FakeMAuthServer.start(9001);
+    Security.addProvider(new BouncyCastleProvider());
   }
 
   @AfterClass
   public static void tearDown() {
     FakeMAuthServer.stop();
-  }
-
-  public MAuthHttpClientTest() throws IOException {
-    PRIVATE_KEY =
-        IOUtils.toString(MAuthSignerImpl.class.getResourceAsStream("/keys/privatekey.pem"));
-    PUBLIC_KEY =
-        IOUtils.toString(MAuthSignerImpl.class.getResourceAsStream("/keys/publickey.pem"));
-    Security.addProvider(new BouncyCastleProvider());
   }
 
   private MAuthHttpClient getClientWithMockedSigner() throws Exception {
