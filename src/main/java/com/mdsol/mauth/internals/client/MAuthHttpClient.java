@@ -8,7 +8,6 @@ import com.mdsol.mauth.internals.utils.MAuthKeysHelper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.ParseException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -28,37 +27,38 @@ public class MAuthHttpClient implements MAuthClient {
 
   private final MAuthConfiguration configuration;
   private final MAuthSigner signer;
-
-  private final PublicKeyResponseHandler publicKeyResponseHandler = new PublicKeyResponseHandler();
+  private final CloseableHttpClient httpclient;
+  private final PublicKeyResponseHandler publicKeyResponseHandler;
 
   public MAuthHttpClient(MAuthConfiguration configuration, MAuthSigner signer) {
     this.configuration = configuration;
     this.signer = signer;
+    this.httpclient = HttpClients.createDefault();
+    this.publicKeyResponseHandler = new PublicKeyResponseHandler();
   }
 
   @Override
   public PublicKey getPublicKey(UUID appUUID) {
-    String requestUrlPath = configuration.getMauthRequestUrlPath()
-        + String.format(configuration.getSecurityTokensUrl(), appUUID.toString());
+    String requestUrlPath = getRequestUrlPath(appUUID);
     Map<String, String> headers = signer.generateHeaders("GET", requestUrlPath, "");
     String requestUrl = configuration.getMauthUrl() + requestUrlPath;
     String publicKeyAsString = get(requestUrl, headers, publicKeyResponseHandler);
     PublicKey publicKey = MAuthKeysHelper.getPublicKeyFromString(publicKeyAsString);
     return publicKey;
+  }
 
+  private String getRequestUrlPath(UUID appUUID) {
+    return configuration.getMauthRequestUrlPath()
+        + String.format(configuration.getSecurityTokensUrl(), appUUID.toString());
   }
 
   public <T> T get(String url, Map<String, String> headers, ResponseHandler<T> responseHandler) {
-    try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+    try {
       HttpGet httpGet = new HttpGet(url);
       for (Entry<String, String> header : headers.entrySet()) {
         httpGet.addHeader(header.getKey(), header.getValue());
       }
-      try {
-        return httpclient.execute(httpGet, responseHandler);
-      } catch (ParseException | IOException ex) {
-        throw new MAuthHttpClientException(ex);
-      }
+      return httpclient.execute(httpGet, responseHandler);
     } catch (IOException ex) {
       throw new MAuthHttpClientException(ex);
     }

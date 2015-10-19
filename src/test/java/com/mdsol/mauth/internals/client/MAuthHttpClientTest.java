@@ -1,12 +1,14 @@
 package com.mdsol.mauth.internals.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.mdsol.mauth.domain.MAuthConfiguration;
-import com.mdsol.mauth.internals.client.MAuthHttpClient;
+import com.mdsol.mauth.exceptions.MAuthHttpClientException;
 import com.mdsol.mauth.internals.signer.MAuthRequestSigner;
 import com.mdsol.mauth.utils.FakeMAuthServer;
-import com.mdsol.mauth.utils.MockEpochTime;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 
@@ -14,13 +16,27 @@ import org.apache.commons.io.IOUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.security.Security;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class MAuthHttpClientTest {
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
+
+  private static final String X_MWS_TIME_HEADER_NAME = "X-Mws-Time";
+  private static final String EXPECTED_TIME_HEADER_VALUE = "1444672125";
+  private static final String X_MWS_AUTHENTICATION_HEADER_NAME = "X-Mws-Authentication";
+  private static final String EXPECTED_AUTHENTICATION_HEADER_VALUE =
+      "MWS 92a1869e-c80d-4f06-8775-6c4ebb0758e0:lTMYNWPaG4...";
 
   private static final String MAUTH_BASE_URL = "http://localhost:9001";
   private static final String MAUTH_URL_PATH = "/mauth/v1";
@@ -28,32 +44,8 @@ public class MAuthHttpClientTest {
   private static final UUID RESOURCE_APP_UUID =
       UUID.fromString("92a1869e-c80d-4f06-8775-6c4ebb0758e0");
 
-  private static final String X_MWS_TIME_HEADER_NAME = "X-Mws-Time";
-  private static final String X_MWS_AUTHENTICATION_HEADER_NAME = "X-Mws-Authentication";
-  private static final String CLIENT_X_MWS_TIME_HEADER_VALUE = "1444672122";
   private final String PUBLIC_KEY;
   private final String PRIVATE_KEY;
-
-  public MAuthHttpClientTest() throws IOException {
-    PRIVATE_KEY =
-        IOUtils.toString(MAuthRequestSigner.class.getResourceAsStream("/keys/privatekey.pem"));
-    PUBLIC_KEY =
-        IOUtils.toString(MAuthRequestSigner.class.getResourceAsStream("/keys/publickey.pem"));
-    Security.addProvider(new BouncyCastleProvider());
-  }
-
-  private MAuthHttpClient createClientUsingValidTestConfiguration() throws Exception {
-    MAuthConfiguration configuration = getMAuthConfiguration();
-    return new MAuthHttpClient(configuration,
-        new MAuthRequestSigner(RESOURCE_APP_UUID, PRIVATE_KEY));
-  }
-
-  private MAuthConfiguration getMAuthConfiguration() {
-    return MAuthConfiguration.Builder.get().withAppUUID(RESOURCE_APP_UUID)
-        .withMauthUrl(MAUTH_BASE_URL).withMauthRequestUrlPath(MAUTH_URL_PATH)
-        .withSecurityTokensUrl(SECURITY_TOKENS_PATH).withPublicKey(PUBLIC_KEY)
-        .withPrivateKey(PRIVATE_KEY).build();
-  }
 
   @BeforeClass
   public static void setup() {
@@ -65,28 +57,67 @@ public class MAuthHttpClientTest {
     FakeMAuthServer.stop();
   }
 
+  public MAuthHttpClientTest() throws IOException {
+    PRIVATE_KEY =
+        IOUtils.toString(MAuthRequestSigner.class.getResourceAsStream("/keys/privatekey.pem"));
+    PUBLIC_KEY =
+        IOUtils.toString(MAuthRequestSigner.class.getResourceAsStream("/keys/publickey.pem"));
+    Security.addProvider(new BouncyCastleProvider());
+  }
+
+  private MAuthHttpClient getClientWithMockedSigner() throws Exception {
+    MAuthConfiguration configuration = getMAuthConfiguration();
+
+    MAuthRequestSigner mockedSigner = mock(MAuthRequestSigner.class);
+    Map<String, String> mockedHeaders = new HashMap<>();
+    mockedHeaders.put(X_MWS_AUTHENTICATION_HEADER_NAME, EXPECTED_AUTHENTICATION_HEADER_VALUE);
+    mockedHeaders.put(X_MWS_TIME_HEADER_NAME, EXPECTED_TIME_HEADER_VALUE);
+    when(mockedSigner.generateHeaders(eq("GET"), Mockito.anyString(), eq("")))
+        .thenReturn(mockedHeaders);
+
+    return new MAuthHttpClient(configuration, mockedSigner);
+  }
+
+  private String getRequestUrlPath(String clientAppId) {
+    return String.format(MAUTH_URL_PATH + SECURITY_TOKENS_PATH, clientAppId);
+  }
+
+  private MAuthConfiguration getMAuthConfiguration() {
+    return MAuthConfiguration.Builder.get().withAppUUID(RESOURCE_APP_UUID)
+        .withMauthUrl(MAUTH_BASE_URL).withMauthRequestUrlPath(MAUTH_URL_PATH)
+        .withSecurityTokensUrl(SECURITY_TOKENS_PATH).withPublicKey(PUBLIC_KEY)
+        .withPrivateKey(PRIVATE_KEY).build();
+  }
+
   @Test
-  public void validatingValidRequestShouldSendCorrectRequestForPublicKeyToMauthServer()
-      throws Exception {
+  public void shouldSendCorrectRequestForPublicKeyToMAuthServer() throws Exception {
     // Arrange
     FakeMAuthServer.return200();
-    MAuthHttpClient client = createClientUsingValidTestConfiguration();
-    MAuthRequestSigner
-        .setEpochTime(new MockEpochTime(Long.valueOf(CLIENT_X_MWS_TIME_HEADER_VALUE) + 3));
+    MAuthHttpClient client = getClientWithMockedSigner();
 
     // Act
     client.getPublicKey(UUID.fromString(FakeMAuthServer.EXISTING_CLIENT_APP_UUID));
 
     // Assert
-    WireMock.verify(getRequestedFor(WireMock.urlEqualTo(String
-        .format(MAUTH_URL_PATH + SECURITY_TOKENS_PATH, FakeMAuthServer.EXISTING_CLIENT_APP_UUID)))
-            .withHeader(X_MWS_TIME_HEADER_NAME.toLowerCase(), WireMock.equalTo("1444672125"))
-            .withHeader(X_MWS_AUTHENTICATION_HEADER_NAME.toLowerCase(), WireMock.equalTo(
-                "MWS 92a1869e-c80d-4f06-8775-6c4ebb0758e0:lTMYNWPaG42sN26tzopSrlGgPrc7xmwIZ6"
-                    + "eMu7v/nOM/F4JnKIadUmnaijnh0T2rbhx1m1Nr5qGNT/Q8xZDb4kkCLsxAeYn/12NRFtMwDzE80Z"
-                    + "sLWaTkEOl8rv1PHDV/B8abvkwuOiqq5MQ7fmRcw80oA6lRtwBkIRGIGT9a48CJSoV28n4jwNHxPpKL"
-                    + "ao8qmHvq2PzrJJyx9FqJII28ii1vvNmlQ4I0ZJQHCXEvdZkVnJ2tA8jo88nEJ8roGcRwUtX9qkIE6SpW"
-                    + "C2knHI5nj8GV12XaBMXZC0pLrBFykwJirTXMGLFlajniWSs+vCI0xPSrZ99Xj7xPNH5I+D2SJg==")));
+    WireMock.verify(getRequestedFor(
+        WireMock.urlEqualTo(getRequestUrlPath(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)))
+            .withHeader(X_MWS_TIME_HEADER_NAME.toLowerCase(),
+                WireMock.equalTo(EXPECTED_TIME_HEADER_VALUE))
+            .withHeader(X_MWS_AUTHENTICATION_HEADER_NAME.toLowerCase(),
+                WireMock.equalTo(EXPECTED_AUTHENTICATION_HEADER_VALUE)));
+  }
+
+  @Test
+  public void shouldThrowMAuthHttpClientExceptionOnInvalidResponseCode() throws Exception {
+    // Arrange
+    FakeMAuthServer.return401();
+    MAuthHttpClient client = getClientWithMockedSigner();
+
+    // Assert & Act
+    expectedException.expect(MAuthHttpClientException.class);
+    expectedException.expectMessage("Invalid response code returned by server: 401");
+
+    client.getPublicKey(UUID.fromString(FakeMAuthServer.NON_EXISTING_CLIENT_APP_UUID));
   }
 
 }
