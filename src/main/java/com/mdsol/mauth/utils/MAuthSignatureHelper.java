@@ -1,4 +1,4 @@
-package com.mdsol.mauth;
+package com.mdsol.mauth.utils;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
@@ -15,25 +15,23 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.UUID;
 
-/**
- * @author Jonathan Price <jprice@mdsol.com>
- */
-class MAuthSignatureHelper {
-  String generateUnencryptedHeaderString(UUID appUUID, String httpVerb, String resourceUrl,
-    String body, String epochTime) {
+public class MAuthSignatureHelper {
+
+  public static String generateUnencryptedHeaderString(UUID appUUID, String httpVerb,
+      String resourceUrl, String body, String epochTime) {
     return httpVerb + "\n" + resourceUrl + "\n" + body + "\n" + appUUID.toString() + "\n"
-      + epochTime;
+        + epochTime;
   }
 
-  String encryptHeaderString(PrivateKey privateKey, String unencryptedString)
-    throws GeneralSecurityException, IOException, CryptoException {
+  public static String encryptHeaderString(PrivateKey privateKey, String unencryptedString)
+      throws GeneralSecurityException, IOException, CryptoException {
     String hexEncodedString = getHexEncodedDigestedString(unencryptedString);
 
     // encrypt
     PKCS1Encoding encryptEngine = new PKCS1Encoding(new RSAEngine());
     encryptEngine.init(true, PrivateKeyFactory.createKey(privateKey.getEncoded()));
-    byte[] encryptedStringBytes = encryptEngine
-      .processBlock(hexEncodedString.getBytes(), 0, hexEncodedString.getBytes().length);
+    byte[] encryptedStringBytes = encryptEngine.processBlock(hexEncodedString.getBytes(), 0,
+        hexEncodedString.getBytes().length);
 
     // Base64 encode
     String encryptedHeaderString = new String(Base64.encodeBase64(encryptedStringBytes), "UTF-8");
@@ -41,7 +39,8 @@ class MAuthSignatureHelper {
     return encryptedHeaderString;
   }
 
-  String decryptSignature(PublicKey publicKey, String encryptedSignature) throws GeneralSecurityException, IOException, CryptoException {
+  public static String decryptSignature(PublicKey publicKey, String encryptedSignature)
+      throws GeneralSecurityException, IOException, CryptoException {
     // Decode the signature from its base 64 form
     byte[] decodedSignature = Base64.decodeBase64(encryptedSignature);
 
@@ -49,13 +48,14 @@ class MAuthSignatureHelper {
     PKCS1Encoding decryptEngine = new PKCS1Encoding(new RSAEngine());
     decryptEngine.init(false, PublicKeyFactory.createKey(publicKey.getEncoded()));
     byte[] decryptedHexMsg_bytes =
-      decryptEngine.processBlock(decodedSignature, 0, decodedSignature.length);
-    String  decryptedHexSignature = new String(decryptedHexMsg_bytes);
+        decryptEngine.processBlock(decodedSignature, 0, decodedSignature.length);
+    String decryptedHexSignature = new String(decryptedHexMsg_bytes);
 
     return decryptedHexSignature;
   }
 
-  String getHexEncodedDigestedString(String unencryptedString) throws GeneralSecurityException {
+  public static String getHexEncodedDigestedString(String unencryptedString)
+      throws GeneralSecurityException {
     // Get digest
     MessageDigest md = MessageDigest.getInstance("SHA-512", "BC");
     byte[] digestedString = md.digest(unencryptedString.getBytes());

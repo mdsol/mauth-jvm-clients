@@ -1,5 +1,7 @@
 package com.mdsol.mauth;
 
+import com.mdsol.mauth.utils.EpochTime;
+
 /**
  * @author Jonathan Price <jprice@mdsol.com>
  */

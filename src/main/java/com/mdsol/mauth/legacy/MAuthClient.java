@@ -1,4 +1,8 @@
-package com.mdsol.mauth;
+package com.mdsol.mauth.legacy;
+
+import com.mdsol.mauth.services.MAuthRequestSigner;
+import com.mdsol.mauth.utils.CurrentEpochTime;
+import com.mdsol.mauth.utils.EpochTime;
 
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
@@ -493,7 +497,6 @@ public class MAuthClient {
       outputStream.write(content.getBytes());
       outputStream.flush();
     }
-
     conn.connect();
     return conn;
   }

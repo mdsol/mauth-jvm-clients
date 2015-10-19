@@ -1,4 +1,4 @@
-package com.mdsol.mauth;
+package com.mdsol.mauth.legacy;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -9,6 +9,11 @@ import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.mdsol.mauth.FakeMAuthServer;
+import com.mdsol.mauth.legacy.MAuthClient;
+import com.mdsol.mauth.services.MAuthRequestSigner;
+import com.mdsol.mauth.utils.EpochTime;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 
