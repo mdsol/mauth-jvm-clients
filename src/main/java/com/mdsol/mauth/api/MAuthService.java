@@ -10,7 +10,7 @@ import java.util.Map;
 public interface MAuthService {
 
   /**
-   * Performs the validation of the incoming HTTP request.
+   * Performs the validation of the incoming HTTP request by delegating to {@code MAuthValidator}.
    * <p/>
    * The validation process consists of recreating the mAuth hashed signature from the request data
    * and comparing it to the decrypted hash signature from the mAuth header.
@@ -21,7 +21,8 @@ public interface MAuthService {
   boolean validate(MAuthRequest mAuthRequest);
 
   /**
-   * Generates the mAuth headers from the provided request data.
+   * Generates the mAuth headers from the provided request data by delegating to {@code MAuthSigner}
+   * .
    * <p/>
    * NOTE: mAuth headers are time sensitive. The headers must be verified by the receiving service
    * within 5 minutes of being generated, or the request will fail.
@@ -35,8 +36,9 @@ public interface MAuthService {
       String requestBody);
 
   /**
-   * Convenience method for clients using Apache {@link HttpClient}. Generates mAuth headers and
-   * appends them to the provided {@link HttpUriRequest}.
+   * Convenience method for clients using Apache {@link HttpClient}. Delegates to
+   * {@code MAuthSigner} to generate mAuth headers and append them to the provided
+   * {@link HttpUriRequest}.
    * <p/>
    * NOTE: mAuth headers are time sensitive. The headers must be verified by the receiving service
    * within 5 minutes of being generated, or the request will fail.
@@ -44,4 +46,5 @@ public interface MAuthService {
    * @param request HttpUriRequest, e.g. HttpGet or HttpPost
    */
   public void signRequest(HttpUriRequest request);
+
 }
