@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.mdsol.mauth.exceptions.MAuthKeyException;
-import com.mdsol.mauth.internals.signer.MAuthRequestSigner;
+import com.mdsol.mauth.internals.signer.MAuthSignerImpl;
 import com.mdsol.mauth.internals.utils.EpochTime;
 import com.mdsol.mauth.utils.MockEpochTime;
 
@@ -23,7 +23,7 @@ import java.util.UUID;
 
 
 /**
- * Tests for {@link com.mdsol.mauth.internals.signer.MAuthRequestSigner}
+ * Tests for {@link com.mdsol.mauth.internals.signer.MAuthSignerImpl}
  *
  * @author Jonathan Price <jprice@mdsol.com>
  */
@@ -43,20 +43,20 @@ public class MAuthRequestSignerTest {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
-  private MAuthRequestSigner mAuthRequestSigner;
+  private MAuthSignerImpl mAuthRequestSigner;
 
   @BeforeClass
   public static void setUpClass() throws Exception {
     privateKeyString = IOUtils.toString(
-        MAuthRequestSigner.class.getClassLoader().getResourceAsStream("keys/privatekey.pem"),
+        MAuthSignerImpl.class.getClassLoader().getResourceAsStream("keys/privatekey.pem"),
         "UTF-8");
     EpochTime testEpochTime = new MockEpochTime(TEST_EPOCH_TIME);
-    MAuthRequestSigner.setEpochTime(testEpochTime);
+    MAuthSignerImpl.setEpochTime(testEpochTime);
   }
 
   @Before
   public void setUp() throws Exception {
-    mAuthRequestSigner = new MAuthRequestSigner(testUUID, privateKeyString);
+    mAuthRequestSigner = new MAuthSignerImpl(testUUID, privateKeyString);
   }
 
   @Test
@@ -64,20 +64,20 @@ public class MAuthRequestSignerTest {
     String privateKeyString = "This is not a valid key";
     thrown.expect(MAuthKeyException.class);
     thrown.expectMessage("Unable to process private key string");
-    new MAuthRequestSigner(testUUID, privateKeyString);
+    new MAuthSignerImpl(testUUID, privateKeyString);
     fail("Expected exception not thrown");
   }
 
   @Test
   public final void generateHeadersIncludesTimeHeaderWithCorrectTime() throws Exception {
-    Map<String, String> headers = mAuthRequestSigner.generateHeaders("GET", "/", null);
+    Map<String, String> headers = mAuthRequestSigner.generateRequestHeaders("GET", "/", null);
     assertEquals("Time in header does not equal expected test time",
         String.valueOf(TEST_EPOCH_TIME), headers.get(MAUTH_TIME_HEADER));
   }
 
   @Test
   public final void generateHeadersIncludesExpectedAuthenticationHeader() throws Exception {
-    Map<String, String> headers = mAuthRequestSigner.generateHeaders("GET", "/", null);
+    Map<String, String> headers = mAuthRequestSigner.generateRequestHeaders("GET", "/", null);
     assertEquals("Authentication header does not match expected value",
         EXPECTED_GET_AUTHENTICATION_HEADER, headers.get(MAUTH_AUTHENTICATION_HEADER));
   }
@@ -85,7 +85,7 @@ public class MAuthRequestSignerTest {
   @Test
   public final void generateHeadersWithBodyIncludesExpectedAuthenticationHeader() throws Exception {
     Map<String, String> headers =
-        mAuthRequestSigner.generateHeaders("POST", "/", TEST_REQUEST_BODY);
+        mAuthRequestSigner.generateRequestHeaders("POST", "/", TEST_REQUEST_BODY);
     assertEquals("Authentication header does not match expected value",
         EXPECTED_POST_AUTHENTICATION_HEADER, headers.get(MAUTH_AUTHENTICATION_HEADER));
   }

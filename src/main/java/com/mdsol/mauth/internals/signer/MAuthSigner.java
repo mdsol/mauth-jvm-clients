@@ -10,7 +10,7 @@ import java.util.Map;
 public interface MAuthSigner {
 
   /**
-   * Generates the mAuth headers from the provided request data.
+   * Generates the mAuth request headers from the provided request data.
    * <p/>
    * NOTE: mAuth headers are time sensitive. The headers must be verified by the receiving service
    * within 5 minutes of being generated, or the request will fail.
@@ -21,7 +21,7 @@ public interface MAuthSigner {
    * @return MAuth headers which should be appended to the request before sending.
    * @throws MAuthSigningException
    */
-  public Map<String, String> generateHeaders(String httpVerb, String requestPath,
+  public Map<String, String> generateRequestHeaders(String httpVerb, String requestPath,
       String requestBody) throws MAuthSigningException;
 
   /**

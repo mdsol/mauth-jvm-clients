@@ -4,7 +4,7 @@ import com.mdsol.mauth.domain.MAuthConfiguration;
 import com.mdsol.mauth.domain.MAuthRequest;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import com.mdsol.mauth.internals.client.MAuthHttpClient;
-import com.mdsol.mauth.internals.signer.MAuthRequestSigner;
+import com.mdsol.mauth.internals.signer.MAuthSignerImpl;
 import com.mdsol.mauth.internals.signer.MAuthSigner;
 import com.mdsol.mauth.internals.utils.CurrentEpochTime;
 import com.mdsol.mauth.internals.utils.EpochTime;
@@ -31,7 +31,7 @@ public class MAuthServiceClient implements MAuthService {
       throw new IllegalArgumentException("MAuth configuration cannot be null.");
     }
     EpochTime epochTime = new CurrentEpochTime();
-    this.signer = new MAuthRequestSigner(configuration.getAppUUID(), configuration.getPrivateKey());
+    this.signer = new MAuthSignerImpl(configuration.getAppUUID(), configuration.getPrivateKey());
     this.validator = new MAuthValidatorImpl(new MAuthHttpClient(configuration, signer), epochTime);
   }
 
@@ -41,9 +41,9 @@ public class MAuthServiceClient implements MAuthService {
   }
 
   @Override
-  public Map<String, String> generateHeaders(String httpVerb, String requestPath,
+  public Map<String, String> generateRequestHeaders(String httpVerb, String requestPath,
       String requestBody) throws MAuthSigningException {
-    return signer.generateHeaders(httpVerb, requestPath, requestBody);
+    return signer.generateRequestHeaders(httpVerb, requestPath, requestBody);
   }
 
   @Override

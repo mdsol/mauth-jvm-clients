@@ -40,7 +40,7 @@ public class MAuthHttpClient implements MAuthClient {
   @Override
   public PublicKey getPublicKey(UUID appUUID) {
     String requestUrlPath = getRequestUrlPath(appUUID);
-    Map<String, String> headers = signer.generateHeaders("GET", requestUrlPath, "");
+    Map<String, String> headers = signer.generateRequestHeaders("GET", requestUrlPath, "");
     String requestUrl = configuration.getMauthUrl() + requestUrlPath;
     String publicKeyAsString = get(requestUrl, headers, publicKeyResponseHandler);
     PublicKey publicKey = MAuthKeysHelper.getPublicKeyFromString(publicKeyAsString);

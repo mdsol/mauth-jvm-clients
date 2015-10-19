@@ -30,9 +30,12 @@ public class MAuthValidatorImpl implements MAuthValidator {
     }
 
     PublicKey publicKey = mAuthClient.getPublicKey(mAuthRequest.getAppUUID());
+
+    // Decrypt the signature with public key from requesting application.
     byte[] decryptedSignature =
         MAuthSignatureHelper.decryptSignature(publicKey, mAuthRequest.getRequestSignature());
 
+    // Recreate the plaintext signature, based on the incoming request parameters, and hash it.
     String unencryptedRequestString = MAuthSignatureHelper.generateUnencryptedHeaderString(
         mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(), mAuthRequest.getResourcePath(),
         new String(mAuthRequest.getMessagePayload(), StandardCharsets.UTF_8),
@@ -40,14 +43,12 @@ public class MAuthValidatorImpl implements MAuthValidator {
     byte[] messageDigest_bytes = MAuthSignatureHelper
         .getHexEncodedDigestedString(unencryptedRequestString).getBytes(StandardCharsets.UTF_8);
 
-    // Compare the decrypted signature and the recreated signature hashes
-    // If both match, the request was signed by the requesting application and hence the request is
-    // valid
-    boolean result = Arrays.equals(messageDigest_bytes, decryptedSignature);
-    return result;
+    // Compare the decrypted signature and the recreated signature hashes.
+    // If both match, the request was signed by the requesting application and is valid.
+    return Arrays.equals(messageDigest_bytes, decryptedSignature);
   }
 
-  // Check epoch time is not older than 5 minutes
+  // Check epoch time is not older than specified interval.
   private boolean validateTime(long requestTime) {
     long currentTime = epochTime.getSeconds();
     return (currentTime - requestTime) < REQUEST_VALIDATION_TIMEOUT;

@@ -32,7 +32,7 @@ public interface MAuthService {
    * @param requestBody The body of the request
    * @return MAuth headers which should be appended to the request before sending.
    */
-  public Map<String, String> generateHeaders(String httpVerb, String requestPath,
+  public Map<String, String> generateRequestHeaders(String httpVerb, String requestPath,
       String requestBody);
 
   /**

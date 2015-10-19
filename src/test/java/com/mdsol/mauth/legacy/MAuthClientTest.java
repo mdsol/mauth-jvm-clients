@@ -10,7 +10,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.mdsol.mauth.internals.signer.MAuthRequestSigner;
+import com.mdsol.mauth.internals.signer.MAuthSignerImpl;
 import com.mdsol.mauth.internals.utils.EpochTime;
 import com.mdsol.mauth.legacy.MAuthClient;
 import com.mdsol.mauth.utils.FakeMAuthServer;
@@ -75,9 +75,9 @@ public class MAuthClientTest {
 
   public MAuthClientTest() throws IOException {
     PRIVATE_KEY =
-        IOUtils.toString(MAuthRequestSigner.class.getResourceAsStream("/keys/privatekey.pem"));
+        IOUtils.toString(MAuthSignerImpl.class.getResourceAsStream("/keys/privatekey.pem"));
     PUBLIC_KEY =
-        IOUtils.toString(MAuthRequestSigner.class.getResourceAsStream("/keys/publickey.pem"));
+        IOUtils.toString(MAuthSignerImpl.class.getResourceAsStream("/keys/publickey.pem"));
   }
 
   private MAuthClient createClientUsingValidTestConfiguration() throws Exception {
@@ -136,7 +136,7 @@ public class MAuthClientTest {
     MAuthClient client = createClientUsingValidTestConfiguration();
     EpochTime remoteTime = mockEpochTime(Long.valueOf(CLIENT_X_MWS_TIME_HEADER_VALUE) + 3);
     client.setEpochTime(remoteTime);
-    MAuthRequestSigner.setEpochTime(remoteTime);
+    MAuthSignerImpl.setEpochTime(remoteTime);
 
     // Act
     client.validateRequest(CLIENT_REQUEST_SIGNATURE, CLIENT_X_MWS_TIME_HEADER_VALUE,

@@ -1,6 +1,6 @@
 package com.mdsol.mauth.legacy;
 
-import com.mdsol.mauth.internals.signer.MAuthRequestSigner;
+import com.mdsol.mauth.internals.signer.MAuthSignerImpl;
 import com.mdsol.mauth.internals.utils.CurrentEpochTime;
 import com.mdsol.mauth.internals.utils.EpochTime;
 
@@ -275,8 +275,8 @@ public class MAuthClient {
                                                                          // of the app we want the
                                                                          // public key from
     // Generate mAuth headers (sign request)
-    MAuthRequestSigner signer = new MAuthRequestSigner(UUID.fromString(_appId), _privateKey);
-    Map<String, String> headers = signer.generateHeaders("GET", completeMAuthResourceUrlPath, "");
+    MAuthSignerImpl signer = new MAuthSignerImpl(UUID.fromString(_appId), _privateKey);
+    Map<String, String> headers = signer.generateRequestHeaders("GET", completeMAuthResourceUrlPath, "");
 
     // Call mAuth api
     String res = callmAuth(_mAuthUrl + completeMAuthResourceUrlPath, headers, "", "GET");

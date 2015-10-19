@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.mdsol.mauth.domain.MAuthConfiguration;
 import com.mdsol.mauth.exceptions.MAuthHttpClientException;
-import com.mdsol.mauth.internals.signer.MAuthRequestSigner;
+import com.mdsol.mauth.internals.signer.MAuthSignerImpl;
 import com.mdsol.mauth.utils.FakeMAuthServer;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -59,20 +59,20 @@ public class MAuthHttpClientTest {
 
   public MAuthHttpClientTest() throws IOException {
     PRIVATE_KEY =
-        IOUtils.toString(MAuthRequestSigner.class.getResourceAsStream("/keys/privatekey.pem"));
+        IOUtils.toString(MAuthSignerImpl.class.getResourceAsStream("/keys/privatekey.pem"));
     PUBLIC_KEY =
-        IOUtils.toString(MAuthRequestSigner.class.getResourceAsStream("/keys/publickey.pem"));
+        IOUtils.toString(MAuthSignerImpl.class.getResourceAsStream("/keys/publickey.pem"));
     Security.addProvider(new BouncyCastleProvider());
   }
 
   private MAuthHttpClient getClientWithMockedSigner() throws Exception {
     MAuthConfiguration configuration = getMAuthConfiguration();
 
-    MAuthRequestSigner mockedSigner = mock(MAuthRequestSigner.class);
+    MAuthSignerImpl mockedSigner = mock(MAuthSignerImpl.class);
     Map<String, String> mockedHeaders = new HashMap<>();
     mockedHeaders.put(X_MWS_AUTHENTICATION_HEADER_NAME, EXPECTED_AUTHENTICATION_HEADER_VALUE);
     mockedHeaders.put(X_MWS_TIME_HEADER_NAME, EXPECTED_TIME_HEADER_VALUE);
-    when(mockedSigner.generateHeaders(eq("GET"), Mockito.anyString(), eq("")))
+    when(mockedSigner.generateRequestHeaders(eq("GET"), Mockito.anyString(), eq("")))
         .thenReturn(mockedHeaders);
 
     return new MAuthHttpClient(configuration, mockedSigner);

@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class MAuthRequestSigner implements MAuthSigner {
+public class MAuthSignerImpl implements MAuthSigner {
 
   private static EpochTime epochTime = new CurrentEpochTime();
 
@@ -31,22 +31,22 @@ public class MAuthRequestSigner implements MAuthSigner {
    * @param epochTime An object of a class the implements the EpochTime interface
    */
   public static void setEpochTime(EpochTime epochTime) {
-    MAuthRequestSigner.epochTime = epochTime;
+    MAuthSignerImpl.epochTime = epochTime;
   }
 
   private final UUID appUUID;
   private final PrivateKey privateKey;
 
-  public MAuthRequestSigner(UUID appUUID, String privateKey) {
+  public MAuthSignerImpl(UUID appUUID, String privateKey) {
     this(appUUID, getPrivateKeyFromString(privateKey));
   }
 
-  public MAuthRequestSigner(UUID appUUID, PrivateKey privateKey) {
+  public MAuthSignerImpl(UUID appUUID, PrivateKey privateKey) {
     this.appUUID = appUUID;
     this.privateKey = privateKey;
   }
 
-  public Map<String, String> generateHeaders(String httpVerb, String requestPath,
+  public Map<String, String> generateRequestHeaders(String httpVerb, String requestPath,
       String requestBody) throws MAuthSigningException {
     if (null == requestBody) {
       requestBody = "";
@@ -84,7 +84,7 @@ public class MAuthRequestSigner implements MAuthSigner {
       }
     }
 
-    Map<String, String> mauthHeaders = generateHeaders(httpVerb, request.getURI().getPath(), body);
+    Map<String, String> mauthHeaders = generateRequestHeaders(httpVerb, request.getURI().getPath(), body);
     for (String key : mauthHeaders.keySet()) {
       request.addHeader(key, mauthHeaders.get(key));
     }

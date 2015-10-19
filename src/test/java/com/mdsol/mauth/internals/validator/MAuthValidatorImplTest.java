@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 import com.mdsol.mauth.domain.MAuthRequest;
 import com.mdsol.mauth.exceptions.MAuthValidationException;
 import com.mdsol.mauth.internals.client.MAuthClient;
-import com.mdsol.mauth.internals.signer.MAuthRequestSigner;
+import com.mdsol.mauth.internals.signer.MAuthSignerImpl;
 import com.mdsol.mauth.internals.utils.MAuthKeysHelper;
 import com.mdsol.mauth.internals.validator.MAuthValidatorImpl;
 import com.mdsol.mauth.utils.FakeMAuthServer;
@@ -75,7 +75,7 @@ public class MAuthValidatorImplTest {
 
   public MAuthValidatorImplTest() throws IOException {
     PUBLIC_KEY =
-        IOUtils.toString(MAuthRequestSigner.class.getResourceAsStream("/keys/publickey.pem"));
+        IOUtils.toString(MAuthSignerImpl.class.getResourceAsStream("/keys/publickey.pem"));
     Security.addProvider(new BouncyCastleProvider());
   }
 
