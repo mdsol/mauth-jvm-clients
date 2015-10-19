@@ -6,6 +6,7 @@ import com.mdsol.mauth.utils.MAuthKeysHelper;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
@@ -14,7 +15,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.mortbay.jetty.HttpStatus;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -68,7 +68,7 @@ public class MAuthHttpClient implements MAuthClient {
     @Override
     public String handleResponse(HttpResponse response)
         throws ClientProtocolException, IOException {
-      if (response.getStatusLine().getStatusCode() == HttpStatus.ORDINAL_200_OK) {
+      if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
         HttpEntity entity = response.getEntity();
         String responseAsString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
         ObjectMapper mapper = new ObjectMapper();

@@ -16,6 +16,7 @@
         <maven.compiler.target>1.7</maven.compiler.target>
 
         <bouncycastle.version>1.53</bouncycastle.version>
+        <commons.lang.version>3.4</commons.lang.version>
         <commons.codec.version>1.9</commons.codec.version>
         <commons.io.version>1.4</commons.io.version>
         <jackson.version>1.7.6</jackson.version>
@@ -37,6 +38,11 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>${commons.codec.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons.lang.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>

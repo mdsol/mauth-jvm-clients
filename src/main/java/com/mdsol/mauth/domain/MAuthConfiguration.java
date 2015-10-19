@@ -1,6 +1,6 @@
 package com.mdsol.mauth.domain;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.UUID;
 
