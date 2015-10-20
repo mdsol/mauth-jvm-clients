@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 /**
- * Wrapper for incoming MAuth request data necessary to validate it.
+ * Wrapper for an incoming MAuth request data necessary to validate it.
  */
 public class MAuthRequest {
 
