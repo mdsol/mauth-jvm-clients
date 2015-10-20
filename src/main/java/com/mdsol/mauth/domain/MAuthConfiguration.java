@@ -5,8 +5,9 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.UUID;
 
 /**
- * Wrapper for data necessary to correctly create and process MAuth requests. Created and provided
- * by library clients.
+ * Wrapper for data necessary which is mandatory to correctly create and process MAuth requests.
+ * Such data should be provided by clients who uses this MAuth service library in order to
+ * initialize and configure the MAuth client.
  */
 public class MAuthConfiguration {
 
