@@ -46,13 +46,12 @@ public class MAuthServiceClient implements MAuthService {
 
   @Override
   public Map<String, String> generateRequestHeaders(String httpVerb, String requestPath,
-      String requestBody) throws MAuthSigningException {
-    return signer.generateRequestHeaders(httpVerb, requestPath, requestBody);
+      String requestPayload) throws MAuthSigningException {
+    return signer.generateRequestHeaders(httpVerb, requestPath, requestPayload);
   }
 
   @Override
   public void signRequest(HttpUriRequest request) throws MAuthSigningException {
     signer.signRequest(request);
   }
-
 }
