@@ -26,7 +26,7 @@ public class MAuthSignerImpl implements MAuthSigner {
 
   /**
    * Allows replacement of the EpochTime object used for constructing headers, for testing purposes
-   * only
+   * only.
    * 
    * @param epochTime An object of a class the implements the EpochTime interface
    */
@@ -46,16 +46,17 @@ public class MAuthSignerImpl implements MAuthSigner {
     this.privateKey = privateKey;
   }
 
+  @Override
   public Map<String, String> generateRequestHeaders(String httpVerb, String requestPath,
-      String requestBody) throws MAuthSigningException {
-    if (null == requestBody) {
-      requestBody = "";
+      String requestPayload) throws MAuthSigningException {
+    if (null == requestPayload) {
+      requestPayload = "";
     }
     // mAuth uses an epoch time measured in seconds
     String epochTimeString = String.valueOf(epochTime.getSeconds());
 
     String unencryptedHeaderString = MAuthSignatureHelper.generateUnencryptedHeaderString(appUUID,
-        httpVerb, requestPath, requestBody, epochTimeString);
+        httpVerb, requestPath, requestPayload, epochTimeString);
 
     String encryptedHeaderString;
     try {
@@ -72,6 +73,7 @@ public class MAuthSignerImpl implements MAuthSigner {
     return headers;
   }
 
+  @Override
   public void signRequest(HttpUriRequest request) throws MAuthSigningException {
     String httpVerb = request.getMethod();
     String body = "";
@@ -84,7 +86,8 @@ public class MAuthSignerImpl implements MAuthSigner {
       }
     }
 
-    Map<String, String> mauthHeaders = generateRequestHeaders(httpVerb, request.getURI().getPath(), body);
+    Map<String, String> mauthHeaders =
+        generateRequestHeaders(httpVerb, request.getURI().getPath(), body);
     for (String key : mauthHeaders.keySet()) {
       request.addHeader(key, mauthHeaders.get(key));
     }
