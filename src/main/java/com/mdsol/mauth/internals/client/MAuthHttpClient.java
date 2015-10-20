@@ -52,7 +52,7 @@ public class MAuthHttpClient implements MAuthClient {
         + String.format(configuration.getSecurityTokensUrl(), appUUID.toString());
   }
 
-  public <T> T get(String url, Map<String, String> headers, ResponseHandler<T> responseHandler) {
+  private <T> T get(String url, Map<String, String> headers, ResponseHandler<T> responseHandler) {
     try {
       HttpGet httpGet = new HttpGet(url);
       for (Entry<String, String> header : headers.entrySet()) {
