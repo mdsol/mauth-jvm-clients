@@ -4,22 +4,26 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.UUID;
 
+/**
+ * Wrapper for data necessary to correctly create and process MAuth requests. Created and provided
+ * by library clients.
+ */
 public class MAuthConfiguration {
 
   private final UUID appUUID;
   private final String publicKey;
   private final String privateKey;
-  private final String mauthUrl;
-  private final String mauthRequestUrlPath;
+  private final String mAuthUrl;
+  private final String mAuthRequestUrlPath;
   private final String securityTokensUrl;
 
-  private MAuthConfiguration(UUID appUUID, String publicKey, String privateKey, String mauthUrl,
-      String mauthRequestUrlPath, String securityTokensUrl) {
+  private MAuthConfiguration(UUID appUUID, String publicKey, String privateKey, String mAuthUrl,
+      String mAuthRequestUrlPath, String securityTokensUrl) {
     this.appUUID = appUUID;
     this.publicKey = publicKey;
     this.privateKey = privateKey;
-    this.mauthUrl = mauthUrl;
-    this.mauthRequestUrlPath = mauthRequestUrlPath;
+    this.mAuthUrl = mAuthUrl;
+    this.mAuthRequestUrlPath = mAuthRequestUrlPath;
     this.securityTokensUrl = securityTokensUrl;
   }
 
@@ -35,12 +39,12 @@ public class MAuthConfiguration {
     return privateKey;
   }
 
-  public String getMauthUrl() {
-    return mauthUrl;
+  public String getMAuthUrl() {
+    return mAuthUrl;
   }
 
-  public String getMauthRequestUrlPath() {
-    return mauthRequestUrlPath;
+  public String getMAuthRequestUrlPath() {
+    return mAuthRequestUrlPath;
   }
 
   public String getSecurityTokensUrl() {
@@ -51,8 +55,8 @@ public class MAuthConfiguration {
     private UUID appUUID;
     private String publicKey;
     private String privateKey;
-    private String mauthUrl;
-    private String mauthRequestUrlPath;
+    private String mAuthUrl;
+    private String mAuthRequestUrlPath;
     private String securityTokensUrl;
 
     public static Builder get() {
@@ -74,13 +78,13 @@ public class MAuthConfiguration {
       return this;
     }
 
-    public Builder withMauthUrl(String mauthUrl) {
-      this.mauthUrl = mauthUrl;
+    public Builder withMAuthUrl(String mauthUrl) {
+      this.mAuthUrl = mauthUrl;
       return this;
     }
 
-    public Builder withMauthRequestUrlPath(String mauthRequestUrlPath) {
-      this.mauthRequestUrlPath = mauthRequestUrlPath;
+    public Builder withMAuthRequestUrlPath(String mAuthRequestUrlPath) {
+      this.mAuthRequestUrlPath = mAuthRequestUrlPath;
       return this;
     }
 
@@ -102,10 +106,10 @@ public class MAuthConfiguration {
       if (StringUtils.isBlank(privateKey)) {
         throw new IllegalArgumentException(String.format(exceptionMessageTemplate, "Private key"));
       }
-      if (StringUtils.isBlank(mauthUrl)) {
+      if (StringUtils.isBlank(mAuthUrl)) {
         throw new IllegalArgumentException(String.format(exceptionMessageTemplate, "MAuth url"));
       }
-      if (StringUtils.isBlank(mauthRequestUrlPath)) {
+      if (StringUtils.isBlank(mAuthRequestUrlPath)) {
         throw new IllegalArgumentException(
             String.format(exceptionMessageTemplate, "MAuth request url path"));
       }
@@ -114,7 +118,7 @@ public class MAuthConfiguration {
             String.format(exceptionMessageTemplate, "Security token url"));
       }
 
-      return new MAuthConfiguration(appUUID, publicKey, privateKey, mauthUrl, mauthRequestUrlPath,
+      return new MAuthConfiguration(appUUID, publicKey, privateKey, mAuthUrl, mAuthRequestUrlPath,
           securityTokensUrl);
     }
   }

@@ -5,6 +5,9 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Arrays;
 import java.util.UUID;
 
+/**
+ * Wrapper for incoming MAuth request data necessary to validate it.
+ */
 public class MAuthRequest {
 
   private final UUID appUUID;
