@@ -1,7 +1,7 @@
 package com.mdsol.mauth.internals.utils;
 
 /**
- * @author Jonathan Price <jprice@mdsol.com>
+ * Basic interface to get the time in seconds.
  */
 public interface EpochTime {
   public long getSeconds();
