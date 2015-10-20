@@ -43,8 +43,8 @@ public class MAuthHttpClientTest {
   private static final UUID RESOURCE_APP_UUID =
       UUID.fromString("92a1869e-c80d-4f06-8775-6c4ebb0758e0");
 
-  private final String PUBLIC_KEY = FixturesLoader.getPublicKey();
-  private final String PRIVATE_KEY = FixturesLoader.getPrivateKey();
+  private static final String PUBLIC_KEY = FixturesLoader.getPublicKey();
+  private static final String PRIVATE_KEY = FixturesLoader.getPrivateKey();
 
   @BeforeClass
   public static void setup() {

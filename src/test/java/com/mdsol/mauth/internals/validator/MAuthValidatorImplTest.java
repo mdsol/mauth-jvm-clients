@@ -55,7 +55,7 @@ public class MAuthValidatorImplTest {
       "Message with some Unicode characters inside: ș吉ń艾ęتあù";
   private static final String CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE = "1444748974";
 
-  private final String PUBLIC_KEY = FixturesLoader.getPublicKey();
+  private static final String PUBLIC_KEY = FixturesLoader.getPublicKey();
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();

@@ -14,8 +14,8 @@ public class MAuthServiceClientTest {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
-  private final String PUBLIC_KEY = FixturesLoader.getPublicKey();
-  private final String PRIVATE_KEY = FixturesLoader.getPrivateKey();
+  private static final String PUBLIC_KEY = FixturesLoader.getPublicKey();
+  private static final String PRIVATE_KEY = FixturesLoader.getPrivateKey();
 
   @Test
   public void shouldThrowExceptionIfPassedConfigurationIsNull() {
