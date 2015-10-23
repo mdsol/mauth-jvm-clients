@@ -32,7 +32,7 @@ public class MAuthServiceClientTest {
     MAuthConfiguration configuration = MAuthConfiguration.Builder.get()
         .withAppUUID(UUID.fromString("92a1869e-c80d-4f06-8775-6c4ebb0758e0"))
         .withMAuthUrl("http://localhost:9001").withMAuthRequestUrlPath("/mauth/v1")
-        .withSecurityTokensUrl("/security_tokens/%s.json").withPublicKey(PUBLIC_KEY)
+        .withSecurityTokensUrlPath("/security_tokens/%s.json").withPublicKey(PUBLIC_KEY)
         .withPrivateKey(PRIVATE_KEY).build();
 
     // Act & Assert

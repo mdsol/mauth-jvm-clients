@@ -77,7 +77,7 @@ public class MAuthHttpClientTest {
   private MAuthConfiguration getMAuthConfiguration() {
     return MAuthConfiguration.Builder.get().withAppUUID(RESOURCE_APP_UUID)
         .withMAuthUrl(MAUTH_BASE_URL).withMAuthRequestUrlPath(MAUTH_URL_PATH)
-        .withSecurityTokensUrl(SECURITY_TOKENS_PATH).withPublicKey(PUBLIC_KEY)
+        .withSecurityTokensUrlPath(SECURITY_TOKENS_PATH).withPublicKey(PUBLIC_KEY)
         .withPrivateKey(PRIVATE_KEY).build();
   }
 

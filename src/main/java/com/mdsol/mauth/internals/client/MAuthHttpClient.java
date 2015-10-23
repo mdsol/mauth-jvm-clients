@@ -49,7 +49,7 @@ public class MAuthHttpClient implements MAuthClient {
 
   private String getRequestUrlPath(UUID appUUID) {
     return configuration.getMAuthRequestUrlPath()
-        + String.format(configuration.getSecurityTokensUrl(), appUUID.toString());
+        + String.format(configuration.getSecurityTokensUrlPath(), appUUID.toString());
   }
 
   private <T> T get(String url, Map<String, String> headers, ResponseHandler<T> responseHandler) {

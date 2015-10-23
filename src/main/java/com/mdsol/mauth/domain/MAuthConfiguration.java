@@ -18,23 +18,23 @@ public class MAuthConfiguration {
   private final transient String privateKey;
   private final String mAuthUrl;
   private final String mAuthRequestUrlPath;
-  private final String securityTokensUrl;
+  private final String securityTokensUrlPath;
 
   private MAuthConfiguration(UUID appUUID, String publicKey, String privateKey, String mAuthUrl,
-      String mAuthRequestUrlPath, String securityTokensUrl) {
+      String mAuthRequestUrlPath, String securityTokensUrlPath) {
     validateNotNull(appUUID, "Application UUID");
     validateNotBlank(publicKey, "Public key");
     validateNotBlank(privateKey, "Private key");
     validateNotBlank(mAuthUrl, "MAuth url");
     validateNotBlank(mAuthRequestUrlPath, "MAuth request url path");
-    validateNotBlank(securityTokensUrl, "Security token url");
+    validateNotBlank(securityTokensUrlPath, "Security tokens url path");
 
     this.appUUID = appUUID;
     this.publicKey = publicKey;
     this.privateKey = privateKey;
     this.mAuthUrl = mAuthUrl;
     this.mAuthRequestUrlPath = mAuthRequestUrlPath;
-    this.securityTokensUrl = securityTokensUrl;
+    this.securityTokensUrlPath = securityTokensUrlPath;
   }
 
   public UUID getAppUUID() {
@@ -57,8 +57,8 @@ public class MAuthConfiguration {
     return mAuthRequestUrlPath;
   }
 
-  public String getSecurityTokensUrl() {
-    return securityTokensUrl;
+  public String getSecurityTokensUrlPath() {
+    return securityTokensUrlPath;
   }
 
   private void validateNotNull(Object field, String fieldNameInExceptionMessage) {
@@ -76,12 +76,16 @@ public class MAuthConfiguration {
   }
 
   public static class Builder {
+
+    private static final String DEFAULT_MAUTH_REQUEST_URL_PATH = "/mauth/v1";
+    private static final String DEFAULT_SECURITY_TOKENS_URL_PATH = "/security_tokens/%s.json";
+
     private UUID appUUID;
     private String publicKey;
     private String privateKey;
     private String mAuthUrl;
     private String mAuthRequestUrlPath;
-    private String securityTokensUrl;
+    private String securityTokensUrlPath;
 
     public static Builder get() {
       return new Builder();
@@ -107,19 +111,31 @@ public class MAuthConfiguration {
       return this;
     }
 
+    /**
+     * Use {@code withDefaultMAuthPaths()} if you don't know the paths.
+     */
     public Builder withMAuthRequestUrlPath(String mAuthRequestUrlPath) {
       this.mAuthRequestUrlPath = mAuthRequestUrlPath;
       return this;
     }
 
-    public Builder withSecurityTokensUrl(String securityTokensUrl) {
-      this.securityTokensUrl = securityTokensUrl;
+    /**
+     * Use {@code withDefaultMAuthPaths()} if you don't know the paths.
+     */
+    public Builder withSecurityTokensUrlPath(String securityTokensUrlPath) {
+      this.securityTokensUrlPath = securityTokensUrlPath;
+      return this;
+    }
+
+    public Builder withDefaultMAuthPaths() {
+      this.mAuthRequestUrlPath = DEFAULT_MAUTH_REQUEST_URL_PATH;
+      this.securityTokensUrlPath = DEFAULT_SECURITY_TOKENS_URL_PATH;
       return this;
     }
 
     public MAuthConfiguration build() {
       return new MAuthConfiguration(appUUID, publicKey, privateKey, mAuthUrl, mAuthRequestUrlPath,
-          securityTokensUrl);
+          securityTokensUrlPath);
     }
   }
 }
