@@ -1,7 +1,7 @@
-package com.mdsol.mauth;
+package com.mdsol.mauth.internals.utils;
 
 /**
- * @author Jonathan Price <jprice@mdsol.com>
+ * Basic implementation of {@code EpochTime} for getting the current time in seconds.
  */
 public class CurrentEpochTime implements EpochTime {
   @Override

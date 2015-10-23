@@ -1,4 +1,4 @@
-package com.mdsol.mauth;
+package com.mdsol.mauth.utils;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
