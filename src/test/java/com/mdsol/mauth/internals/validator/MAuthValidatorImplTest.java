@@ -28,9 +28,7 @@ import java.util.UUID;
 
 public class MAuthValidatorImplTest {
 
-  private static final UUID CLIENT_APP_ID =
-      UUID.fromString(FakeMAuthServer.EXISTING_CLIENT_APP_UUID);
-
+  private static final String CLIENT_APP_ID = FakeMAuthServer.EXISTING_CLIENT_APP_UUID;
   private static final String CLIENT_REQUEST_SIGNATURE =
       "fFQzIOo4S1MxxmEDB9v7v0IYNytnS3I5aHNeJfEfFe1v1gTE/cH36BfLG"
           + "/zpOHX7kPUDUnmVZK1MuqdenLDmY6q2h8BR/1yA7n/dupQfnVZIeaB99GIO"
@@ -38,10 +36,12 @@ public class MAuthValidatorImplTest {
           + "x9sAt/iG/Yu7lzZbWx4SWkDyAGvk1I5rpbxcOWLPYad8qpuCFaHPMQJTTze8G02hd5"
           + "ocZDzQS73MOfUqPLfvv7aLRvBS078cqs2uAip84n8bM4qG60gMfoC9kUluza7i9poyFqq"
           + "IdsCnS5RQuyNcsixneX2X3CNt3yOw==";
+  private static final String CLIENT_REQUEST_AUTHENTICATION_HEADER =
+      "MWS " + CLIENT_APP_ID + ":" + CLIENT_REQUEST_SIGNATURE;
   private static final String CLIENT_REQUEST_METHOD = HttpPost.METHOD_NAME;
   private static final String CLIENT_REQUEST_PATH = "/resource/path";
   private static final String CLIENT_REQUEST_BODY = "message here";
-  private static final long CLIENT_X_MWS_TIME_HEADER_VALUE = 1444672122L;
+  private static final String CLIENT_X_MWS_TIME_HEADER_VALUE = "1444672122";
 
   private static final String CLIENT_UNICODE_REQUEST_SIGNATURE =
       "uJ2HR9ntb9v+5cbx8X5y/SYuQCTGz+f9jxk2AJCR02mrW/nWspN1H9jvC6Y"
@@ -49,11 +49,13 @@ public class MAuthValidatorImplTest {
           + "0gMUPdP1/WiJvRh9jcEiAUJ4gmpYzL78PCJVI2uAkZm3czmiqXvXYhQmRD0KjurRfecEwA"
           + "k3VNvSbdWgoO5BM4PTTZULhjU4clfCti6+0X93ffZQGxkjcSEtIeaz2tci/YUtsYDfbfVeqX"
           + "2M3//w0OCpcBlHYXuGh9S8I1D2DCcjvC08GMJPj8HIOte0nnsIcFr5SRdfxH+5xgW7OCdUfSsKw==";
+  private static final String CLIENT_UNICODE_REQUEST_AUTHENTICATION_HEADER =
+      "MWS " + CLIENT_APP_ID + ":" + CLIENT_UNICODE_REQUEST_SIGNATURE;
   private static final String CLIENT_UNICODE_REQUEST_METHOD = HttpPost.METHOD_NAME;
   private static final String CLIENT_UNICODE_REQUEST_PATH = "/resource/path";
   private static final String CLIENT_UNICODE_REQUEST_BODY =
       "Message with some Unicode characters inside: ș吉ń艾ęتあù";
-  private static final long CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE = 1444748974L;
+  private static final String CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE = "1444748974";
 
   private static final String PUBLIC_KEY = FixturesLoader.getPublicKey();
 
@@ -75,7 +77,7 @@ public class MAuthValidatorImplTest {
   public void validatingRequestSentAfter5MinutesShouldFail() throws Exception {
     // Arrange
     MAuthValidatorImpl validator = new MAuthValidatorImpl(mock(MAuthClient.class),
-        new MockEpochTime(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE + 600));
+        new MockEpochTime(Long.parseLong(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE) + 600));
     MAuthRequest request = getRequestWithUnicodeCharactersInBody();
 
     // Act & Assert
@@ -88,10 +90,10 @@ public class MAuthValidatorImplTest {
   public void validatingInvalidRequestShouldFail() throws Exception {
     // Arrange
     MAuthClient client = mock(MAuthClient.class);
-    when(client.getPublicKey(Mockito.eq(CLIENT_APP_ID)))
+    when(client.getPublicKey(Mockito.eq(UUID.fromString(CLIENT_APP_ID))))
         .thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
-    MAuthValidator validator =
-        new MAuthValidatorImpl(client, new MockEpochTime(CLIENT_X_MWS_TIME_HEADER_VALUE + 3));
+    MAuthValidator validator = new MAuthValidatorImpl(client,
+        new MockEpochTime(Long.parseLong(CLIENT_X_MWS_TIME_HEADER_VALUE) + 3));
     MAuthRequest invalidRequest = getSimpleRequestWithWrongSignature();
 
     // Act
@@ -105,10 +107,10 @@ public class MAuthValidatorImplTest {
   public void validatingValidRequestShouldPass() throws Exception {
     // Arrange
     MAuthClient client = mock(MAuthClient.class);
-    when(client.getPublicKey(Mockito.eq(CLIENT_APP_ID)))
+    when(client.getPublicKey(Mockito.eq(UUID.fromString(CLIENT_APP_ID))))
         .thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
-    MAuthValidator validator =
-        new MAuthValidatorImpl(client, new MockEpochTime(CLIENT_X_MWS_TIME_HEADER_VALUE + 3));
+    MAuthValidator validator = new MAuthValidatorImpl(client,
+        new MockEpochTime(Long.parseLong(CLIENT_X_MWS_TIME_HEADER_VALUE) + 3));
     MAuthRequest request = getSimpleRequest();
 
     // Act
@@ -122,10 +124,10 @@ public class MAuthValidatorImplTest {
   public void validatingValidRequestWithSpecialCharactersShouldPass() throws Exception {
     // Arrange
     MAuthClient client = mock(MAuthClient.class);
-    when(client.getPublicKey(Mockito.eq(CLIENT_APP_ID)))
+    when(client.getPublicKey(Mockito.eq(UUID.fromString(CLIENT_APP_ID))))
         .thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
     MAuthValidator validator = new MAuthValidatorImpl(client,
-        new MockEpochTime(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE + 3));
+        new MockEpochTime(Long.parseLong(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE) + 3));
     MAuthRequest request = getRequestWithUnicodeCharactersInBody();
 
     // Act
@@ -136,30 +138,28 @@ public class MAuthValidatorImplTest {
   }
 
   private MAuthRequest getSimpleRequest() {
-    return MAuthRequest.Builder.get().withAppUUID(CLIENT_APP_ID)
-        .withHttpMethod(CLIENT_REQUEST_METHOD)
+    return MAuthRequest.Builder.get()
+        .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
+        .withTimeHeaderValue(CLIENT_X_MWS_TIME_HEADER_VALUE).withHttpMethod(CLIENT_REQUEST_METHOD)
         .withMessagePayload(CLIENT_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))
-        .withRequestSignature(CLIENT_REQUEST_SIGNATURE)
-        .withRequestTime(CLIENT_X_MWS_TIME_HEADER_VALUE).withResourcePath(CLIENT_REQUEST_PATH)
-        .build();
+        .withResourcePath(CLIENT_REQUEST_PATH).build();
   }
 
   private MAuthRequest getSimpleRequestWithWrongSignature() {
-    return MAuthRequest.Builder.get().withAppUUID(CLIENT_APP_ID)
-        .withHttpMethod(CLIENT_REQUEST_METHOD)
+    return MAuthRequest.Builder.get()
+        .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
+        .withTimeHeaderValue(CLIENT_X_MWS_TIME_HEADER_VALUE).withHttpMethod(CLIENT_REQUEST_METHOD)
         .withMessagePayload((CLIENT_REQUEST_BODY + " this makes this request invalid.")
             .getBytes(StandardCharsets.UTF_8))
-        .withRequestSignature(CLIENT_REQUEST_SIGNATURE)
-        .withRequestTime(CLIENT_X_MWS_TIME_HEADER_VALUE).withResourcePath(CLIENT_REQUEST_PATH)
-        .build();
+        .withResourcePath(CLIENT_REQUEST_PATH).build();
   }
 
   private MAuthRequest getRequestWithUnicodeCharactersInBody() {
-    return MAuthRequest.Builder.get().withAppUUID(CLIENT_APP_ID)
+    return MAuthRequest.Builder.get()
+        .withAuthenticationHeaderValue(CLIENT_UNICODE_REQUEST_AUTHENTICATION_HEADER)
+        .withTimeHeaderValue(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE)
         .withHttpMethod(CLIENT_UNICODE_REQUEST_METHOD)
         .withMessagePayload(CLIENT_UNICODE_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))
-        .withRequestSignature(CLIENT_UNICODE_REQUEST_SIGNATURE)
-        .withRequestTime(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE)
         .withResourcePath(CLIENT_UNICODE_REQUEST_PATH).build();
   }
 
