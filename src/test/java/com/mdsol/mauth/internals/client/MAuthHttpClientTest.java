@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.mdsol.mauth.domain.MAuthConfiguration;
 import com.mdsol.mauth.exceptions.MAuthHttpClientException;
-import com.mdsol.mauth.internals.signer.MAuthSignerImpl;
+import com.mdsol.mauth.internals.signer.MAuthSigner;
 import com.mdsol.mauth.utils.FakeMAuthServer;
 import com.mdsol.mauth.utils.FixturesLoader;
 
@@ -60,7 +60,7 @@ public class MAuthHttpClientTest {
   private MAuthHttpClient getClientWithMockedSigner() throws Exception {
     MAuthConfiguration configuration = getMAuthConfiguration();
 
-    MAuthSignerImpl mockedSigner = mock(MAuthSignerImpl.class);
+    MAuthSigner mockedSigner = mock(MAuthSigner.class);
     Map<String, String> mockedHeaders = new HashMap<>();
     mockedHeaders.put(X_MWS_AUTHENTICATION_HEADER_NAME, EXPECTED_AUTHENTICATION_HEADER_VALUE);
     mockedHeaders.put(X_MWS_TIME_HEADER_NAME, EXPECTED_TIME_HEADER_VALUE);
@@ -85,7 +85,7 @@ public class MAuthHttpClientTest {
   public void shouldSendCorrectRequestForPublicKeyToMAuthServer() throws Exception {
     // Arrange
     FakeMAuthServer.return200();
-    MAuthHttpClient client = getClientWithMockedSigner();
+    MAuthClient client = getClientWithMockedSigner();
 
     // Act
     client.getPublicKey(UUID.fromString(FakeMAuthServer.EXISTING_CLIENT_APP_UUID));
@@ -103,7 +103,7 @@ public class MAuthHttpClientTest {
   public void shouldThrowMAuthHttpClientExceptionOnInvalidResponseCode() throws Exception {
     // Arrange
     FakeMAuthServer.return401();
-    MAuthHttpClient client = getClientWithMockedSigner();
+    MAuthClient client = getClientWithMockedSigner();
 
     // Assert & Act
     expectedException.expect(MAuthHttpClientException.class);
