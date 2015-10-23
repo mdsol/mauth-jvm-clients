@@ -45,20 +45,20 @@ public class MAuthSignerImpl implements MAuthSigner {
     // mAuth uses an epoch time measured in seconds
     long currentTime = epochTime.getSeconds();
 
-    String unencryptedHeaderString = MAuthSignatureHelper.generateUnencryptedHeaderString(appUUID,
+    String unencryptedSignature = MAuthSignatureHelper.generateUnencryptedSignature(appUUID,
         httpVerb, requestPath, requestPayload, String.valueOf(currentTime));
 
-    String encryptedHeaderString;
+    String encryptedSignature;
     try {
-      encryptedHeaderString =
-          MAuthSignatureHelper.encryptHeaderString(privateKey, unencryptedHeaderString);
+      encryptedSignature =
+          MAuthSignatureHelper.encryptSignature(privateKey, unencryptedSignature);
     } catch (GeneralSecurityException | IOException | CryptoException e) {
       throw new MAuthSigningException(e);
     }
 
     HashMap<String, String> headers = new HashMap<>();
     headers.put("x-mws-authentication",
-        MAuthHeadersHelper.createAuthenticationHeaderValue(appUUID, encryptedHeaderString));
+        MAuthHeadersHelper.createAuthenticationHeaderValue(appUUID, encryptedSignature));
     headers.put("x-mws-time", MAuthHeadersHelper.createTimeHeaderValue(currentTime));
 
     return headers;
