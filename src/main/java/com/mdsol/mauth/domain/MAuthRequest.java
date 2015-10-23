@@ -6,9 +6,11 @@ import java.util.Arrays;
 import java.util.UUID;
 
 /**
- * Wrapper for an incoming MAuth request data necessary to validate it.
+ * Wrapper for an incoming MAuth request data necessary to authenticate it.
  */
 public class MAuthRequest {
+
+  private final static String VALIDATION_EXCEPTION_MESSAGE_TEMPLATE = "%s cannot be null or empty.";
 
   private final UUID appUUID;
   private final String requestSignature;
@@ -19,6 +21,13 @@ public class MAuthRequest {
 
   private MAuthRequest(UUID appUUID, String requestSignature, byte[] messagePayload,
       String httpMethod, long requestTime, String resourcePath) {
+    validateNotNull(appUUID, "Application UUID");
+    validateNotBlank(requestSignature, "Request signature");
+    validateNotBlank(httpMethod, "Http method");
+    validateNotBlank(resourcePath, "Resource path");
+    validateMessagePayload(messagePayload);
+    validateRequestTime(requestTime);
+
     this.appUUID = appUUID;
     this.requestSignature = requestSignature;
     this.messagePayload = messagePayload;
@@ -51,13 +60,40 @@ public class MAuthRequest {
     return resourcePath;
   }
 
+  private void validateNotNull(Object field, String fieldNameInExceptionMessage) {
+    if (field == null) {
+      throw new IllegalArgumentException(
+          String.format(VALIDATION_EXCEPTION_MESSAGE_TEMPLATE, fieldNameInExceptionMessage));
+    }
+  }
+
+  private void validateNotBlank(String field, String fieldNameInExceptionMessage) {
+    if (StringUtils.isBlank(field)) {
+      throw new IllegalArgumentException(
+          String.format(VALIDATION_EXCEPTION_MESSAGE_TEMPLATE, fieldNameInExceptionMessage));
+    }
+  }
+
+  private void validateMessagePayload(byte[] messagePayload) {
+    if (messagePayload == null || messagePayload.length == 0) {
+      throw new IllegalArgumentException(
+          String.format(VALIDATION_EXCEPTION_MESSAGE_TEMPLATE, "Message payload"));
+    }
+  }
+
+  private void validateRequestTime(long requestTime) {
+    if (requestTime <= 0) {
+      throw new IllegalArgumentException("Request time cannot be negative or 0.");
+    }
+  }
+
   public static final class Builder {
 
     private UUID appUUID;
     private String requestSignature;
     private byte[] messagePayload;
     private String httpMethod;
-    private String requestTime;
+    private long requestTime;
     private String resourcePath;
 
     public static Builder get() {
@@ -84,7 +120,7 @@ public class MAuthRequest {
       return this;
     }
 
-    public Builder withRequestTime(String requestTime) {
+    public Builder withRequestTime(long requestTime) {
       this.requestTime = requestTime;
       return this;
     }
@@ -95,39 +131,8 @@ public class MAuthRequest {
     }
 
     public MAuthRequest build() {
-      final String exceptionMessageTemplate = "%s cannot be null or empty.";
-
-      if (appUUID == null) {
-        throw new IllegalArgumentException(
-            String.format(exceptionMessageTemplate, "Application UUID"));
-      }
-      if (StringUtils.isBlank(requestSignature)) {
-        throw new IllegalArgumentException(
-            String.format(exceptionMessageTemplate, "Request signature"));
-      }
-      if (messagePayload == null || messagePayload.length == 0) {
-        throw new IllegalArgumentException(
-            String.format(exceptionMessageTemplate, "Message payload"));
-      }
-      if (StringUtils.isBlank(httpMethod)) {
-        throw new IllegalArgumentException(String.format(exceptionMessageTemplate, "Http method"));
-      }
-      if (StringUtils.isBlank(requestTime)) {
-        throw new IllegalArgumentException(String.format(exceptionMessageTemplate, "Request time"));
-      }
-      try {
-        if (Long.parseLong(requestTime) < 0) {
-          throw new IllegalArgumentException("Request time cannot be negative.");
-        }
-      } catch (NumberFormatException ex) {
-        throw new IllegalArgumentException("Request time must express the epoch time.");
-      }
-      if (StringUtils.isBlank(resourcePath)) {
-        throw new IllegalArgumentException(
-            String.format(exceptionMessageTemplate, "Resource path"));
-      }
-      return new MAuthRequest(appUUID, requestSignature, messagePayload, httpMethod,
-          Long.parseLong(requestTime), resourcePath);
+      return new MAuthRequest(appUUID, requestSignature, messagePayload, httpMethod, requestTime,
+          resourcePath);
     }
   }
 }

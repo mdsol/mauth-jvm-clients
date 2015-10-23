@@ -11,6 +11,8 @@ import java.util.UUID;
  */
 public class MAuthConfiguration {
 
+  private final static String VALIDATION_EXCEPTION_MESSAGE_TEMPLATE = "%s cannot be null or empty.";
+
   private final UUID appUUID;
   private final String publicKey;
   private final transient String privateKey;
@@ -20,6 +22,13 @@ public class MAuthConfiguration {
 
   private MAuthConfiguration(UUID appUUID, String publicKey, String privateKey, String mAuthUrl,
       String mAuthRequestUrlPath, String securityTokensUrl) {
+    validateNotNull(appUUID, "Application UUID");
+    validateNotBlank(publicKey, "Public key");
+    validateNotBlank(privateKey, "Private key");
+    validateNotBlank(mAuthUrl, "MAuth url");
+    validateNotBlank(mAuthRequestUrlPath, "MAuth request url path");
+    validateNotBlank(securityTokensUrl, "Security token url");
+
     this.appUUID = appUUID;
     this.publicKey = publicKey;
     this.privateKey = privateKey;
@@ -50,6 +59,20 @@ public class MAuthConfiguration {
 
   public String getSecurityTokensUrl() {
     return securityTokensUrl;
+  }
+
+  private void validateNotNull(Object field, String fieldNameInExceptionMessage) {
+    if (field == null) {
+      throw new IllegalArgumentException(
+          String.format(VALIDATION_EXCEPTION_MESSAGE_TEMPLATE, fieldNameInExceptionMessage));
+    }
+  }
+
+  private void validateNotBlank(String field, String fieldNameInExceptionMessage) {
+    if (StringUtils.isBlank(field)) {
+      throw new IllegalArgumentException(
+          String.format(VALIDATION_EXCEPTION_MESSAGE_TEMPLATE, fieldNameInExceptionMessage));
+    }
   }
 
   public static class Builder {
@@ -95,30 +118,6 @@ public class MAuthConfiguration {
     }
 
     public MAuthConfiguration build() {
-      final String exceptionMessageTemplate = "%s cannot be null or empty.";
-
-      if (appUUID == null) {
-        throw new IllegalArgumentException(
-            String.format(exceptionMessageTemplate, "Application UUID"));
-      }
-      if (StringUtils.isBlank(publicKey)) {
-        throw new IllegalArgumentException(String.format(exceptionMessageTemplate, "Public key"));
-      }
-      if (StringUtils.isBlank(privateKey)) {
-        throw new IllegalArgumentException(String.format(exceptionMessageTemplate, "Private key"));
-      }
-      if (StringUtils.isBlank(mAuthUrl)) {
-        throw new IllegalArgumentException(String.format(exceptionMessageTemplate, "MAuth url"));
-      }
-      if (StringUtils.isBlank(mAuthRequestUrlPath)) {
-        throw new IllegalArgumentException(
-            String.format(exceptionMessageTemplate, "MAuth request url path"));
-      }
-      if (StringUtils.isBlank(securityTokensUrl)) {
-        throw new IllegalArgumentException(
-            String.format(exceptionMessageTemplate, "Security token url"));
-      }
-
       return new MAuthConfiguration(appUUID, publicKey, privateKey, mAuthUrl, mAuthRequestUrlPath,
           securityTokensUrl);
     }

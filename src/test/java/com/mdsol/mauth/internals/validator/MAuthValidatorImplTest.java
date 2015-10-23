@@ -41,7 +41,7 @@ public class MAuthValidatorImplTest {
   private static final String CLIENT_REQUEST_METHOD = HttpPost.METHOD_NAME;
   private static final String CLIENT_REQUEST_PATH = "/resource/path";
   private static final String CLIENT_REQUEST_BODY = "message here";
-  private static final String CLIENT_X_MWS_TIME_HEADER_VALUE = "1444672122";
+  private static final long CLIENT_X_MWS_TIME_HEADER_VALUE = 1444672122L;
 
   private static final String CLIENT_UNICODE_REQUEST_SIGNATURE =
       "uJ2HR9ntb9v+5cbx8X5y/SYuQCTGz+f9jxk2AJCR02mrW/nWspN1H9jvC6Y"
@@ -53,7 +53,7 @@ public class MAuthValidatorImplTest {
   private static final String CLIENT_UNICODE_REQUEST_PATH = "/resource/path";
   private static final String CLIENT_UNICODE_REQUEST_BODY =
       "Message with some Unicode characters inside: ș吉ń艾ęتあù";
-  private static final String CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE = "1444748974";
+  private static final long CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE = 1444748974L;
 
   private static final String PUBLIC_KEY = FixturesLoader.getPublicKey();
 
@@ -75,7 +75,7 @@ public class MAuthValidatorImplTest {
   public void validatingRequestSentAfter5MinutesShouldFail() throws Exception {
     // Arrange
     MAuthValidatorImpl validator = new MAuthValidatorImpl(mock(MAuthClient.class),
-        new MockEpochTime(Long.parseLong(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE) + 600));
+        new MockEpochTime(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE + 600));
     MAuthRequest request = getRequestWithUnicodeCharactersInBody();
 
     // Act & Assert
@@ -90,8 +90,8 @@ public class MAuthValidatorImplTest {
     MAuthClient client = mock(MAuthClient.class);
     when(client.getPublicKey(Mockito.eq(CLIENT_APP_ID)))
         .thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
-    MAuthValidatorImpl validator = new MAuthValidatorImpl(client,
-        new MockEpochTime(Long.parseLong(CLIENT_X_MWS_TIME_HEADER_VALUE) + 3));
+    MAuthValidatorImpl validator =
+        new MAuthValidatorImpl(client, new MockEpochTime(CLIENT_X_MWS_TIME_HEADER_VALUE + 3));
     MAuthRequest invalidRequest = getSimpleRequestWithWrongSignature();
 
     // Act
@@ -107,8 +107,8 @@ public class MAuthValidatorImplTest {
     MAuthClient client = mock(MAuthClient.class);
     when(client.getPublicKey(Mockito.eq(CLIENT_APP_ID)))
         .thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
-    MAuthValidatorImpl validator = new MAuthValidatorImpl(client,
-        new MockEpochTime(Long.parseLong(CLIENT_X_MWS_TIME_HEADER_VALUE) + 3));
+    MAuthValidatorImpl validator =
+        new MAuthValidatorImpl(client, new MockEpochTime(CLIENT_X_MWS_TIME_HEADER_VALUE + 3));
     MAuthRequest request = getSimpleRequest();
 
     // Act
@@ -125,7 +125,7 @@ public class MAuthValidatorImplTest {
     when(client.getPublicKey(Mockito.eq(CLIENT_APP_ID)))
         .thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
     MAuthValidatorImpl validator = new MAuthValidatorImpl(client,
-        new MockEpochTime(Long.parseLong(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE) + 3));
+        new MockEpochTime(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE + 3));
     MAuthRequest request = getRequestWithUnicodeCharactersInBody();
 
     // Act

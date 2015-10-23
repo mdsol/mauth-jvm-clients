@@ -29,7 +29,7 @@ public class MAuthRequestTest {
   private static final String CLIENT_REQUEST_PATH = "/resource/path";
   private static final byte[] CLIENT_REQUEST_PAYLOAD =
       "message here".getBytes(StandardCharsets.UTF_8);
-  private static final String CLIENT_REQUEST_TIME = "1444672122";
+  private static final long CLIENT_REQUEST_TIME = 1444672122L;
 
   @Test
   public void shouldNotAllowToCreateRequestWithoutAppUUID() {
@@ -74,7 +74,7 @@ public class MAuthRequestTest {
   @Test
   public void shouldNotAllowToCreateRequestWithoutRequestTime() {
     expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage("Request time cannot be null or empty.");
+    expectedException.expectMessage("Request time cannot be negative or 0.");
 
     MAuthRequest.Builder.get().withHttpMethod(CLIENT_REQUEST_METHOD).withAppUUID(CLIENT_APP_UUID)
         .withRequestSignature(CLIENT_REQUEST_SIGNATURE).withMessagePayload(CLIENT_REQUEST_PAYLOAD)
@@ -82,13 +82,13 @@ public class MAuthRequestTest {
   }
 
   @Test
-  public void shouldNotAllowToCreateRequestWithInvalidFormatOfRequestTime() {
+  public void shouldNotAllowToCreateRequestWithNegativeRequestTime() {
     expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage("Request time must express the epoch time.");
+    expectedException.expectMessage("Request time cannot be negative or 0.");
 
     MAuthRequest.Builder.get().withHttpMethod(CLIENT_REQUEST_METHOD).withAppUUID(CLIENT_APP_UUID)
         .withRequestSignature(CLIENT_REQUEST_SIGNATURE).withMessagePayload(CLIENT_REQUEST_PAYLOAD)
-        .withResourcePath(CLIENT_REQUEST_PATH).withRequestTime("10/10/16 13:21:58").build();
+        .withRequestTime(-1L).withResourcePath(CLIENT_REQUEST_PATH).build();
   }
 
   @Test
@@ -121,7 +121,7 @@ public class MAuthRequestTest {
     assertThat(request.getAppUUID(), equalTo(CLIENT_APP_UUID));
     assertThat(request.getHttpMethod(), equalTo(CLIENT_REQUEST_METHOD));
     assertThat(request.getResourcePath(), equalTo(CLIENT_REQUEST_PATH));
-    assertThat(request.getRequestTime(), equalTo(Long.parseLong(CLIENT_REQUEST_TIME)));
+    assertThat(request.getRequestTime(), equalTo(CLIENT_REQUEST_TIME));
     assertThat(request.getMessagePayload(), equalTo(CLIENT_REQUEST_PAYLOAD));
   }
 
