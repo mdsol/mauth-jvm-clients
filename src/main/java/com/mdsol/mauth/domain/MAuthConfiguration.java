@@ -13,7 +13,7 @@ public class MAuthConfiguration {
 
   private final UUID appUUID;
   private final String publicKey;
-  private final String privateKey;
+  private final transient String privateKey;
   private final String mAuthUrl;
   private final String mAuthRequestUrlPath;
   private final String securityTokensUrl;
