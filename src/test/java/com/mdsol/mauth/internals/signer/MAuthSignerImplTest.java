@@ -11,12 +11,14 @@ import com.mdsol.mauth.utils.MockEpochTime;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.security.Security;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,7 +28,7 @@ import java.util.UUID;
  *
  * @author Jonathan Price <jprice@mdsol.com>
  */
-public class MAuthRequestSignerTest {
+public class MAuthSignerImplTest {
 
   private static final long TEST_EPOCH_TIME = 1424700000L;
   private static final String TEST_REQUEST_BODY = "Request Body";
@@ -42,13 +44,14 @@ public class MAuthRequestSignerTest {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
-  private MAuthSignerImpl mAuthRequestSigner;
+  private MAuthSigner mAuthRequestSigner;
 
   @BeforeClass
   public static void setUpClass() throws Exception {
     privateKeyString = FixturesLoader.getPrivateKey();
     EpochTime testEpochTime = new MockEpochTime(TEST_EPOCH_TIME);
     MAuthSignerImpl.setEpochTime(testEpochTime);
+    Security.addProvider(new BouncyCastleProvider());
   }
 
   @Before
