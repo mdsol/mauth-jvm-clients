@@ -35,7 +35,7 @@ public class MAuthServiceClient implements MAuthService {
       throw new IllegalArgumentException("MAuth configuration cannot be null.");
     }
     EpochTime epochTime = new CurrentEpochTime();
-    this.signer = new MAuthSignerImpl(configuration.getAppUUID(), configuration.getPrivateKey());
+    this.signer = new MAuthSignerImpl(configuration.getAppUUID(), configuration.getPrivateKey(), epochTime);
     this.validator = new MAuthValidatorImpl(new MAuthHttpClient(configuration, signer), epochTime);
   }
 

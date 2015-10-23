@@ -3,7 +3,6 @@ package com.mdsol.mauth.internals.signer;
 import static com.mdsol.mauth.internals.utils.MAuthKeysHelper.getPrivateKeyFromString;
 
 import com.mdsol.mauth.exceptions.MAuthSigningException;
-import com.mdsol.mauth.internals.utils.CurrentEpochTime;
 import com.mdsol.mauth.internals.utils.EpochTime;
 import com.mdsol.mauth.internals.utils.MAuthSignatureHelper;
 
@@ -22,28 +21,18 @@ import java.util.UUID;
 
 public class MAuthSignerImpl implements MAuthSigner {
 
-  private static EpochTime epochTime = new CurrentEpochTime();
-
-  /**
-   * Allows replacement of the EpochTime object used for constructing headers, for testing purposes
-   * only.
-   * 
-   * @param epochTime An object of a class the implements the EpochTime interface
-   */
-  public static void setEpochTime(EpochTime epochTime) {
-    MAuthSignerImpl.epochTime = epochTime;
-  }
-
   private final UUID appUUID;
   private final PrivateKey privateKey;
+  private final EpochTime epochTime;
 
-  public MAuthSignerImpl(UUID appUUID, String privateKey) {
-    this(appUUID, getPrivateKeyFromString(privateKey));
+  public MAuthSignerImpl(UUID appUUID, String privateKey, EpochTime epochTime) {
+    this(appUUID, getPrivateKeyFromString(privateKey), epochTime);
   }
 
-  public MAuthSignerImpl(UUID appUUID, PrivateKey privateKey) {
+  public MAuthSignerImpl(UUID appUUID, PrivateKey privateKey, EpochTime epochTime) {
     this.appUUID = appUUID;
     this.privateKey = privateKey;
+    this.epochTime = epochTime;
   }
 
   @Override

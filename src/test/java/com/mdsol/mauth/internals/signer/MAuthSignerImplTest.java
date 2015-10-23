@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.mdsol.mauth.exceptions.MAuthKeyException;
-import com.mdsol.mauth.internals.utils.EpochTime;
 import com.mdsol.mauth.utils.FixturesLoader;
 import com.mdsol.mauth.utils.MockEpochTime;
 
@@ -49,14 +48,13 @@ public class MAuthSignerImplTest {
   @BeforeClass
   public static void setUpClass() throws Exception {
     privateKeyString = FixturesLoader.getPrivateKey();
-    EpochTime testEpochTime = new MockEpochTime(TEST_EPOCH_TIME);
-    MAuthSignerImpl.setEpochTime(testEpochTime);
     Security.addProvider(new BouncyCastleProvider());
   }
 
   @Before
   public void setUp() throws Exception {
-    mAuthRequestSigner = new MAuthSignerImpl(testUUID, privateKeyString);
+    mAuthRequestSigner =
+        new MAuthSignerImpl(testUUID, privateKeyString, new MockEpochTime(TEST_EPOCH_TIME));
   }
 
   @Test
@@ -64,7 +62,7 @@ public class MAuthSignerImplTest {
     String privateKeyString = "This is not a valid key";
     thrown.expect(MAuthKeyException.class);
     thrown.expectMessage("Unable to process private key string");
-    new MAuthSignerImpl(testUUID, privateKeyString);
+    new MAuthSignerImpl(testUUID, privateKeyString, new MockEpochTime(TEST_EPOCH_TIME));
     fail("Expected exception not thrown");
   }
 
