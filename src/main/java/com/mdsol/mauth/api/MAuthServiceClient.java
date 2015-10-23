@@ -2,7 +2,6 @@ package com.mdsol.mauth.api;
 
 import com.mdsol.mauth.domain.MAuthConfiguration;
 import com.mdsol.mauth.domain.MAuthRequest;
-import com.mdsol.mauth.exceptions.MAuthSigningException;
 import com.mdsol.mauth.internals.client.MAuthHttpClient;
 import com.mdsol.mauth.internals.signer.MAuthSigner;
 import com.mdsol.mauth.internals.signer.MAuthSignerImpl;
@@ -46,12 +45,12 @@ public class MAuthServiceClient implements MAuthService {
 
   @Override
   public Map<String, String> generateRequestHeaders(String httpVerb, String requestPath,
-      String requestPayload) throws MAuthSigningException {
+      String requestPayload) {
     return signer.generateRequestHeaders(httpVerb, requestPath, requestPayload);
   }
 
   @Override
-  public void signRequest(HttpUriRequest request) throws MAuthSigningException {
+  public void signRequest(HttpUriRequest request) {
     signer.signRequest(request);
   }
 }
