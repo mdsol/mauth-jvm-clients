@@ -23,13 +23,13 @@ import java.util.UUID;
 
 public class MAuthSignatureHelper {
 
-  public static String generateUnencryptedHeaderString(UUID appUUID, String httpMethod,
+  public static String generateUnencryptedSignature(UUID appUUID, String httpMethod,
       String resourceUrl, String body, String epochTime) {
     return httpMethod + "\n" + resourceUrl + "\n" + body + "\n" + appUUID.toString() + "\n"
         + epochTime;
   }
 
-  public static String encryptHeaderString(PrivateKey privateKey, String unencryptedString)
+  public static String encryptSignature(PrivateKey privateKey, String unencryptedString)
       throws GeneralSecurityException, IOException, CryptoException {
     String hexEncodedString = getHexEncodedDigestedString(unencryptedString);
 

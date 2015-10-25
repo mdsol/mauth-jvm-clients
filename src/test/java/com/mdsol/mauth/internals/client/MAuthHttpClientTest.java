@@ -31,9 +31,9 @@ public class MAuthHttpClientTest {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
-  private static final String X_MWS_TIME_HEADER_NAME = "X-Mws-Time";
+  private static final String X_MWS_TIME_HEADER_NAME = "x-mws-time";
   private static final String EXPECTED_TIME_HEADER_VALUE = "1444672125";
-  private static final String X_MWS_AUTHENTICATION_HEADER_NAME = "X-Mws-Authentication";
+  private static final String X_MWS_AUTHENTICATION_HEADER_NAME = "x-mws-authentication";
   private static final String EXPECTED_AUTHENTICATION_HEADER_VALUE =
       "MWS 92a1869e-c80d-4f06-8775-6c4ebb0758e0:lTMYNWPaG4...";
 

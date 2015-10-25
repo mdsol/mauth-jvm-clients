@@ -1,5 +1,7 @@
 package com.mdsol.mauth.domain;
 
+import com.mdsol.mauth.internals.utils.MAuthHeadersHelper;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
@@ -10,7 +12,10 @@ import java.util.UUID;
  */
 public class MAuthRequest {
 
-  private final static String VALIDATION_EXCEPTION_MESSAGE_TEMPLATE = "%s cannot be null or empty.";
+  public static final String MAUTH_TIME_HEADER_NAME = "x-mws-time";
+  public static final String MAUTH_AUTHENTICATION_HEADER_NAME = "x-mws-authentication";
+
+  private static final String VALIDATION_EXCEPTION_MESSAGE_TEMPLATE = "%s cannot be null or empty.";
 
   private final UUID appUUID;
   private final String requestSignature;
@@ -19,10 +24,16 @@ public class MAuthRequest {
   private final long requestTime;
   private final String resourcePath;
 
-  private MAuthRequest(UUID appUUID, String requestSignature, byte[] messagePayload,
-      String httpMethod, long requestTime, String resourcePath) {
-    validateNotNull(appUUID, "Application UUID");
-    validateNotBlank(requestSignature, "Request signature");
+  public MAuthRequest(String authenticationHeaderValue, byte[] messagePayload, String httpMethod,
+      String timeHeaderValue, String resourcePath) {
+
+    validateNotBlank(authenticationHeaderValue, "Authentication header value");
+    UUID appUUID = MAuthHeadersHelper.getAppUUIDFromAuthenticationHeader(authenticationHeaderValue);
+    String requestSignature = MAuthHeadersHelper.getSignatureFromAuthenticationHeader(authenticationHeaderValue);
+
+    validateNotBlank(timeHeaderValue, "Time header value");
+    long requestTime = MAuthHeadersHelper.getRequestTimeFromTimeHeader(timeHeaderValue);
+
     validateNotBlank(httpMethod, "Http method");
     validateNotBlank(resourcePath, "Resource path");
     validateMessagePayload(messagePayload);
@@ -60,13 +71,6 @@ public class MAuthRequest {
     return resourcePath;
   }
 
-  private void validateNotNull(Object field, String fieldNameInExceptionMessage) {
-    if (field == null) {
-      throw new IllegalArgumentException(
-          String.format(VALIDATION_EXCEPTION_MESSAGE_TEMPLATE, fieldNameInExceptionMessage));
-    }
-  }
-
   private void validateNotBlank(String field, String fieldNameInExceptionMessage) {
     if (StringUtils.isBlank(field)) {
       throw new IllegalArgumentException(
@@ -89,24 +93,23 @@ public class MAuthRequest {
 
   public static final class Builder {
 
-    private UUID appUUID;
-    private String requestSignature;
+    private String authenticationHeaderValue;
     private byte[] messagePayload;
     private String httpMethod;
-    private long requestTime;
+    private String timeHeaderValue;
     private String resourcePath;
 
     public static Builder get() {
       return new Builder();
     }
 
-    public Builder withAppUUID(UUID appUUID) {
-      this.appUUID = appUUID;
+    public Builder withAuthenticationHeaderValue(String authenticationHeaderValue) {
+      this.authenticationHeaderValue = authenticationHeaderValue;
       return this;
     }
 
-    public Builder withRequestSignature(String requestSignature) {
-      this.requestSignature = requestSignature;
+    public Builder withTimeHeaderValue(String timeHeaderValue) {
+      this.timeHeaderValue = timeHeaderValue;
       return this;
     }
 
@@ -120,19 +123,14 @@ public class MAuthRequest {
       return this;
     }
 
-    public Builder withRequestTime(long requestTime) {
-      this.requestTime = requestTime;
-      return this;
-    }
-
     public Builder withResourcePath(String resourcePath) {
       this.resourcePath = resourcePath;
       return this;
     }
 
     public MAuthRequest build() {
-      return new MAuthRequest(appUUID, requestSignature, messagePayload, httpMethod, requestTime,
-          resourcePath);
+      return new MAuthRequest(authenticationHeaderValue, messagePayload, httpMethod,
+          timeHeaderValue, resourcePath);
     }
   }
 }

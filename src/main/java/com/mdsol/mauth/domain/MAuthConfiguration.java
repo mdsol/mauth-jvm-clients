@@ -11,7 +11,7 @@ import java.util.UUID;
  */
 public class MAuthConfiguration {
 
-  private final static String VALIDATION_EXCEPTION_MESSAGE_TEMPLATE = "%s cannot be null or empty.";
+  private static final String VALIDATION_EXCEPTION_MESSAGE_TEMPLATE = "%s cannot be null or empty.";
 
   private final UUID appUUID;
   private final String publicKey;

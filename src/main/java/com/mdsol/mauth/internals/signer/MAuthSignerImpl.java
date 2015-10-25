@@ -4,6 +4,7 @@ import static com.mdsol.mauth.internals.utils.MAuthKeysHelper.getPrivateKeyFromS
 
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import com.mdsol.mauth.internals.utils.EpochTime;
+import com.mdsol.mauth.internals.utils.MAuthHeadersHelper;
 import com.mdsol.mauth.internals.utils.MAuthSignatureHelper;
 
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -42,22 +43,23 @@ public class MAuthSignerImpl implements MAuthSigner {
       requestPayload = "";
     }
     // mAuth uses an epoch time measured in seconds
-    String epochTimeString = String.valueOf(epochTime.getSeconds());
+    long currentTime = epochTime.getSeconds();
 
-    String unencryptedHeaderString = MAuthSignatureHelper.generateUnencryptedHeaderString(appUUID,
-        httpVerb, requestPath, requestPayload, epochTimeString);
+    String unencryptedSignature = MAuthSignatureHelper.generateUnencryptedSignature(appUUID,
+        httpVerb, requestPath, requestPayload, String.valueOf(currentTime));
 
-    String encryptedHeaderString;
+    String encryptedSignature;
     try {
-      encryptedHeaderString =
-          MAuthSignatureHelper.encryptHeaderString(privateKey, unencryptedHeaderString);
+      encryptedSignature =
+          MAuthSignatureHelper.encryptSignature(privateKey, unencryptedSignature);
     } catch (GeneralSecurityException | IOException | CryptoException e) {
       throw new MAuthSigningException(e);
     }
 
     HashMap<String, String> headers = new HashMap<>();
-    headers.put("x-mws-authentication", "MWS " + appUUID.toString() + ":" + encryptedHeaderString);
-    headers.put("x-mws-time", epochTimeString);
+    headers.put("x-mws-authentication",
+        MAuthHeadersHelper.createAuthenticationHeaderValue(appUUID, encryptedSignature));
+    headers.put("x-mws-time", MAuthHeadersHelper.createTimeHeaderValue(currentTime));
 
     return headers;
   }

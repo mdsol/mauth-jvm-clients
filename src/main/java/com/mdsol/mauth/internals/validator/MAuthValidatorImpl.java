@@ -36,7 +36,7 @@ public class MAuthValidatorImpl implements MAuthValidator {
         MAuthSignatureHelper.decryptSignature(publicKey, mAuthRequest.getRequestSignature());
 
     // Recreate the plain text signature, based on the incoming request parameters, and hash it.
-    String unencryptedRequestString = MAuthSignatureHelper.generateUnencryptedHeaderString(
+    String unencryptedRequestString = MAuthSignatureHelper.generateUnencryptedSignature(
         mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(), mAuthRequest.getResourcePath(),
         new String(mAuthRequest.getMessagePayload(), StandardCharsets.UTF_8),
         String.valueOf(mAuthRequest.getRequestTime()));
