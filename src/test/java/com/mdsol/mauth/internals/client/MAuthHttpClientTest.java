@@ -57,7 +57,7 @@ public class MAuthHttpClientTest {
     FakeMAuthServer.stop();
   }
 
-  private MAuthHttpClient getClientWithMockedSigner() throws Exception {
+  private MAuthHttpClient getClientWithMockedSigner() {
     MAuthConfiguration configuration = getMAuthConfiguration();
 
     MAuthSigner mockedSigner = mock(MAuthSigner.class);

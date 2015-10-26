@@ -36,7 +36,7 @@ public interface MAuthService {
    * @param requestPayload The payload of the request
    * @return MAuth headers which should be appended to the request before sending.
    */
-  public Map<String, String> generateRequestHeaders(String httpVerb, String requestPath,
+  Map<String, String> generateRequestHeaders(String httpVerb, String requestPath,
       String requestPayload);
 
   /**
@@ -48,5 +48,5 @@ public interface MAuthService {
    *
    * @param request {@link HttpUriRequest}, e.g. {@link HttpGet} or {@link HttpPost}
    */
-  public void signRequest(HttpUriRequest request);
+  void signRequest(HttpUriRequest request);
 }

@@ -14,7 +14,6 @@ import org.apache.http.util.EntityUtils;
 import org.bouncycastle.crypto.CryptoException;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +51,7 @@ public class MAuthSignerImpl implements MAuthSigner {
     try {
       encryptedSignature =
           MAuthSignatureHelper.encryptSignature(privateKey, unencryptedSignature);
-    } catch (GeneralSecurityException | IOException | CryptoException e) {
+    } catch (IOException | CryptoException e) {
       throw new MAuthSigningException(e);
     }
 
