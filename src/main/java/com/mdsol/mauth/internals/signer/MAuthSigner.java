@@ -23,7 +23,7 @@ public interface MAuthSigner {
    * @return MAuth headers which should be appended to the request before sending.
    * @throws MAuthSigningException
    */
-  public Map<String, String> generateRequestHeaders(String httpVerb, String requestPath,
+  Map<String, String> generateRequestHeaders(String httpVerb, String requestPath,
       String requestPayload) throws MAuthSigningException;
 
   /**
@@ -36,6 +36,6 @@ public interface MAuthSigner {
    * @param request {@link HttpUriRequest}, e.g. {@link HttpGet} or {@link HttpPost}
    * @throws MAuthSigningException
    */
-  public void signRequest(HttpUriRequest request) throws MAuthSigningException;
+  void signRequest(HttpUriRequest request) throws MAuthSigningException;
 
 }

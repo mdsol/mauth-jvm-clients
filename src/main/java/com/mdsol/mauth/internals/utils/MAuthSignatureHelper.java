@@ -13,7 +13,6 @@ import org.bouncycastle.crypto.util.PublicKeyFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -30,7 +29,7 @@ public class MAuthSignatureHelper {
   }
 
   public static String encryptSignature(PrivateKey privateKey, String unencryptedString)
-      throws GeneralSecurityException, IOException, CryptoException {
+      throws IOException, CryptoException {
     String hexEncodedString = getHexEncodedDigestedString(unencryptedString);
 
     // encrypt

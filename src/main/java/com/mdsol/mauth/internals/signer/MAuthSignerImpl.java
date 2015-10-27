@@ -2,6 +2,7 @@ package com.mdsol.mauth.internals.signer;
 
 import static com.mdsol.mauth.internals.utils.MAuthKeysHelper.getPrivateKeyFromString;
 
+import com.mdsol.mauth.domain.MAuthRequest;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import com.mdsol.mauth.internals.utils.EpochTime;
 import com.mdsol.mauth.internals.utils.MAuthHeadersHelper;
@@ -14,7 +15,6 @@ import org.apache.http.util.EntityUtils;
 import org.bouncycastle.crypto.CryptoException;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,14 +52,14 @@ public class MAuthSignerImpl implements MAuthSigner {
     try {
       encryptedSignature =
           MAuthSignatureHelper.encryptSignature(privateKey, unencryptedSignature);
-    } catch (GeneralSecurityException | IOException | CryptoException e) {
+    } catch (IOException | CryptoException e) {
       throw new MAuthSigningException(e);
     }
 
     HashMap<String, String> headers = new HashMap<>();
-    headers.put("x-mws-authentication",
+    headers.put(MAuthRequest.MAUTH_AUTHENTICATION_HEADER_NAME,
         MAuthHeadersHelper.createAuthenticationHeaderValue(appUUID, encryptedSignature));
-    headers.put("x-mws-time", MAuthHeadersHelper.createTimeHeaderValue(currentTime));
+    headers.put(MAuthRequest.MAUTH_TIME_HEADER_NAME, MAuthHeadersHelper.createTimeHeaderValue(currentTime));
 
     return headers;
   }

@@ -8,7 +8,6 @@ import com.mdsol.mauth.internals.utils.MAuthKeysHelper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -67,8 +66,7 @@ public class MAuthHttpClient implements MAuthClient {
   private class PublicKeyResponseHandler implements ResponseHandler<String> {
 
     @Override
-    public String handleResponse(HttpResponse response)
-        throws ClientProtocolException, IOException {
+    public String handleResponse(HttpResponse response) throws IOException {
       if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
         HttpEntity entity = response.getEntity();
         String responseAsString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
