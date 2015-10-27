@@ -2,6 +2,7 @@ package com.mdsol.mauth.internals.signer;
 
 import static com.mdsol.mauth.internals.utils.MAuthKeysHelper.getPrivateKeyFromString;
 
+import com.mdsol.mauth.domain.MAuthRequest;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import com.mdsol.mauth.internals.utils.EpochTime;
 import com.mdsol.mauth.internals.utils.MAuthHeadersHelper;
@@ -56,9 +57,9 @@ public class MAuthSignerImpl implements MAuthSigner {
     }
 
     HashMap<String, String> headers = new HashMap<>();
-    headers.put("x-mws-authentication",
+    headers.put(MAuthRequest.MAUTH_AUTHENTICATION_HEADER_NAME,
         MAuthHeadersHelper.createAuthenticationHeaderValue(appUUID, encryptedSignature));
-    headers.put("x-mws-time", MAuthHeadersHelper.createTimeHeaderValue(currentTime));
+    headers.put(MAuthRequest.MAUTH_TIME_HEADER_NAME, MAuthHeadersHelper.createTimeHeaderValue(currentTime));
 
     return headers;
   }
