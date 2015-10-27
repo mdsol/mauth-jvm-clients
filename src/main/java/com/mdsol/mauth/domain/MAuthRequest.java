@@ -12,6 +12,9 @@ import java.util.UUID;
  */
 public class MAuthRequest {
 
+  public static final String MAUTH_TIME_HEADER_NAME = "x-mws-time";
+  public static final String MAUTH_AUTHENTICATION_HEADER_NAME = "x-mws-authentication";
+
   private static final String VALIDATION_EXCEPTION_MESSAGE_TEMPLATE = "%s cannot be null or empty.";
 
   private final UUID appUUID;
