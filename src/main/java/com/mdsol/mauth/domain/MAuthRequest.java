@@ -26,18 +26,20 @@ public class MAuthRequest {
 
   public MAuthRequest(String authenticationHeaderValue, byte[] messagePayload, String httpMethod,
       String timeHeaderValue, String resourcePath) {
-
     validateNotBlank(authenticationHeaderValue, "Authentication header value");
     UUID appUUID = MAuthHeadersHelper.getAppUUIDFromAuthenticationHeader(authenticationHeaderValue);
-    String requestSignature = MAuthHeadersHelper.getSignatureFromAuthenticationHeader(authenticationHeaderValue);
+    String requestSignature =
+        MAuthHeadersHelper.getSignatureFromAuthenticationHeader(authenticationHeaderValue);
 
     validateNotBlank(timeHeaderValue, "Time header value");
     long requestTime = MAuthHeadersHelper.getRequestTimeFromTimeHeader(timeHeaderValue);
 
     validateNotBlank(httpMethod, "Http method");
     validateNotBlank(resourcePath, "Resource path");
-    validateMessagePayload(messagePayload);
     validateRequestTime(requestTime);
+    if (messagePayload == null) {
+      messagePayload = new byte[] {};
+    }
 
     this.appUUID = appUUID;
     this.requestSignature = requestSignature;
@@ -75,13 +77,6 @@ public class MAuthRequest {
     if (StringUtils.isBlank(field)) {
       throw new IllegalArgumentException(
           String.format(VALIDATION_EXCEPTION_MESSAGE_TEMPLATE, fieldNameInExceptionMessage));
-    }
-  }
-
-  private void validateMessagePayload(byte[] messagePayload) {
-    if (messagePayload == null || messagePayload.length == 0) {
-      throw new IllegalArgumentException(
-          String.format(VALIDATION_EXCEPTION_MESSAGE_TEMPLATE, "Message payload"));
     }
   }
 

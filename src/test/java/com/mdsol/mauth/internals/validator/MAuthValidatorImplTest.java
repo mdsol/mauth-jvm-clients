@@ -13,6 +13,7 @@ import com.mdsol.mauth.utils.FakeMAuthServer;
 import com.mdsol.mauth.utils.FixturesLoader;
 import com.mdsol.mauth.utils.MockEpochTime;
 
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.AfterClass;
@@ -56,6 +57,18 @@ public class MAuthValidatorImplTest {
   private static final String CLIENT_UNICODE_REQUEST_BODY =
       "Message with some Unicode characters inside: ș吉ń艾ęتあù";
   private static final String CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE = "1444748974";
+
+  private static final String CLIENT_NO_BODY_REQUEST_SIGNATURE =
+      "NddGBdXnB3/ne3oCmYJQ20mASPHifsI0sG3mt034jjRfjlTafOYJ/kt3RJYk"
+          + "OMLT104GtzTgFfQBeTSJpOrBK/+EK9T0V+JNmjrU6Y9FpcH4p3hB2liooKjHK"
+          + "fs0L1u3wEG5VOK5xzpjTxO4SQeFQ7GhoAJpNh1p3kcJIPrxRUy3Fbi3FZzeWfOevS9yrj"
+          + "idU3713xNsg1d/nJP63b/2zT+mcaZHaDHhQ6IL2z9bKc7H7sBqMSJaqJ4GpuNZPvAd/lkP9/n"
+          + "25w5Jd5fbA+phj+K3MIJWmIETItzS9pt5YgAWW1PjAuZd3w9ugTOXwfWNbc7YIAeCqMRMVp5NLndzww==";
+  private static final String CLIENT_NO_BODY_REQUEST_AUTHENTICATION_HEADER =
+      "MWS " + CLIENT_APP_ID + ":" + CLIENT_NO_BODY_REQUEST_SIGNATURE;
+  private static final String CLIENT_NO_BODY_REQUEST_METHOD = HttpGet.METHOD_NAME;
+  private static final String CLIENT_NO_BODY_REQUEST_PATH = "/resource/path";
+  private static final String CLIENT_NO_BODY_X_MWS_TIME_HEADER_VALUE = "1424700000";
 
   private static final String PUBLIC_KEY = FixturesLoader.getPublicKey();
 
@@ -137,6 +150,23 @@ public class MAuthValidatorImplTest {
     assertThat(validationResult, equalTo(true));
   }
 
+  @Test
+  public void validatingValidRequestWithoutBodyShouldPass() throws Exception {
+    // Arrange
+    MAuthClient client = mock(MAuthClient.class);
+    when(client.getPublicKey(Mockito.eq(UUID.fromString(CLIENT_APP_ID))))
+        .thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
+    MAuthValidator validator = new MAuthValidatorImpl(client,
+        new MockEpochTime(Long.parseLong(CLIENT_NO_BODY_X_MWS_TIME_HEADER_VALUE) + 3));
+    MAuthRequest request = getRequestWithoutMessageBody();
+
+    // Act
+    boolean validationResult = validator.validate(request);
+
+    // Assert
+    assertThat(validationResult, equalTo(true));
+  }
+
   private MAuthRequest getSimpleRequest() {
     return MAuthRequest.Builder.get()
         .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
@@ -162,5 +192,14 @@ public class MAuthValidatorImplTest {
         .withMessagePayload(CLIENT_UNICODE_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))
         .withResourcePath(CLIENT_UNICODE_REQUEST_PATH).build();
   }
+
+  private MAuthRequest getRequestWithoutMessageBody() {
+    return MAuthRequest.Builder.get()
+        .withAuthenticationHeaderValue(CLIENT_NO_BODY_REQUEST_AUTHENTICATION_HEADER)
+        .withTimeHeaderValue(CLIENT_NO_BODY_X_MWS_TIME_HEADER_VALUE)
+        .withHttpMethod(CLIENT_NO_BODY_REQUEST_METHOD).withResourcePath(CLIENT_NO_BODY_REQUEST_PATH)
+        .build();
+  }
+
 
 }
