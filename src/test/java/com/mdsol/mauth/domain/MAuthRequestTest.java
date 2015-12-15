@@ -53,28 +53,6 @@ public class MAuthRequestTest {
   }
 
   @Test
-  public void shouldNotAllowToCreateRequestWithoutMessagePayload() {
-    expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage("Message payload cannot be null or empty.");
-
-    MAuthRequest.Builder.get().withHttpMethod(CLIENT_REQUEST_METHOD)
-        .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
-        .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER).withResourcePath(CLIENT_REQUEST_PATH)
-        .build();
-  }
-
-  @Test
-  public void shouldNotAllowToCreateRequestWithEmptyMessagePayload() {
-    expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage("Message payload cannot be null or empty.");
-
-    MAuthRequest.Builder.get().withHttpMethod(CLIENT_REQUEST_METHOD)
-        .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
-        .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER).withResourcePath(CLIENT_REQUEST_PATH)
-        .withMessagePayload(new byte[] {}).build();
-  }
-
-  @Test
   public void shouldNotAllowToCreateRequestWithoutRequestTimeHeader() {
     expectedException.expect(IllegalArgumentException.class);
     expectedException.expectMessage("Time header value cannot be null or empty.");
@@ -118,6 +96,20 @@ public class MAuthRequestTest {
     assertThat(request.getResourcePath(), equalTo(CLIENT_REQUEST_PATH));
     assertThat(request.getRequestTime(), equalTo(Long.parseLong(CLIENT_REQUEST_TIME_HEADER)));
     assertThat(request.getMessagePayload(), equalTo(CLIENT_REQUEST_PAYLOAD));
+  }
+
+  @Test
+  public void shouldCorrectlyCreateMAuthRequestWithoutMessagePayload() {
+    MAuthRequest request = MAuthRequest.Builder.get()
+        .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
+        .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER).withHttpMethod(CLIENT_REQUEST_METHOD)
+        .withResourcePath(CLIENT_REQUEST_PATH).build();
+
+    assertThat(request.getAppUUID(), equalTo(UUID.fromString(CLIENT_APP_UUID)));
+    assertThat(request.getHttpMethod(), equalTo(CLIENT_REQUEST_METHOD));
+    assertThat(request.getResourcePath(), equalTo(CLIENT_REQUEST_PATH));
+    assertThat(request.getRequestTime(), equalTo(Long.parseLong(CLIENT_REQUEST_TIME_HEADER)));
+    assertThat(request.getMessagePayload(), equalTo(new byte[] {}));
   }
 
 }
