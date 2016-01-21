@@ -21,8 +21,9 @@ This is a standalone MAuth client for use by internal Medidata teams and authori
  ``` java
     MAuthService mAuthService = new MAuthServiceClient(configuration);
  ```
+MAuthServiceClient is thread-safe. This means you only need to instantiate it once for given configuration.
 
-3. Use MAuthService to sign your requests, e.g. (using Apache HttpClient):
+3. Use MAuthService to create authentication headers for your requests, e.g. (using Apache HttpClient):
 
  ``` java
     HttpGet request = new HttpGet("http://example.com/resources/1");
