@@ -4,7 +4,7 @@
 
     <groupId>com.mdsol.clients</groupId>
     <artifactId>mauth-client</artifactId>
-    <version>2016.1.1-SNAPSHOT</version>
+    <version>2016.1.2</version>
     <packaging>jar</packaging>
 
     <name>mauth-client</name>
@@ -23,7 +23,7 @@
         <httpclient.version>4.5.1</httpclient.version>
         <junit.version>4.11</junit.version>
         <hamcrest.version>1.3</hamcrest.version>
-        <wiremock.version>1.57</wiremock.version>
+        <wiremock.version>1.58</wiremock.version>
         <mockito.version>1.10.19</mockito.version>
     </properties>
 
