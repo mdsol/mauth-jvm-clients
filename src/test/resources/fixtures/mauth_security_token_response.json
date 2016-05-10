@@ -1,0 +1,7 @@
+{
+  "security_token": {
+    "app_name": "Average App",
+    "app_uuid": "162a4b03-4db9-4631-9d1f-d7195f37128d",
+    "public_key_str": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA62E+E3/I+rH9PZ9Z7GwU\nakZeDbBqBj52sfFyt2M4LBawPojpDBtAHOGxhCff8yncoDa8QRKTqVwn7kiTcjsu\nKub40/JMbnY1ltjaRm473vhMiUZmq1c5jFyU24dEZ7DYFpC1bTpjyCeI6dgzfcqD\naO366/fpuMGURGgVOQ7Fi71FKpYcB5cZp8ywgQjSOfpM9u0e0yLukfSvDxeDGGpV\n1JnD9xcrojJI2iyFe2i+LPESpp6LYHKKHilBbK3cI7uTfiIvdsYc1SLYZQtyNXDC\nBbvJ/zgcSTteh8D9sioL/2uLHKH32VRlDn0zafulP/G1pYyT89hVE1kj6P5A0m6J\nMwIDAQAB\n-----END PUBLIC KEY-----\n"
+  }
+}
