@@ -13,6 +13,13 @@ import java.util.UUID;
 public class MAuthConfiguration {
 
   private static final String VALIDATION_EXCEPTION_MESSAGE_TEMPLATE = "%s cannot be null or empty.";
+  public static final String SECTION_HEADER = "mauth";
+  public static final String APP_UUID_PATH = SECTION_HEADER  + ".app_uuid";
+  public static final String PUBLIC_KEY_PATH = SECTION_HEADER  + ".public_key";
+  public static final String PRIVATE_KEY_PATH = SECTION_HEADER  + ".private_key";
+  public static final String URL_PATH = SECTION_HEADER  + ".url";
+  public static final String REQUEST_URL_PATH = SECTION_HEADER  + ".request_url";
+  public static final String TOKEN_URL_PATH = SECTION_HEADER  + ".token_url";
 
   private final UUID appUUID;
   private final String publicKey;
@@ -141,12 +148,12 @@ public class MAuthConfiguration {
 
     public static MAuthConfiguration parse(Config config){
       return new MAuthConfiguration(
-          UUID.fromString(config.getString("mauth.app_uuid")),
-          config.getString("mauth.public_key"),
-          config.getString("mauth.private_key"),
-          config.getString("mauth.url"),
-          config.getString("mauth.request_url"),
-          config.getString("mauth.token_url")
+          UUID.fromString(config.getString(APP_UUID_PATH)),
+          config.getString(PUBLIC_KEY_PATH),
+          config.getString(PRIVATE_KEY_PATH),
+          config.getString(URL_PATH),
+          config.getString(REQUEST_URL_PATH),
+          config.getString(TOKEN_URL_PATH)
       );
     }
   }
