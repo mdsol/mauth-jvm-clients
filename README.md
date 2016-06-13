@@ -21,6 +21,7 @@ mauth {
 
 **Defaults:**
 If following settings are omitted the default values will be used.
+
 | Setting     | Default Value |
 | ----------- | ------------- |
 | request_url | /mauth/v1     |
