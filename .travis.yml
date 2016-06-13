@@ -1,0 +1,14 @@
+language: java
+jdk:
+- oraclejdk8
+notifications:
+  email: false
+cache:
+  directories:
+  - $HOME/.m2
+before_install:
+- openssl aes-256-cbc -K $encrypted_687694e4a95a_key -iv $encrypted_687694e4a95a_iv
+  -in travis/env_variables.sh.enc -out travis/env_variables.sh -d
+- . travis/env_variables.sh
+install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V --settings travis/settings.xml
+script: mvn test --settings travis/settings.xml

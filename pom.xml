@@ -4,7 +4,7 @@
 
     <groupId>com.mdsol.clients</groupId>
     <artifactId>mauth-client</artifactId>
-    <version>2016.1.2</version>
+    <version>2016.2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>mauth-client</name>
@@ -12,8 +12,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>1.7</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
 
         <bouncycastle.version>1.53</bouncycastle.version>
         <commons.lang.version>3.4</commons.lang.version>
@@ -96,4 +94,48 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <distributionManagement>
+        <repository>
+            <id>central</id>
+            <name>ctms-releases</name>
+            <url>https://etlhydra-artifactory-sandbox.imedidata.net/artifactory/ctms-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshot</id>
+            <name>snapshot</name>
+            <url>https://etlhydra-artifactory-sandbox.imedidata.net/artifactory/ctms-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>central</id>
+            <name>all-repos-release</name>
+            <url>https://etlhydra-artifactory-sandbox.imedidata.net/artifactory/all-repos-release</url>
+        </repository>
+        <repository>
+            <id>snapshot</id>
+            <name>snapshot</name>
+            <url>https://etlhydra-artifactory-sandbox.imedidata.net/artifactory/snapshot/</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
 </project>
