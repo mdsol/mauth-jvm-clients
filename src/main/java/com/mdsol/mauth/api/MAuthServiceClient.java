@@ -10,6 +10,8 @@ import com.mdsol.mauth.internals.utils.EpochTime;
 import com.mdsol.mauth.internals.validator.MAuthValidator;
 import com.mdsol.mauth.internals.validator.MAuthValidatorImpl;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -22,12 +24,23 @@ import java.util.Map;
  */
 public class MAuthServiceClient implements MAuthService {
 
+  public static final String CONFIG_SECTION_HEADER = "mauth";
+
   static {
     Security.addProvider(new BouncyCastleProvider());
   }
 
   private final MAuthSigner signer;
   private final MAuthValidator validator;
+
+  public MAuthServiceClient() {
+    this(ConfigFactory.load());
+  }
+
+  public MAuthServiceClient(Config config) {
+    this(MAuthConfiguration.Builder.parse(config));
+    config.checkValid(ConfigFactory.defaultReference(), CONFIG_SECTION_HEADER);
+  }
 
   public MAuthServiceClient(MAuthConfiguration configuration) {
     if (configuration == null) {

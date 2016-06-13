@@ -1,5 +1,6 @@
 package com.mdsol.mauth.domain;
 
+import com.typesafe.config.Config;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.UUID;
@@ -136,6 +137,17 @@ public class MAuthConfiguration {
     public MAuthConfiguration build() {
       return new MAuthConfiguration(appUUID, publicKey, privateKey, mAuthUrl, mAuthRequestUrlPath,
           securityTokensUrlPath);
+    }
+
+    public static MAuthConfiguration parse(Config config){
+      return new MAuthConfiguration(
+          UUID.fromString(config.getString("mauth.app_uuid")),
+          config.getString("mauth.public_key"),
+          config.getString("mauth.private_key"),
+          config.getString("mauth.url"),
+          config.getString("mauth.request_url"),
+          config.getString("mauth.token_url")
+      );
     }
   }
 }
