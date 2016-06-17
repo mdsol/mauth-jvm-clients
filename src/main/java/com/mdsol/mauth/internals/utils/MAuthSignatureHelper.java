@@ -57,7 +57,7 @@ public class MAuthSignatureHelper {
 
       return decryptedSignature;
     } catch (InvalidCipherTextException | IOException ex) {
-      throw new MAuthSigningException("Couldn't decrypt the signature using give public key.", ex);
+      throw new MAuthSigningException("Couldn't decrypt the signature using given public key.", ex);
     }
   }
 
