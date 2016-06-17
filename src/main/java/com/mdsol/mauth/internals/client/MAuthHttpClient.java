@@ -1,10 +1,10 @@
 package com.mdsol.mauth.internals.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mdsol.mauth.domain.MAuthConfiguration;
 import com.mdsol.mauth.exceptions.MAuthHttpClientException;
 import com.mdsol.mauth.internals.signer.MAuthSigner;
 import com.mdsol.mauth.internals.utils.MAuthKeysHelper;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -13,7 +13,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -71,7 +70,7 @@ public class MAuthHttpClient implements MAuthClient {
         HttpEntity entity = response.getEntity();
         String responseAsString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.readTree(responseAsString).findValue("public_key_str").getTextValue();
+        return mapper.readTree(responseAsString).findValue("public_key_str").asText();
       } else {
         throw new MAuthHttpClientException("Invalid response code returned by server: "
             + response.getStatusLine().getStatusCode());

@@ -5,3 +5,4 @@
 .idea
 mauth-client.iml
 /bin/
+env_variables.sh

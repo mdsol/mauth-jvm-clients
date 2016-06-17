@@ -10,11 +10,15 @@ import com.mdsol.mauth.internals.utils.EpochTime;
 import com.mdsol.mauth.internals.validator.MAuthValidator;
 import com.mdsol.mauth.internals.validator.MAuthValidatorImpl;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.security.Security;
 import java.util.Map;
+
+import static com.mdsol.mauth.domain.MAuthConfiguration.SECTION_HEADER;
 
 /**
  * Thread-safe implementation of MAuthService which delegates responsibilities to the
@@ -28,6 +32,15 @@ public class MAuthServiceClient implements MAuthService {
 
   private final MAuthSigner signer;
   private final MAuthValidator validator;
+
+  public MAuthServiceClient() {
+    this(ConfigFactory.load());
+  }
+
+  public MAuthServiceClient(Config config) {
+    this(MAuthConfiguration.Builder.parse(config));
+    config.checkValid(ConfigFactory.defaultReference(), SECTION_HEADER);
+  }
 
   public MAuthServiceClient(MAuthConfiguration configuration) {
     if (configuration == null) {

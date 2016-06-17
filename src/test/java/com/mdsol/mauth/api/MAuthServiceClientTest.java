@@ -23,7 +23,7 @@ public class MAuthServiceClientTest {
     expectedException.expect(IllegalArgumentException.class);
     expectedException.expectMessage("MAuth configuration cannot be null.");
 
-    new MAuthServiceClient(null);
+    new MAuthServiceClient((MAuthConfiguration)null);
   }
 
   @Test
