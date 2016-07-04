@@ -3,6 +3,7 @@ package com.mdsol.mauth.api;
 import com.mdsol.mauth.domain.MAuthConfiguration;
 import com.mdsol.mauth.utils.FixturesLoader;
 
+import com.typesafe.config.ConfigFactory;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -22,6 +23,8 @@ public class MAuthServiceClientTest {
     // Assert & Act
     expectedException.expect(IllegalArgumentException.class);
     expectedException.expectMessage("MAuth configuration cannot be null.");
+
+    ConfigFactory.empty();
 
     new MAuthServiceClient((MAuthConfiguration)null);
   }
