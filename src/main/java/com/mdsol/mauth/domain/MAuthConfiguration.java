@@ -15,7 +15,7 @@ public class MAuthConfiguration {
   private static final String VALIDATION_EXCEPTION_MESSAGE_TEMPLATE = "%s cannot be null or empty.";
   public static final String MAUTH_SECTION_HEADER = "mauth";
   public static final String APP_SECTION_HEADER = "app";
-  public static final String APP_UUID_PATH = APP_SECTION_HEADER + ".app_uuid";
+  public static final String APP_UUID_PATH = APP_SECTION_HEADER + ".uuid";
   public static final String APP_PUBLIC_KEY_PATH = APP_SECTION_HEADER + ".public_key";
   public static final String APP_PRIVATE_KEY_PATH = APP_SECTION_HEADER + ".private_key";
   public static final String URL_PATH = MAUTH_SECTION_HEADER + ".url";
