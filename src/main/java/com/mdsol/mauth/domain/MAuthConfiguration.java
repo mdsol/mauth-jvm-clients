@@ -13,13 +13,14 @@ import java.util.UUID;
 public class MAuthConfiguration {
 
   private static final String VALIDATION_EXCEPTION_MESSAGE_TEMPLATE = "%s cannot be null or empty.";
-  public static final String SECTION_HEADER = "mauth";
-  public static final String APP_UUID_PATH = SECTION_HEADER  + ".app_uuid";
-  public static final String PUBLIC_KEY_PATH = SECTION_HEADER  + ".public_key";
-  public static final String PRIVATE_KEY_PATH = SECTION_HEADER  + ".private_key";
-  public static final String URL_PATH = SECTION_HEADER  + ".url";
-  public static final String REQUEST_URL_PATH = SECTION_HEADER  + ".request_url";
-  public static final String TOKEN_URL_PATH = SECTION_HEADER  + ".token_url";
+  public static final String MAUTH_SECTION_HEADER = "mauth";
+  public static final String APP_SECTION_HEADER = "app";
+  public static final String APP_UUID_PATH = APP_SECTION_HEADER + ".uuid";
+  public static final String APP_PUBLIC_KEY_PATH = APP_SECTION_HEADER + ".public_key";
+  public static final String APP_PRIVATE_KEY_PATH = APP_SECTION_HEADER + ".private_key";
+  public static final String URL_PATH = MAUTH_SECTION_HEADER + ".url";
+  public static final String REQUEST_URL_PATH = MAUTH_SECTION_HEADER + ".request_url";
+  public static final String TOKEN_URL_PATH = MAUTH_SECTION_HEADER + ".token_url";
 
   private final UUID appUUID;
   private final String publicKey;
@@ -31,11 +32,11 @@ public class MAuthConfiguration {
   private MAuthConfiguration(UUID appUUID, String publicKey, String privateKey, String mAuthUrl,
       String mAuthRequestUrlPath, String securityTokensUrlPath) {
     validateNotNull(appUUID, "Application UUID");
-    validateNotBlank(publicKey, "Public key");
-    validateNotBlank(privateKey, "Private key");
+    validateNotBlank(publicKey, "Application Public key");
+    validateNotBlank(privateKey, "Application Private key");
     validateNotBlank(mAuthUrl, "MAuth url");
     validateNotBlank(mAuthRequestUrlPath, "MAuth request url path");
-    validateNotBlank(securityTokensUrlPath, "Security tokens url path");
+    validateNotBlank(securityTokensUrlPath, "MAuth Security tokens url path");
 
     this.appUUID = appUUID;
     this.publicKey = publicKey;
@@ -149,8 +150,8 @@ public class MAuthConfiguration {
     public static MAuthConfiguration parse(Config config){
       return new MAuthConfiguration(
           UUID.fromString(config.getString(APP_UUID_PATH)),
-          config.getString(PUBLIC_KEY_PATH),
-          config.getString(PRIVATE_KEY_PATH),
+          config.getString(APP_PUBLIC_KEY_PATH),
+          config.getString(APP_PRIVATE_KEY_PATH),
           config.getString(URL_PATH),
           config.getString(REQUEST_URL_PATH),
           config.getString(TOKEN_URL_PATH)

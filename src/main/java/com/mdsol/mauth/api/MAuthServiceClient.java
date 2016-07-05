@@ -18,7 +18,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import java.security.Security;
 import java.util.Map;
 
-import static com.mdsol.mauth.domain.MAuthConfiguration.SECTION_HEADER;
+import static com.mdsol.mauth.domain.MAuthConfiguration.MAUTH_SECTION_HEADER;
 
 /**
  * Thread-safe implementation of MAuthService which delegates responsibilities to the
@@ -39,7 +39,7 @@ public class MAuthServiceClient implements MAuthService {
 
   public MAuthServiceClient(Config config) {
     this(MAuthConfiguration.Builder.parse(config));
-    config.checkValid(ConfigFactory.defaultReference(), SECTION_HEADER);
+    config.checkValid(ConfigFactory.defaultReference(), MAUTH_SECTION_HEADER);
   }
 
   public MAuthServiceClient(MAuthConfiguration configuration) {

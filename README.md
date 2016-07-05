@@ -9,13 +9,14 @@ MAuthServiceClient is thread-safe. This means you only need to instantiate it on
   * Using [Typesafe Config](https://github.com/typesafehub/config)
   Create `application.conf` on your classpath with following content
 ```json
-mauth {
-  app_uuid: "aaaa-bbbbb-ccccc-ddddd-eeeee"
-  url: "http://localhost"
-  request_url: "/mauth/v1"
-  token_url: "/security_tokens/%s.json"
+app {
+  uuid: "aaaa-bbbbb-ccccc-ddddd-eeeee"
   private_key: "avasdfasdfadf"
   public_key: "sadfadfasdfasdfsadfdsafw"
+}
+
+mauth {
+  url: "http://localhost"
 }
 ```
 
