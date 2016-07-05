@@ -8,7 +8,6 @@ env:
 cache:
   directories:
   - $HOME/.m2
-install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V --settings travis/settings.xml
+install: mvn install -Dmaven.javadoc.skip=true -B -V --settings travis/settings.xml
 script: mvn test --settings travis/settings.xml
-after_success:
-- mvn deploy -DskipTests=true --settings travis/settings.xml
+after_success: mvn deploy -DskipTests=true --settings travis/settings.xml
