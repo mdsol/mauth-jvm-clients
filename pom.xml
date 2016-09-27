@@ -5,9 +5,14 @@
     <groupId>com.mdsol.clients</groupId>
     <artifactId>mauth-client</artifactId>
     <version>2016.2.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <name>mauth-client</name>
+    <modules>
+        <module>mauth-authenticator</module>
+        <module>mauth-signer</module>
+        <module>mauth-common</module>
+    </modules>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -29,11 +34,6 @@
     </build>
 
     <dependencies>
-        <dependency>
-            <groupId>com.typesafe</groupId>
-            <artifactId>config</artifactId>
-            <version>1.3.0</version>
-        </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
