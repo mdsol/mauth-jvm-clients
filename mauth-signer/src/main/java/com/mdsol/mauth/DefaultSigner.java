@@ -3,10 +3,6 @@ package com.mdsol.mauth;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import com.mdsol.mauth.util.MAuthHeadersHelper;
 import com.mdsol.mauth.util.MAuthSignatureHelper;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.ParseException;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.util.EntityUtils;
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -26,6 +22,10 @@ public class DefaultSigner implements Signer {
 
   static {
     Security.addProvider(new BouncyCastleProvider());
+  }
+
+  public DefaultSigner(MAuthConfiguration configuration) {
+    this(configuration.getAppUUID(), configuration.getPrivateKey());
   }
 
   public DefaultSigner(UUID appUUID, String privateKey) {

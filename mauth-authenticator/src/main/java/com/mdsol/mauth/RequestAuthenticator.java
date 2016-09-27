@@ -2,7 +2,7 @@ package com.mdsol.mauth;
 
 import com.mdsol.mauth.exception.MAuthValidationException;
 import com.mdsol.mauth.util.MAuthSignatureHelper;
-import com.mdsol.mauth.utils.PublicKeyProvider;
+import com.mdsol.mauth.utils.ClientPublicKeyProvider;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.nio.charset.StandardCharsets;
@@ -12,16 +12,16 @@ import java.util.Arrays;
 
 public class RequestAuthenticator implements Authenticator {
 
-  private final PublicKeyProvider publicKeyProvider;
+  private final ClientPublicKeyProvider clientPublicKeyProvider;
   private final long requestValidationTimeoutSeconds;
 
   static {
     Security.addProvider(new BouncyCastleProvider());
   }
 
-  public RequestAuthenticator(PublicKeyProvider publicKeyProvider, long requestValidationTimeout) {
-    this.publicKeyProvider = publicKeyProvider;
-    this.requestValidationTimeoutSeconds = requestValidationTimeout;
+  public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider, long requestValidationTimeoutSeconds) {
+    this.clientPublicKeyProvider = clientPublicKeyProvider;
+    this.requestValidationTimeoutSeconds = requestValidationTimeoutSeconds;
   }
 
   @Override
@@ -31,7 +31,7 @@ public class RequestAuthenticator implements Authenticator {
           "MAuth request validation failed because of timeout " + requestValidationTimeoutSeconds + "s");
     }
 
-    PublicKey clientPublicKey = publicKeyProvider.getPublicKey(mAuthRequest.getAppUUID());
+    PublicKey clientPublicKey = clientPublicKeyProvider.getPublicKey(mAuthRequest.getAppUUID());
 
     // Decrypt the signature with public key from requesting application.
     byte[] decryptedSignature = MAuthSignatureHelper.decryptSignature(clientPublicKey, mAuthRequest.getRequestSignature());

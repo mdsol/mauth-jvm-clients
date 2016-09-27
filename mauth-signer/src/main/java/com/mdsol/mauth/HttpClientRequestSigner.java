@@ -16,6 +16,9 @@ import java.util.UUID;
 
 public class HttpClientRequestSigner extends DefaultSigner {
 
+  public HttpClientRequestSigner(MAuthConfiguration configuration) {
+    super(configuration);
+  }
 
   public HttpClientRequestSigner(UUID appUUID, String privateKey) {
     super(appUUID, privateKey);

@@ -9,30 +9,27 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mauth-signer</artifactId>
+    <artifactId>mauth-common</artifactId>
 
     <dependencies>
         <dependency>
-            <groupId>com.mdsol.clients</groupId>
-            <artifactId>mauth-common</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.typesafe</groupId>
+            <artifactId>config</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.mdsol.clients</groupId>
-            <artifactId>maut-test-utils</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <scope>test</scope>
-        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -44,5 +41,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
 
 </project>

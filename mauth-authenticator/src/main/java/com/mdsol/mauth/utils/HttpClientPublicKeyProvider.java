@@ -1,10 +1,9 @@
 package com.mdsol.mauth.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mdsol.mauth.MAuthConfiguration;
 import com.mdsol.mauth.Signer;
-import com.mdsol.mauth.config.MAuthConfiguration;
-import com.mdsol.mauth.exception.MAuthHttpClientException;
-import com.mdsol.mauth.util.MAuthKeysHelper;
+import com.mdsol.mauth.exception.HttpClientPublicKeyProviderException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -21,7 +20,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-public class HttpClientPublicKeyProvider implements PublicKeyProvider {
+import static com.mdsol.mauth.util.MAuthKeysHelper.getPublicKeyFromString;
+
+public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
 
   private final MAuthConfiguration configuration;
   private final Signer signer;
@@ -39,14 +40,13 @@ public class HttpClientPublicKeyProvider implements PublicKeyProvider {
   public PublicKey getPublicKey(UUID appUUID) {
     String requestUrlPath = getRequestUrlPath(appUUID);
     Map<String, String> headers = signer.generateRequestHeaders("GET", requestUrlPath, "");
-    String requestUrl = configuration.getMAuthUrl() + requestUrlPath;
+    String requestUrl = configuration.getUrl() + requestUrlPath;
     String publicKeyAsString = get(requestUrl, headers, publicKeyResponseHandler);
-    PublicKey publicKey = MAuthKeysHelper.getPublicKeyFromString(publicKeyAsString);
-    return publicKey;
+    return getPublicKeyFromString(publicKeyAsString);
   }
 
   private String getRequestUrlPath(UUID appUUID) {
-    return configuration.getMAuthRequestUrlPath()
+    return configuration.getRequestUrlPath()
         + String.format(configuration.getSecurityTokensUrlPath(), appUUID.toString());
   }
 
@@ -58,7 +58,7 @@ public class HttpClientPublicKeyProvider implements PublicKeyProvider {
       }
       return httpclient.execute(httpGet, responseHandler);
     } catch (IOException ex) {
-      throw new MAuthHttpClientException(ex);
+      throw new HttpClientPublicKeyProviderException(ex);
     }
   }
 
@@ -72,7 +72,7 @@ public class HttpClientPublicKeyProvider implements PublicKeyProvider {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readTree(responseAsString).findValue("public_key_str").asText();
       } else {
-        throw new MAuthHttpClientException("Invalid response code returned by server: "
+        throw new HttpClientPublicKeyProviderException("Invalid response code returned by server: "
             + response.getStatusLine().getStatusCode());
       }
     }
