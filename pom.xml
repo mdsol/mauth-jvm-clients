@@ -12,7 +12,9 @@
         <module>mauth-authenticator</module>
         <module>mauth-signer</module>
         <module>mauth-common</module>
-        <module>maut-test-utils</module>
+        <module>mauth-test-utils</module>
+        <module>mauth-signer-apachehttp</module>
+        <module>mauth-authenticator-apachehttp</module>
     </modules>
 
     <properties>

@@ -1,5 +1,7 @@
-package com.mdsol.mauth;
+package com.mdsol.mauth.apache;
 
+import com.mdsol.mauth.DefaultSigner;
+import com.mdsol.mauth.MAuthConfiguration;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import com.mdsol.mauth.util.EpochTimeProvider;
 import org.apache.http.HttpEntityEnclosingRequest;

@@ -1,9 +1,11 @@
-package com.mdsol.mauth.utils;
+package com.mdsol.mauth.apache;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mdsol.mauth.MAuthConfiguration;
 import com.mdsol.mauth.Signer;
 import com.mdsol.mauth.exception.HttpClientPublicKeyProviderException;
+import com.mdsol.mauth.util.MAuthKeysHelper;
+import com.mdsol.mauth.utils.ClientPublicKeyProvider;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -19,8 +21,6 @@ import java.security.PublicKey;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
-
-import static com.mdsol.mauth.util.MAuthKeysHelper.getPublicKeyFromString;
 
 public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
 
@@ -42,7 +42,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
     Map<String, String> headers = signer.generateRequestHeaders("GET", requestUrlPath, "");
     String requestUrl = configuration.getUrl() + requestUrlPath;
     String publicKeyAsString = get(requestUrl, headers, publicKeyResponseHandler);
-    return getPublicKeyFromString(publicKeyAsString);
+    return MAuthKeysHelper.getPublicKeyFromString(publicKeyAsString);
   }
 
   private String getRequestUrlPath(UUID appUUID) {

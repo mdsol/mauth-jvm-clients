@@ -9,14 +9,19 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mauth-signer</artifactId>
+    <artifactId>mauth-signer-apachehttp</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>com.mdsol.clients</groupId>
-            <artifactId>mauth-common</artifactId>
+            <artifactId>mauth-signer</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
+
 
         <dependency>
             <groupId>com.mdsol.clients</groupId>

@@ -1,10 +1,12 @@
-package com.mdsol.mauth.utils;
+package com.mdsol.mauth.apache;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mdsol.mauth.MAuthConfiguration;
 import com.mdsol.mauth.Signer;
 import com.mdsol.mauth.exception.HttpClientPublicKeyProviderException;
+import com.mdsol.mauth.test.utils.FakeMAuthServer;
 import com.mdsol.mauth.test.utils.FixturesLoader;
+import com.mdsol.mauth.utils.ClientPublicKeyProvider;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

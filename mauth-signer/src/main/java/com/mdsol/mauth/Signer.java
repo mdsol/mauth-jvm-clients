@@ -1,10 +1,6 @@
 package com.mdsol.mauth;
 
 import com.mdsol.mauth.exceptions.MAuthSigningException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
 
 import java.util.Map;
 

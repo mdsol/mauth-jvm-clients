@@ -1,6 +1,5 @@
-package com.mdsol.mauth.utils;
+package com.mdsol.mauth.apache;
 
-import com.mdsol.mauth.HttpClientRequestSigner;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpRequestInterceptor;

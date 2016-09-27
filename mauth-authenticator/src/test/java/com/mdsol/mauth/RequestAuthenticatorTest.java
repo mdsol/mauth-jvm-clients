@@ -5,7 +5,7 @@ import com.mdsol.mauth.test.utils.FixturesLoader;
 import com.mdsol.mauth.util.EpochTimeProvider;
 import com.mdsol.mauth.util.MAuthKeysHelper;
 import com.mdsol.mauth.utils.ClientPublicKeyProvider;
-import com.mdsol.mauth.utils.FakeMAuthServer;
+import com.mdsol.mauth.test.utils.FakeMAuthServer;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;

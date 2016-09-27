@@ -1,4 +1,4 @@
-package com.mdsol.mauth.utils;
+package com.mdsol.mauth.test.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
