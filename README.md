@@ -1,4 +1,4 @@
-# Java Client for MAuth - version 2016.2.0
+# Java Client for MAuth
 
 This is a standalone MAuth client for use by internal Medidata teams and authorized 3rd parties.
 
