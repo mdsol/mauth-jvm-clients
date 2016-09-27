@@ -1,6 +1,7 @@
 package com.mdsol.mauth;
 
 import com.mdsol.mauth.exception.MAuthValidationException;
+import com.mdsol.mauth.util.EpochTimeProvider;
 import com.mdsol.mauth.util.MAuthSignatureHelper;
 import com.mdsol.mauth.utils.ClientPublicKeyProvider;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -14,14 +15,16 @@ public class RequestAuthenticator implements Authenticator {
 
   private final ClientPublicKeyProvider clientPublicKeyProvider;
   private final long requestValidationTimeoutSeconds;
+  private final EpochTimeProvider epochTimeProvider;
 
   static {
     Security.addProvider(new BouncyCastleProvider());
   }
 
-  public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider, long requestValidationTimeoutSeconds) {
+  public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider, long requestValidationTimeoutSeconds, EpochTimeProvider epochTimeProvider) {
     this.clientPublicKeyProvider = clientPublicKeyProvider;
     this.requestValidationTimeoutSeconds = requestValidationTimeoutSeconds;
+    this.epochTimeProvider = epochTimeProvider;
   }
 
   @Override
@@ -53,7 +56,7 @@ public class RequestAuthenticator implements Authenticator {
 
   // Check epoch time is not older than specified interval.
   private boolean validateTime(long requestTime) {
-    long currentTime = System.currentTimeMillis() / 1000;
+    long currentTime = epochTimeProvider.inSeconds();
     return (currentTime - requestTime) < requestValidationTimeoutSeconds;
   }
 }

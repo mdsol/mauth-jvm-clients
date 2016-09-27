@@ -1,6 +1,7 @@
 package com.mdsol.mauth;
 
 import com.mdsol.mauth.test.utils.FixturesLoader;
+import com.mdsol.mauth.util.EpochTimeProvider;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -10,15 +11,16 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.security.Security;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-public class HttpClientRequestSignerTest extends DefaultSignerTest{
+public class HttpClientRequestSignerTest implements BaseSignerTest {
 
-  private final UUID testUUID = UUID.fromString("2a6790ab-f6c6-45be-86fc-9e9be76ec12a");
   private HttpClientRequestSigner mAuthRequestSigner;
   private static String privateKeyString;
+  private EpochTimeProvider mockEpochTimeProvider = mock(EpochTimeProvider.class);
 
   @BeforeClass
   public static void setUpClass() throws Exception {
@@ -28,7 +30,8 @@ public class HttpClientRequestSignerTest extends DefaultSignerTest{
 
   @Before
   public void setUp() throws Exception {
-    mAuthRequestSigner = new HttpClientRequestSigner(testUUID, privateKeyString);
+    when(mockEpochTimeProvider.inSeconds()).thenReturn(TEST_EPOCH_TIME);
+    mAuthRequestSigner = new HttpClientRequestSigner(testUUID, privateKeyString, mockEpochTimeProvider);
   }
 
   @Test

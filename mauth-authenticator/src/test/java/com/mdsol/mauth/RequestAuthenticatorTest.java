@@ -1,10 +1,11 @@
 package com.mdsol.mauth;
 
 import com.mdsol.mauth.exception.MAuthValidationException;
+import com.mdsol.mauth.test.utils.FixturesLoader;
+import com.mdsol.mauth.util.EpochTimeProvider;
 import com.mdsol.mauth.util.MAuthKeysHelper;
 import com.mdsol.mauth.utils.ClientPublicKeyProvider;
 import com.mdsol.mauth.utils.FakeMAuthServer;
-import com.mdsol.mauth.utils.FixturesLoader;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -67,6 +68,8 @@ public class RequestAuthenticatorTest {
   private static final String CLIENT_NO_BODY_X_MWS_TIME_HEADER_VALUE = "1424700000";
 
   private static final String PUBLIC_KEY = FixturesLoader.getPublicKey();
+  public static final long REQUEST_VALIDATION_TIMEOUT_SECONDS = 300L;
+  private EpochTimeProvider mockEpochTimeProvider = mock(EpochTimeProvider.class);
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
@@ -84,8 +87,8 @@ public class RequestAuthenticatorTest {
 
   @Test
   public void validatingRequestSentAfter5MinutesShouldFail() throws Exception {
-    RequestAuthenticator authenticator = new RequestAuthenticator(mock(ClientPublicKeyProvider.class),
-        Long.parseLong(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE) + 600);
+    when(mockEpochTimeProvider.inSeconds()).thenReturn(Long.parseLong(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE) + 600);
+    RequestAuthenticator authenticator = new RequestAuthenticator(mock(ClientPublicKeyProvider.class), REQUEST_VALIDATION_TIMEOUT_SECONDS, mockEpochTimeProvider);
     MAuthRequest request = getRequestWithUnicodeCharactersInBody();
 
     expectedException.expect(MAuthValidationException.class);
@@ -96,10 +99,9 @@ public class RequestAuthenticatorTest {
   @Test
   public void validatingInvalidRequestShouldFail() throws Exception {
     ClientPublicKeyProvider client = mock(ClientPublicKeyProvider.class);
-    when(client.getPublicKey(Mockito.eq(UUID.fromString(CLIENT_APP_ID))))
-        .thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
-    Authenticator authenticator = new RequestAuthenticator(client,
-        Long.parseLong(CLIENT_X_MWS_TIME_HEADER_VALUE) + 3);
+    when(client.getPublicKey(Mockito.eq(UUID.fromString(CLIENT_APP_ID)))).thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
+    when(mockEpochTimeProvider.inSeconds()).thenReturn(Long.parseLong(CLIENT_X_MWS_TIME_HEADER_VALUE) + 3);
+    Authenticator authenticator = new RequestAuthenticator(client, REQUEST_VALIDATION_TIMEOUT_SECONDS, mockEpochTimeProvider);
     MAuthRequest invalidRequest = getSimpleRequestWithWrongSignature();
 
     boolean validationResult = authenticator.authenticate(invalidRequest);
@@ -110,10 +112,9 @@ public class RequestAuthenticatorTest {
   @Test
   public void validatingValidRequestShouldPass() throws Exception {
     ClientPublicKeyProvider client = mock(ClientPublicKeyProvider.class);
-    when(client.getPublicKey(Mockito.eq(UUID.fromString(CLIENT_APP_ID))))
-        .thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
-    Authenticator authenticator = new RequestAuthenticator(client,
-        Long.parseLong(CLIENT_X_MWS_TIME_HEADER_VALUE) + 3);
+    when(client.getPublicKey(Mockito.eq(UUID.fromString(CLIENT_APP_ID)))).thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
+    when(mockEpochTimeProvider.inSeconds()).thenReturn(Long.parseLong(CLIENT_X_MWS_TIME_HEADER_VALUE) + 3);
+    Authenticator authenticator = new RequestAuthenticator(client, REQUEST_VALIDATION_TIMEOUT_SECONDS, mockEpochTimeProvider);
     MAuthRequest request = getSimpleRequest();
 
     boolean validationResult = authenticator.authenticate(request);
@@ -124,10 +125,9 @@ public class RequestAuthenticatorTest {
   @Test
   public void validatingValidRequestWithSpecialCharactersShouldPass() throws Exception {
     ClientPublicKeyProvider client = mock(ClientPublicKeyProvider.class);
-    when(client.getPublicKey(Mockito.eq(UUID.fromString(CLIENT_APP_ID))))
-        .thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
-    Authenticator authenticator = new RequestAuthenticator(client,
-        Long.parseLong(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE) + 3);
+    when(client.getPublicKey(Mockito.eq(UUID.fromString(CLIENT_APP_ID)))).thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
+    when(mockEpochTimeProvider.inSeconds()).thenReturn(Long.parseLong(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE) + 3);
+    Authenticator authenticator = new RequestAuthenticator(client, REQUEST_VALIDATION_TIMEOUT_SECONDS, mockEpochTimeProvider);
     MAuthRequest request = getRequestWithUnicodeCharactersInBody();
 
     boolean validationResult = authenticator.authenticate(request);
@@ -138,10 +138,9 @@ public class RequestAuthenticatorTest {
   @Test
   public void validatingValidRequestWithoutBodyShouldPass() throws Exception {
     ClientPublicKeyProvider client = mock(ClientPublicKeyProvider.class);
-    when(client.getPublicKey(Mockito.eq(UUID.fromString(CLIENT_APP_ID))))
-        .thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
-    Authenticator authenticator = new RequestAuthenticator(client,
-        Long.parseLong(CLIENT_NO_BODY_X_MWS_TIME_HEADER_VALUE) + 3);
+    when(client.getPublicKey(Mockito.eq(UUID.fromString(CLIENT_APP_ID)))).thenReturn(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY));
+    when(mockEpochTimeProvider.inSeconds()).thenReturn(Long.parseLong(CLIENT_NO_BODY_X_MWS_TIME_HEADER_VALUE) + 3);
+    Authenticator authenticator = new RequestAuthenticator(client, REQUEST_VALIDATION_TIMEOUT_SECONDS, mockEpochTimeProvider);
     MAuthRequest request = getRequestWithoutMessageBody();
 
     boolean validationResult = authenticator.authenticate(request);

@@ -1,6 +1,8 @@
 package com.mdsol.mauth;
 
 import com.mdsol.mauth.exceptions.MAuthSigningException;
+import com.mdsol.mauth.util.CurrentEpochTimeProvider;
+import com.mdsol.mauth.util.EpochTimeProvider;
 import com.mdsol.mauth.util.MAuthHeadersHelper;
 import com.mdsol.mauth.util.MAuthSignatureHelper;
 import org.bouncycastle.crypto.CryptoException;
@@ -19,22 +21,24 @@ public class DefaultSigner implements Signer {
 
   private final UUID appUUID;
   private final PrivateKey privateKey;
+  private final EpochTimeProvider epochTimeProvider;
 
   static {
     Security.addProvider(new BouncyCastleProvider());
   }
 
   public DefaultSigner(MAuthConfiguration configuration) {
-    this(configuration.getAppUUID(), configuration.getPrivateKey());
+    this(configuration.getAppUUID(), configuration.getPrivateKey(), new CurrentEpochTimeProvider());
   }
 
-  public DefaultSigner(UUID appUUID, String privateKey) {
-    this(appUUID, getPrivateKeyFromString(privateKey));
+  public DefaultSigner(UUID appUUID, String privateKey, EpochTimeProvider epochTimeProvider) {
+    this(appUUID, getPrivateKeyFromString(privateKey), epochTimeProvider);
   }
 
-  public DefaultSigner(UUID appUUID, PrivateKey privateKey) {
+  public DefaultSigner(UUID appUUID, PrivateKey privateKey, EpochTimeProvider epochTimeProvider) {
     this.appUUID = appUUID;
     this.privateKey = privateKey;
+    this.epochTimeProvider = epochTimeProvider;
   }
 
   @Override
@@ -43,7 +47,7 @@ public class DefaultSigner implements Signer {
       requestPayload = "";
     }
     // mAuth uses an epoch time measured in seconds
-    long currentTime = System.currentTimeMillis() / 1000;
+    long currentTime = epochTimeProvider.inSeconds();
 
     String unencryptedSignature = MAuthSignatureHelper.generateUnencryptedSignature(appUUID,
         httpVerb, requestPath, requestPayload, String.valueOf(currentTime));

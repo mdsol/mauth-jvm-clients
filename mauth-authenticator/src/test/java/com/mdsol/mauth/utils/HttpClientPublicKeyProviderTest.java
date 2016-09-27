@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mdsol.mauth.MAuthConfiguration;
 import com.mdsol.mauth.Signer;
 import com.mdsol.mauth.exception.HttpClientPublicKeyProviderException;
+import com.mdsol.mauth.test.utils.FixturesLoader;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -36,7 +37,6 @@ public class HttpClientPublicKeyProviderTest {
   private static final String SECURITY_TOKENS_PATH = "/security_tokens/%s.json";
   private static final UUID RESOURCE_APP_UUID = UUID.fromString("92a1869e-c80d-4f06-8775-6c4ebb0758e0");
 
-  //private static final String PUBLIC_KEY = FixturesLoader.getPublicKey();
   private static final String PRIVATE_KEY = FixturesLoader.getPrivateKey();
 
   @BeforeClass

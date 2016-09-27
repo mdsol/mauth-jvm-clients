@@ -28,6 +28,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.mdsol.clients</groupId>
+            <artifactId>maut-test-utils</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>

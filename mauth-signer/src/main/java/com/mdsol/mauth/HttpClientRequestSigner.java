@@ -1,6 +1,7 @@
 package com.mdsol.mauth;
 
 import com.mdsol.mauth.exceptions.MAuthSigningException;
+import com.mdsol.mauth.util.EpochTimeProvider;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.ParseException;
 import org.apache.http.client.HttpClient;
@@ -20,12 +21,12 @@ public class HttpClientRequestSigner extends DefaultSigner {
     super(configuration);
   }
 
-  public HttpClientRequestSigner(UUID appUUID, String privateKey) {
-    super(appUUID, privateKey);
+  public HttpClientRequestSigner(UUID appUUID, String privateKey, EpochTimeProvider epochTimeProvider) {
+    super(appUUID, privateKey, epochTimeProvider);
   }
 
-  public HttpClientRequestSigner(UUID appUUID, PrivateKey privateKey) {
-    super(appUUID, privateKey);
+  public HttpClientRequestSigner(UUID appUUID, PrivateKey privateKey, EpochTimeProvider epochTimeProvider) {
+    super(appUUID, privateKey, epochTimeProvider);
   }
 
   /**
@@ -36,7 +37,7 @@ public class HttpClientRequestSigner extends DefaultSigner {
    * within 5 minutes of being generated otherwise the request will fail.
    *
    * @param request {@link HttpUriRequest}, e.g. {@link HttpGet} or {@link HttpPost}
-   * @throws MAuthSigningException
+   * @throws MAuthSigningException wraps {@link ParseException} and {@link IOException}
    */
   public void signRequest(HttpUriRequest request) throws MAuthSigningException {
     String httpVerb = request.getMethod();
