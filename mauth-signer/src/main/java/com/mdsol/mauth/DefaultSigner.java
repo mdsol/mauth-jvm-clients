@@ -7,6 +7,8 @@ import com.mdsol.mauth.util.MAuthHeadersHelper;
 import com.mdsol.mauth.util.MAuthSignatureHelper;
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.PrivateKey;
@@ -18,6 +20,7 @@ import java.util.UUID;
 import static com.mdsol.mauth.util.MAuthKeysHelper.getPrivateKeyFromString;
 
 public class DefaultSigner implements Signer {
+  private static final Logger logger = LoggerFactory.getLogger(DefaultSigner.class);
 
   private final UUID appUUID;
   private final PrivateKey privateKey;
@@ -49,14 +52,14 @@ public class DefaultSigner implements Signer {
     // mAuth uses an epoch time measured in seconds
     long currentTime = epochTimeProvider.inSeconds();
 
-    String unencryptedSignature = MAuthSignatureHelper.generateUnencryptedSignature(appUUID,
-        httpVerb, requestPath, requestPayload, String.valueOf(currentTime));
+    String unencryptedSignature = MAuthSignatureHelper.generateUnencryptedSignature(appUUID, httpVerb, requestPath, requestPayload, String.valueOf(currentTime));
 
     String encryptedSignature;
     try {
       encryptedSignature =
           MAuthSignatureHelper.encryptSignature(privateKey, unencryptedSignature);
     } catch (IOException | CryptoException e) {
+      logger.error("Error generating request headers", e);
       throw new MAuthSigningException(e);
     }
 

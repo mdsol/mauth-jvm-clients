@@ -5,6 +5,8 @@ import com.mdsol.mauth.util.EpochTimeProvider;
 import com.mdsol.mauth.util.MAuthSignatureHelper;
 import com.mdsol.mauth.utils.ClientPublicKeyProvider;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
@@ -12,6 +14,8 @@ import java.security.Security;
 import java.util.Arrays;
 
 public class RequestAuthenticator implements Authenticator {
+
+  private static final Logger logger = LoggerFactory.getLogger(RequestAuthenticator.class);
 
   private final ClientPublicKeyProvider clientPublicKeyProvider;
   private final long requestValidationTimeoutSeconds;
@@ -30,8 +34,9 @@ public class RequestAuthenticator implements Authenticator {
   @Override
   public boolean authenticate(MAuthRequest mAuthRequest) {
     if (!(validateTime(mAuthRequest.getRequestTime()))) {
-      throw new MAuthValidationException(
-          "MAuth request validation failed because of timeout " + requestValidationTimeoutSeconds + "s");
+      final String message = "MAuth request validation failed because of timeout " + requestValidationTimeoutSeconds + "s";
+      logger.error(message);
+      throw new MAuthValidationException(message);
     }
 
     PublicKey clientPublicKey = clientPublicKeyProvider.getPublicKey(mAuthRequest.getAppUUID());

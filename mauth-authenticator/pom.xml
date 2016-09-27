@@ -17,11 +17,6 @@
             <artifactId>mauth-common</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.mdsol.clients</groupId>
-            <artifactId>mauth-signer</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>com.mdsol.clients</groupId>

@@ -9,6 +9,8 @@ import org.bouncycastle.crypto.encodings.PKCS1Encoding;
 import org.bouncycastle.crypto.engines.RSAEngine;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -21,26 +23,21 @@ import java.util.UUID;
 
 public class MAuthSignatureHelper {
 
-  public static String generateUnencryptedSignature(UUID appUUID, String httpMethod,
-      String resourceUrl, String body, String epochTime) {
-    return httpMethod + "\n" + resourceUrl + "\n" + body + "\n" + appUUID.toString() + "\n"
-        + epochTime;
+  private static final Logger logger = LoggerFactory.getLogger(MAuthSignatureHelper.class);
+
+  public static String generateUnencryptedSignature(UUID appUUID, String httpMethod, String resourceUrl, String body, String epochTime) {
+    logger.debug("Generating Unencrypted Signature");
+    return httpMethod + "\n" + resourceUrl + "\n" + body + "\n" + appUUID.toString() + "\n" + epochTime;
   }
 
-  public static String encryptSignature(PrivateKey privateKey, String unencryptedString)
-      throws IOException, CryptoException {
+  public static String encryptSignature(PrivateKey privateKey, String unencryptedString) throws IOException, CryptoException {
     String hexEncodedString = getHexEncodedDigestedString(unencryptedString);
 
-    // encrypt
     PKCS1Encoding encryptEngine = new PKCS1Encoding(new RSAEngine());
     encryptEngine.init(true, PrivateKeyFactory.createKey(privateKey.getEncoded()));
-    byte[] encryptedStringBytes = encryptEngine.processBlock(hexEncodedString.getBytes(), 0,
-        hexEncodedString.getBytes().length);
+    byte[] encryptedStringBytes = encryptEngine.processBlock(hexEncodedString.getBytes(), 0,hexEncodedString.getBytes().length);
 
-    // Base64 encode
-    String encryptedHeaderString = new String(Base64.encodeBase64(encryptedStringBytes), "UTF-8");
-
-    return encryptedHeaderString;
+    return new String(Base64.encodeBase64(encryptedStringBytes), "UTF-8");
   }
 
   public static byte[] decryptSignature(PublicKey publicKey, String encryptedSignature) {
@@ -56,7 +53,9 @@ public class MAuthSignatureHelper {
 
       return decryptedSignature;
     } catch (InvalidCipherTextException | IOException ex) {
-      throw new MAuthSigningException("Couldn't decrypt the signature using given public key.", ex);
+      final String msg = "Couldn't decrypt the signature using given public key.";
+      logger.error(msg, ex);
+      throw new MAuthSigningException(msg, ex);
     }
   }
 
@@ -68,7 +67,9 @@ public class MAuthSignatureHelper {
       // Convert to hex
       return Hex.encodeHexString(digestedString);
     } catch (NoSuchAlgorithmException | NoSuchProviderException ex) {
-      throw new MAuthSigningException("Invalid alghoritm or security provider.", ex);
+      final String message = "Invalid alghoritm or security provider.";
+      logger.error(message, ex);
+      throw new MAuthSigningException(message, ex);
     }
   }
 }
