@@ -70,19 +70,16 @@ public class HttpClientPublicKeyProviderTest {
   }
 
   private MAuthConfiguration getMAuthConfiguration() {
-    return new MAuthConfiguration(RESOURCE_APP_UUID, MAUTH_BASE_URL, PRIVATE_KEY, MAUTH_URL_PATH ,SECURITY_TOKENS_PATH);
+    return new MAuthConfiguration(RESOURCE_APP_UUID, MAUTH_BASE_URL, PRIVATE_KEY, MAUTH_URL_PATH ,SECURITY_TOKENS_PATH, 300L);
   }
 
   @Test
   public void shouldSendCorrectRequestForPublicKeyToMAuthServer() throws Exception {
-    // Arrange
     FakeMAuthServer.return200();
     ClientPublicKeyProvider client = getClientWithMockedSigner();
 
-    // Act
     client.getPublicKey(UUID.fromString(FakeMAuthServer.EXISTING_CLIENT_APP_UUID));
 
-    // Assert
     WireMock.verify(getRequestedFor(
         WireMock.urlEqualTo(getRequestUrlPath(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)))
         .withHeader(X_MWS_TIME_HEADER_NAME.toLowerCase(),
@@ -93,11 +90,9 @@ public class HttpClientPublicKeyProviderTest {
 
   @Test
   public void shouldThrowHttpClientPublicKeyProviderExceptionOnInvalidResponseCode() throws Exception {
-    // Arrange
     FakeMAuthServer.return401();
     ClientPublicKeyProvider client = getClientWithMockedSigner();
 
-    // Assert & Act
     expectedException.expect(HttpClientPublicKeyProviderException.class);
     expectedException.expectMessage("Invalid response code returned by server: 401");
 

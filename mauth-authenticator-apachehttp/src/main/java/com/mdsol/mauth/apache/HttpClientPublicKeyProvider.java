@@ -72,7 +72,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
   public PublicKey getPublicKey(UUID appUUID) {
     try {
       return publicKeyCache.get(appUUID);
-    } catch (ExecutionException e) {
+    } catch (Exception e) {
       logger.error("Couldn't find public key", e);
       throw new HttpClientPublicKeyProviderException(e);
     }
