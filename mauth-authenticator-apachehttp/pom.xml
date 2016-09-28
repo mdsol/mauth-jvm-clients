@@ -35,11 +35,12 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
-
+        <!-- Test dependencies -->
         <dependency>
             <groupId>com.mdsol.clients</groupId>
             <artifactId>mauth-test-utils</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

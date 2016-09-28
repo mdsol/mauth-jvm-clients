@@ -22,7 +22,7 @@
             <artifactId>httpclient</artifactId>
         </dependency>
 
-
+        <!-- Test dependencies -->
         <dependency>
             <groupId>com.mdsol.clients</groupId>
             <artifactId>mauth-test-utils</artifactId>
