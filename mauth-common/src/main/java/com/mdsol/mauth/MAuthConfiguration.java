@@ -11,7 +11,7 @@ public class MAuthConfiguration {
   public static final String APP_SECTION_HEADER = "app";
   public static final String APP_UUID_PATH = APP_SECTION_HEADER + ".uuid";
   public static final String APP_PRIVATE_KEY_PATH = APP_SECTION_HEADER + ".private_key";
-  public static final String URL_PATH = MAUTH_SECTION_HEADER + ".url";
+  public static final String BASE_URL_PATH = MAUTH_SECTION_HEADER + ".base_url";
   public static final String REQUEST_URL_PATH = MAUTH_SECTION_HEADER + ".request_url";
   public static final String TOKEN_URL_PATH = MAUTH_SECTION_HEADER + ".token_url";
   public static final String TIME_TO_LIVE_SECONDS = MAUTH_SECTION_HEADER + ".cache.time_to_live_seconds";
@@ -27,7 +27,7 @@ public class MAuthConfiguration {
     this(
         UUID.fromString(config.getString(APP_UUID_PATH)),
         config.getString(APP_PRIVATE_KEY_PATH),
-        config.getString(URL_PATH),
+        config.getString(BASE_URL_PATH),
         config.getString(REQUEST_URL_PATH),
         config.getString(TOKEN_URL_PATH),
         config.getLong(TIME_TO_LIVE_SECONDS)
