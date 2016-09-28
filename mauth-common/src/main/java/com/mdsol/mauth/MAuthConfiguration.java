@@ -17,7 +17,7 @@ public class MAuthConfiguration {
   public static final String TIME_TO_LIVE_SECONDS = MAUTH_SECTION_HEADER + ".cache.time_to_live_seconds";
 
   private final UUID appUUID;
-  private final String url;
+  private final String baseUrl;
   private final transient String privateKey;
   private final String requestUrlPath;
   private final String securityTokensUrlPath;
@@ -34,23 +34,23 @@ public class MAuthConfiguration {
     );
   }
 
-  public MAuthConfiguration(UUID appUUID, String url, String privateKey, String requestUrlPath, String securityTokensUrlPath, Long timeToLive) {
+  public MAuthConfiguration(UUID appUUID, String baseUrl, String privateKey, String requestUrlPath, String securityTokensUrlPath, Long timeToLive) {
     validateNotNull(appUUID, "Application UUID");
     validateNotBlank(privateKey, "Application Private key");
-    validateNotBlank(url, "MAuth url");
+    validateNotBlank(baseUrl, "MAuth base url");
     validateNotBlank(requestUrlPath, "MAuth request url path");
     validateNotBlank(securityTokensUrlPath, "MAuth Security tokens url path");
 
     this.appUUID = appUUID;
-    this.url = url;
+    this.baseUrl = baseUrl;
     this.privateKey = privateKey;
     this.requestUrlPath = requestUrlPath;
     this.securityTokensUrlPath = securityTokensUrlPath;
     this.timeToLive = timeToLive;
   }
 
-  public String getUrl() {
-    return url;
+  public String getBaseUrl() {
+    return baseUrl;
   }
 
   public String getRequestUrlPath() {

@@ -26,7 +26,6 @@ import java.security.PublicKey;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
@@ -63,7 +62,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
   private PublicKey getPublicKeyFromEureka(UUID appUUID) {
     String requestUrlPath = getRequestUrlPath(appUUID);
     Map<String, String> headers = signer.generateRequestHeaders("GET", requestUrlPath, "");
-    String requestUrl = configuration.getUrl() + requestUrlPath;
+    String requestUrl = configuration.getBaseUrl() + requestUrlPath;
     String publicKeyAsString = get(requestUrl, headers, publicKeyResponseHandler);
     return MAuthKeysHelper.getPublicKeyFromString(publicKeyAsString);
   }
