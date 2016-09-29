@@ -1,0 +1,6 @@
+/target/
+.project
+.settings
+mauth-testing-authenticator.log
+.classpath
+.DS_Store
