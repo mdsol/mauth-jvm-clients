@@ -31,11 +31,19 @@ public class DefaultSigner implements Signer {
   }
 
   public DefaultSigner(MAuthConfiguration configuration) {
-    this(configuration.getAppUUID(), configuration.getPrivateKey(), new CurrentEpochTimeProvider());
+    this(configuration.getAppUUID(), configuration.getPrivateKey());
+  }
+
+  public DefaultSigner(UUID appUUID, String privateKey) {
+    this(appUUID, getPrivateKeyFromString(privateKey));
   }
 
   public DefaultSigner(UUID appUUID, String privateKey, EpochTimeProvider epochTimeProvider) {
     this(appUUID, getPrivateKeyFromString(privateKey), epochTimeProvider);
+  }
+
+  public DefaultSigner(UUID appUUID, PrivateKey privateKey) {
+    this(appUUID, privateKey, new CurrentEpochTimeProvider());
   }
 
   public DefaultSigner(UUID appUUID, PrivateKey privateKey, EpochTimeProvider epochTimeProvider) {

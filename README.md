@@ -12,21 +12,30 @@ MAuthServiceClient is thread-safe. This means you only need to instantiate it on
 app {
   uuid: "aaaa-bbbbb-ccccc-ddddd-eeeee"
   private_key: "avasdfasdfadf"
-  public_key: "sadfadfasdfasdfsadfdsafw"
 }
 
 mauth {
-  url: "http://localhost"
+  base_url: "http://localhost"
 }
 ```
 
 **Defaults:**
 If following settings are omitted the default values will be used.
+```json
+app {
+  uuid: ${?APP_UUID}
+  private_key: ${?APP_PRIVATE_KEY}
+}
 
-| Setting     | Default Value |
-| ----------- | ------------- |
-| request_url | /mauth/v1     |
-| token_url   | /security_tokens/%s.json  |
+mauth {
+  base_url: ${?MAUTH_URL}
+  request_url: "/mauth/v1"
+  token_url: "/security_tokens/%s.json"
+  cache {
+    time_to_live_seconds: 90
+  }
+}
+```
         
 ```java
 MAuthService mAuthService = new MAuthServiceClient();
