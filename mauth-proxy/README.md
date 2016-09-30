@@ -13,6 +13,15 @@ If you don't specify `forward-url` header, the default value for host part of th
 
 By default the service runs on port 8080. This can be changed in `application.properties` file.
 
+## Configuration
+Here is a sample of the `application.properties`
+```properties
+server.port=8080
+defaultHostToForward=https://cdg-sandbox.imedidata.net
+mauth.appUuid=75a681ad-d874-4326-b599-68b059aaa637
+mauth.privateKeyFilePath=config/keys/id_rsa
+```
+
 ## Disbursement Gateway:
 
 #### Requests to Disbursement Gateway:

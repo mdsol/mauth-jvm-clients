@@ -1,9 +1,7 @@
 package com.mdsol.mauth.fake;
 
-import com.mdsol.mauth.api.MAuthService;
-import com.mdsol.mauth.api.MAuthServiceClient;
-import com.mdsol.mauth.domain.MAuthConfiguration;
-
+import com.mdsol.mauth.Signer;
+import com.mdsol.mauth.apache.HttpClientRequestSigner;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,6 +13,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -31,26 +31,13 @@ public class MAuthFakeAuthenticatorApp {
   }
 
   @Bean
-  public MAuthService mAuthService(@Value("${mauth.baseUrl}") String mAuthUrl,
-      @Value("${mauth.appUuid}") String appUuid,
-      @Value("${mauth.privateKeyFilePath}") String privateKeyFilePath,
-      @Value("${mauth.publicKeyFilePath}") String publicKeyFilePath) throws IOException {
-    String privateKey = loadFileToString(privateKeyFilePath);
-    String publicKey = loadFileToString(publicKeyFilePath);
-    MAuthConfiguration configuration = MAuthConfiguration.Builder.get().withMAuthUrl(mAuthUrl)
-        .withAppUUID(UUID.fromString(appUuid)).withPrivateKey(privateKey).withPublicKey(publicKey)
-        .withDefaultMAuthPaths().build();
-    return new MAuthServiceClient(configuration);
-  }
-
-  private String loadFileToString(String filePath) throws IOException {
-    ClassPathResource resource = new ClassPathResource(filePath);
-    String fileContent;
-    try (BufferedReader br = new BufferedReader(
-        new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
-      fileContent = br.lines().collect(Collectors.joining(System.lineSeparator()));
-    }
-    return fileContent;
+  public Signer mAuthService(@Value("${mauth.appUuid}") String appUuid,
+                             @Value("${mauth.privateKeyFilePath}") String privateKeyFilePath) throws IOException {
+    String privateKey = new String(Files.readAllBytes(Paths.get(privateKeyFilePath)));
+    return new HttpClientRequestSigner(
+        UUID.fromString(appUuid),
+        privateKey
+    );
   }
 
   /*
@@ -64,7 +51,7 @@ public class MAuthFakeAuthenticatorApp {
             SecurityConstraint securityConstraint = new SecurityConstraint();
             securityConstraint.setUserConstraint("CONFIDENTIAL");
             SecurityCollection collection = new SecurityCollection();
-            collection.addPattern("/*");
+            collection.addPattern("/*");§
             securityConstraint.addCollection(collection);
             context.addConstraint(securityConstraint);
           }

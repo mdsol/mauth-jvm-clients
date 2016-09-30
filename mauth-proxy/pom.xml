@@ -1,30 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <name>mAuth Testing Authenticator</name>
-    <groupId>com.mdsol</groupId>
-    <artifactId>mauth-testing-authenticator</artifactId>
-    <version>0.1-SNAPSHOT</version>
-
-    <properties>
-        <java.version>1.8</java.version>
-        <mauth.client.version>2015.2.0-SNAPSHOT</mauth.client.version>
-        <guava.version>18.0</guava.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.2.6.RELEASE</version>
+        <artifactId>mauth-client</artifactId>
+        <groupId>com.mdsol.clients</groupId>
+        <version>2016.3.0-SNAPSHOT</version>
     </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>mauth-proxy</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>com.mdsol.clients</groupId>
-            <artifactId>mauth-client</artifactId>
-            <version>${mauth.client.version}</version>
+            <artifactId>mauth-signer-apachehttp</artifactId>
+            <version>${project.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>javax.servlet</groupId>
@@ -33,7 +23,6 @@
             </exclusions>
         </dependency>
 
-        <!-- Spring Boot -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -44,11 +33,9 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Guava -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
         </dependency>
 
     </dependencies>

@@ -6,9 +6,8 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.mdsol.mauth.api.MAuthService;
-import com.mdsol.mauth.domain.MAuthRequest;
-
+import com.mdsol.mauth.MAuthRequest;
+import com.mdsol.mauth.Signer;
 import org.junit.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -41,11 +40,11 @@ public class AuthenticatorServiceTest {
   public void shouldCorrectlyModifyRequestWhenForwardUrlHeaderIsNull() {
     // Arrange
     RequestEntity<String> entity = mockRequestEntity();
-    MAuthService mAuthService = mockMAuthService();
+    Signer signer = mockMAuthSigner();
 
     // Act
     AuthenticatorService authenticatorService =
-        new AuthenticatorService(mAuthService, DEFAULT_FORWARD_HOST);
+        new AuthenticatorService(signer, DEFAULT_FORWARD_HOST);
     RequestEntity<String> modifiedRequest =
         authenticatorService.createModifiedRequest(entity, null, CONTENT_TYPE);
 
@@ -62,11 +61,11 @@ public class AuthenticatorServiceTest {
     // Arrange
     String forwardUrl = "https://forwarded-host.com/forwarded-path?forwarded-query=42";
     RequestEntity<String> entity = mockRequestEntity();
-    MAuthService mAuthService = mockMAuthService(URI.create(forwardUrl));
+    Signer signer = mockMAuthSigner(URI.create(forwardUrl));
 
     // Act
     AuthenticatorService authenticatorService =
-        new AuthenticatorService(mAuthService, DEFAULT_FORWARD_HOST);
+        new AuthenticatorService(signer, DEFAULT_FORWARD_HOST);
     RequestEntity<String> modifiedRequest =
         authenticatorService.createModifiedRequest(entity, forwardUrl, CONTENT_TYPE);
 
@@ -85,11 +84,11 @@ public class AuthenticatorServiceTest {
     headersWithMAuthKeys.add(MAuthRequest.MAUTH_AUTHENTICATION_HEADER_NAME,
         "MWS old_uuid:old_signature");
     when(entity.getHeaders()).thenReturn(headersWithMAuthKeys);
-    MAuthService mAuthService = mockMAuthService();
+    Signer signer = mockMAuthSigner();
 
     // Act
     AuthenticatorService authenticatorService =
-        new AuthenticatorService(mAuthService, DEFAULT_FORWARD_HOST);
+        new AuthenticatorService(signer, DEFAULT_FORWARD_HOST);
     RequestEntity<String> modifiedRequest =
         authenticatorService.createModifiedRequest(entity, null, CONTENT_TYPE);
 
@@ -101,15 +100,15 @@ public class AuthenticatorServiceTest {
         equalTo("MWS uuid:signature"));
   }
 
-  private MAuthService mockMAuthService() {
-    MAuthService mAuthService = mock(MAuthService.class);
+  private Signer mockMAuthSigner() {
+    Signer mAuthService = mock(Signer.class);
     when(mAuthService.generateRequestHeaders(REQUEST_METHOD.name(), REQUEST_URL.getPath(),
         REQUEST_BODY)).thenReturn(MAUTH_HEADERS);
     return mAuthService;
   }
 
-  private MAuthService mockMAuthService(URI forwardUrl) {
-    MAuthService mAuthService = mock(MAuthService.class);
+  private Signer mockMAuthSigner(URI forwardUrl) {
+    Signer mAuthService = mock(Signer.class);
     when(mAuthService.generateRequestHeaders(REQUEST_METHOD.name(), forwardUrl.getPath(),
         REQUEST_BODY)).thenReturn(MAUTH_HEADERS);
     return mAuthService;

@@ -1,8 +1,7 @@
 package com.mdsol.mauth.fake.services;
 
-import com.mdsol.mauth.api.MAuthService;
-import com.mdsol.mauth.domain.MAuthRequest;
-
+import com.mdsol.mauth.MAuthRequest;
+import com.mdsol.mauth.Signer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.RequestEntity;
@@ -15,23 +14,19 @@ import java.util.Map;
 public class AuthenticatorService {
 
   private String defaultHostToForward;
-  private MAuthService mAuthService;
+  private Signer signer;
 
   @Autowired
-  public AuthenticatorService(MAuthService mAuthService,
-      @Value("${defaultHostToForward}") String defaultHostToForward) {
-    this.mAuthService = mAuthService;
+  public AuthenticatorService(Signer signer, @Value("${defaultHostToForward}") String defaultHostToForward) {
+    this.signer = signer;
     this.defaultHostToForward = defaultHostToForward;
   }
 
   public RequestEntity<String> createModifiedRequest(RequestEntity<String> entity,
-      String overridenUrlToForward, String contentType) {
+                                                     String overridenUrlToForward, String contentType) {
     URI urlToForward = createUrlToForward(entity, overridenUrlToForward);
-    Map<String, String> mAuthHeaders = mAuthService.generateRequestHeaders(
-        entity.getMethod().name(), urlToForward.getPath(), entity.getBody());
-    RequestEntity<String> modifiedRequest =
-        modifyRequest(entity, mAuthHeaders, urlToForward, contentType);
-    return modifiedRequest;
+    Map<String, String> mAuthHeaders = signer.generateRequestHeaders(entity.getMethod().name(), urlToForward.getPath(), entity.getBody());
+    return modifyRequest(entity, mAuthHeaders, urlToForward, contentType);
   }
 
   private URI createUrlToForward(RequestEntity<String> entity, String overridenUrlToForward) {
@@ -39,8 +34,7 @@ public class AuthenticatorService {
     if (overridenUrlToForward == null || overridenUrlToForward.isEmpty()) {
       String pathPart = entity.getUrl().getPath() != null ? entity.getUrl().getPath() : "";
       String queryPart = entity.getUrl().getQuery() != null ? "?" + entity.getUrl().getQuery() : "";
-      urlToForward =
-          new StringBuilder(defaultHostToForward).append(pathPart).append(queryPart).toString();
+      urlToForward = defaultHostToForward + pathPart + queryPart;
     } else {
       urlToForward = overridenUrlToForward;
     }
@@ -48,7 +42,7 @@ public class AuthenticatorService {
   }
 
   private RequestEntity<String> modifyRequest(RequestEntity<String> entity,
-      Map<String, String> mAuthHeaders, URI urlToForward, String contentType) {
+                                              Map<String, String> mAuthHeaders, URI urlToForward, String contentType) {
     RequestEntity.BodyBuilder builder = RequestEntity.method(entity.getMethod(), urlToForward);
 
     entity.getHeaders().forEach((key, value) -> {
@@ -58,8 +52,7 @@ public class AuthenticatorService {
         builder.header(key, value.toArray(new String[value.size()]));
       }
     });
-    mAuthHeaders.entrySet().stream()
-        .forEach((header) -> builder.header(header.getKey(), header.getValue()));
+    mAuthHeaders.entrySet().forEach((header) -> builder.header(header.getKey(), header.getValue()));
 
     // content-type in entity gets modified by Spring to append charset at the end, but we want to
     // forward exactly the same as incoming.
