@@ -44,7 +44,11 @@ public class ProxyServer {
               public HttpResponse clientToProxyRequest(HttpObject httpObject) {
                 if (httpObject instanceof HttpRequest) {
                   HttpRequest request = (HttpRequest) httpObject;
-                  request.setUri(proxyConfig.getForwardBaseUrl() + request.getUri());
+                  String forwardBaseUrl = request.headers().get("forward-base-url");
+                  if(null == forwardBaseUrl){
+                    forwardBaseUrl = proxyConfig.getForwardBaseUrl();
+                  }
+                  request.setUri(forwardBaseUrl + request.getUri());
                 }
                 return null;
               }

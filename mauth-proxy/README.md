@@ -22,3 +22,4 @@ app {
   private_key_file: ${?APP_PRIVATE_KEY_FILE}
 }
 ```
+Forwarding base url can be overridden by `forward-base-url` HTTP request header
