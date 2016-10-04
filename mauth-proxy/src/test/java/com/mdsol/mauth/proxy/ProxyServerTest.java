@@ -6,7 +6,6 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.mdsol.mauth.MAuthRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.Rule;
