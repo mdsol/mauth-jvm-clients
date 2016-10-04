@@ -26,8 +26,8 @@ public class MAuthConfiguration {
   public MAuthConfiguration(Config config) {
     this(
         UUID.fromString(config.getString(APP_UUID_PATH)),
-        config.getString(APP_PRIVATE_KEY_PATH),
         config.getString(BASE_URL_PATH),
+        config.getString(APP_PRIVATE_KEY_PATH),
         config.getString(REQUEST_URL_PATH),
         config.getString(TOKEN_URL_PATH),
         config.getLong(TIME_TO_LIVE_SECONDS)

@@ -18,8 +18,6 @@ import java.security.PrivateKey;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.mdsol.mauth.util.MAuthKeysHelper.getPrivateKeyFromString;
-
 public class HttpClientRequestSigner extends DefaultSigner {
 
   public HttpClientRequestSigner(MAuthConfiguration configuration) {

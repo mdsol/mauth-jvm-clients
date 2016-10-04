@@ -1,7 +1,6 @@
 package com.mdsol.mauth;
 
 import com.mdsol.mauth.util.MAuthHeadersHelper;
-
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;

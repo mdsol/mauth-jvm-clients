@@ -1,0 +1,28 @@
+<configuration>
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>"%-6level [%date{yyyy-MM-dd'T'HH:mm:ss.S,UTC}] [%t] %logger{5} - %X{code} %msg %n"</pattern>
+        </encoder>
+    </appender>
+
+<!--     <appender name="application_file" class="ch.qos.logback.core.FileAppender"> -->
+<!--         <file>mauth-testing-authenticator.log</file> -->
+<!--         <encoder> -->
+<!--             <pattern>"%-6level [%date{yyyy-MM-dd'T'HH:mm:ss.S,UTC}] [%t] %logger{5} - %X{code} %msg %n"</pattern> -->
+<!--         </encoder> -->
+
+<!--         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy"> -->
+<!--             rollover daily -->
+<!--             <fileNamePattern>mauth-testing-authenticator-%d.log</fileNamePattern> -->
+<!--             <timeBasedFileNamingAndTriggeringPolicy -->
+<!--                 class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP"> -->
+<!--                 <maxFileSize>10MB</maxFileSize> -->
+<!--             </timeBasedFileNamingAndTriggeringPolicy> -->
+<!--         </rollingPolicy> -->
+<!--     </appender> -->
+
+    <root level="info">
+        <appender-ref ref="stdout" />
+<!--         <appender-ref ref="application_file" /> -->
+    </root>
+</configuration>
