@@ -13,12 +13,23 @@ public class ProxyConfig {
   private final UUID appUuid;
 
   public ProxyConfig(Config config) {
-    proxyPort = config.getInt("proxy.port");
-    bufferSizeInByes = config.getInt("proxy.buffer_size_in_bytes");
-    forwardBaseUrl = config.getString("proxy.forward.base_url");
-    privateKeyFile = config.getString("app.private_key_file");
-    appUuid = UUID.fromString(config.getString("app.uuid"));
+    this(
+        config.getInt("proxy.port"),
+        config.getInt("proxy.buffer_size_in_bytes"),
+        config.getString("proxy.forward.base_url"),
+        UUID.fromString(config.getString("app.uuid")),
+        config.getString("app.private_key_file")
+    );
   }
+
+  public ProxyConfig(int proxyPort, int bufferSizeInByes, String forwardBaseUrl, UUID appUuid, String privateKeyFile) {
+    this.proxyPort = proxyPort;
+    this.bufferSizeInByes = bufferSizeInByes;
+    this.forwardBaseUrl = forwardBaseUrl;
+    this.appUuid = appUuid;
+    this.privateKeyFile = privateKeyFile;
+  }
+
 
   public int getProxyPort() {
     return proxyPort;
