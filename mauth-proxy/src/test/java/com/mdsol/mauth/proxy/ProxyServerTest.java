@@ -12,6 +12,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -101,13 +102,18 @@ public class ProxyServerTest {
   }
 
   private ProxyServer getProxyServer() throws IOException {
-    ProxyServer proxyServer = new ProxyServer(new ProxyConfig(
-        0,
-        (512 * 1024),
-        BASE_URL + ":" + service1.port(),
-        UUID.randomUUID(),
-        "/projects/mauth-java-client/mauth-proxy/src/test/resources/fake_private_key"
-    ));
+    ProxyServer proxyServer = null;
+    try {
+      proxyServer = new ProxyServer(new ProxyConfig(
+          0,
+          (512 * 1024),
+          BASE_URL + ":" + service1.port(),
+          UUID.randomUUID(),
+          "classpath:/fake_private_key"
+      ));
+    } catch (URISyntaxException e) {
+      e.printStackTrace();
+    }
     proxyServer.serve();
     return proxyServer;
   }

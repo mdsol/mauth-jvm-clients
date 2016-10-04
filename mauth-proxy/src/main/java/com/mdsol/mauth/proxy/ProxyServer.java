@@ -30,9 +30,9 @@ public class ProxyServer {
   private final ProxyConfig proxyConfig;
 
   private final HttpClientRequestSigner httpClientRequestSigner;
-  private  HttpProxyServer httpProxyServer;
+  private HttpProxyServer httpProxyServer;
 
-  public ProxyServer(ProxyConfig proxyConfig) throws IOException {
+  public ProxyServer(ProxyConfig proxyConfig) throws IOException, URISyntaxException {
     this.proxyConfig = proxyConfig;
 
     httpClientRequestSigner = new HttpClientRequestSigner(
@@ -81,19 +81,19 @@ public class ProxyServer {
         .start();
   }
 
-  public void stop(){
-    if(httpProxyServer != null){
+  public void stop() {
+    if (httpProxyServer != null) {
       httpProxyServer.stop();
     }
   }
 
-  public void abort(){
-    if(httpProxyServer != null){
+  public void abort() {
+    if (httpProxyServer != null) {
       httpProxyServer.abort();
     }
   }
 
-  public int getPort(){
+  public int getPort() {
     return httpProxyServer.getListenAddress().getPort();
   }
 
@@ -115,7 +115,7 @@ public class ProxyServer {
   public static void main(String[] args) {
     try {
       new ProxyServer(new ProxyConfig(ConfigFactory.load().resolve())).serve();
-    } catch (IOException e) {
+    } catch (IOException | URISyntaxException e) {
       e.printStackTrace();
     }
   }
