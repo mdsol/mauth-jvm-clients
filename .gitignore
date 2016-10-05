@@ -1,8 +1,6 @@
-/target/
+target/
 .classpath
 .project
 .settings
 .idea
-mauth-client.iml
-/bin/
-env_variables.sh
+*.iml
