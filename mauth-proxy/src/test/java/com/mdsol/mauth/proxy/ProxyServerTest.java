@@ -45,39 +45,6 @@ public class ProxyServerTest {
   }
 
   @Test
-  public void shouldCorrectlyModifyRequestWhenForwardUrlHeaderIsPassed() throws IOException {
-    service1.stubFor(get(urlEqualTo(MY_RESOURCE))
-        .willReturn(aResponse()
-            .withStatus(500)
-            .withBody("failed")));
-
-    WireMockServer service2 = new WireMockServer(wireMockConfig().dynamicPort());
-    service2.start();
-    final String forwardBaseUrl = BASE_URL + ":" + service2.port();
-
-    service2.stubFor(get(urlEqualTo(MY_RESOURCE))
-        .withHeader(MAuthRequest.MAUTH_AUTHENTICATION_HEADER_NAME, containing("MWS "))
-        .withHeader(MAuthRequest.MAUTH_TIME_HEADER_NAME, matching(".*"))
-        .withHeader(ProxyServer.HEADER_FORWARD_BASE_URL, equalTo(forwardBaseUrl))
-        .willReturn(aResponse()
-            .withStatus(200)
-            .withBody("success")));
-
-    ProxyServer proxyServer = getProxyServer();
-
-    final int proxyPort = proxyServer.getPort();
-
-    final HttpGet request = new HttpGet(BASE_URL + ":" + proxyPort + MY_RESOURCE);
-    request.addHeader(ProxyServer.HEADER_FORWARD_BASE_URL, forwardBaseUrl);
-    HttpResponse response = HttpClients.createDefault().execute(request);
-    assert (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK);
-
-    proxyServer.stop();
-    WireMock.reset();
-    service2.stop();
-  }
-
-  @Test
   public void shouldOverrideExistingMAuthHeaders() throws IOException {
     final String WRONG_MAUTH_HEADER = "This is a wrong Mauth Header";
 
@@ -107,7 +74,6 @@ public class ProxyServerTest {
       proxyServer = new ProxyServer(new ProxyConfig(
           0,
           (512 * 1024),
-          BASE_URL + ":" + service1.port(),
           UUID.randomUUID(),
           "classpath:/fake_private_key"
       ));

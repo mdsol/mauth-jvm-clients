@@ -12,7 +12,6 @@ public class ProxyConfig {
   private static final Logger logger = LoggerFactory.getLogger(ProxyConfig.class);
   private final int proxyPort;
   private final int bufferSizeInByes;
-  private final String forwardBaseUrl;
   private URI privateKeyFile;
   private final UUID appUuid;
 
@@ -20,16 +19,14 @@ public class ProxyConfig {
     this(
         config.getInt("proxy.port"),
         config.getInt("proxy.buffer_size_in_bytes"),
-        config.getString("proxy.forward.base_url"),
         UUID.fromString(config.getString("app.uuid")),
         config.getString("app.private_key_file")
     );
   }
 
-  public ProxyConfig(int proxyPort, int bufferSizeInByes, String forwardBaseUrl, UUID appUuid, String privateKeyFile) {
+  public ProxyConfig(int proxyPort, int bufferSizeInByes, UUID appUuid, String privateKeyFile) {
     this.proxyPort = proxyPort;
     this.bufferSizeInByes = bufferSizeInByes;
-    this.forwardBaseUrl = forwardBaseUrl;
     this.appUuid = appUuid;
     try {
       URI uri = new URI(privateKeyFile);
@@ -52,10 +49,6 @@ public class ProxyConfig {
 
   public int getBufferSizeInByes() {
     return bufferSizeInByes;
-  }
-
-  public String getForwardBaseUrl() {
-    return forwardBaseUrl;
   }
 
   public URI getPrivateKeyFile() {
