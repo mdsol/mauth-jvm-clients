@@ -1,13 +1,14 @@
 package com.mdsol.mauth.proxy;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.mdsol.mauth.MAuthRequest;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -27,7 +28,7 @@ public class ProxyServerTest {
   public WireMockRule service1 = new WireMockRule(wireMockConfig().dynamicPort());
 
   @Test
-  public void shouldCorrectlyModifyRequestWhenForwardUrlHeaderIsNull() throws IOException {
+  public void shouldCorrectlyModifyRequestToAddMAuthHeaders() throws IOException {
     service1.stubFor(get(urlEqualTo(MY_RESOURCE))
         .withHeader(MAuthRequest.MAUTH_AUTHENTICATION_HEADER_NAME, containing("MWS "))
         .withHeader(MAuthRequest.MAUTH_TIME_HEADER_NAME, matching(".*"))
@@ -37,44 +38,9 @@ public class ProxyServerTest {
 
     ProxyServer proxyServer = getProxyServer();
 
-    final int proxyPort = proxyServer.getPort();
-
-    HttpResponse response = HttpClients.createDefault().execute(new HttpGet(BASE_URL + ":" + proxyPort + MY_RESOURCE));
+    HttpResponse response = execute(proxyServer.getPort(), new HttpGet(BASE_URL + ":" + service1.port() + MY_RESOURCE));
     assert (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK);
     proxyServer.stop();
-  }
-
-  @Test
-  public void shouldCorrectlyModifyRequestWhenForwardUrlHeaderIsPassed() throws IOException {
-    service1.stubFor(get(urlEqualTo(MY_RESOURCE))
-        .willReturn(aResponse()
-            .withStatus(500)
-            .withBody("failed")));
-
-    WireMockServer service2 = new WireMockServer(wireMockConfig().dynamicPort());
-    service2.start();
-    final String forwardBaseUrl = BASE_URL + ":" + service2.port();
-
-    service2.stubFor(get(urlEqualTo(MY_RESOURCE))
-        .withHeader(MAuthRequest.MAUTH_AUTHENTICATION_HEADER_NAME, containing("MWS "))
-        .withHeader(MAuthRequest.MAUTH_TIME_HEADER_NAME, matching(".*"))
-        .withHeader(ProxyServer.HEADER_FORWARD_BASE_URL, equalTo(forwardBaseUrl))
-        .willReturn(aResponse()
-            .withStatus(200)
-            .withBody("success")));
-
-    ProxyServer proxyServer = getProxyServer();
-
-    final int proxyPort = proxyServer.getPort();
-
-    final HttpGet request = new HttpGet(BASE_URL + ":" + proxyPort + MY_RESOURCE);
-    request.addHeader(ProxyServer.HEADER_FORWARD_BASE_URL, forwardBaseUrl);
-    HttpResponse response = HttpClients.createDefault().execute(request);
-    assert (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK);
-
-    proxyServer.stop();
-    WireMock.reset();
-    service2.stop();
   }
 
   @Test
@@ -90,13 +56,12 @@ public class ProxyServerTest {
 
     ProxyServer proxyServer = getProxyServer();
 
-    final int proxyPort = proxyServer.getPort();
-
-    final HttpGet request = new HttpGet(BASE_URL + ":" + proxyPort + MY_RESOURCE);
+    final HttpGet request = new HttpGet(BASE_URL + ":" + service1.port() + MY_RESOURCE);
     request.addHeader(MAuthRequest.MAUTH_AUTHENTICATION_HEADER_NAME, WRONG_MAUTH_HEADER);
     request.addHeader(MAuthRequest.MAUTH_TIME_HEADER_NAME, WRONG_MAUTH_HEADER);
 
-    HttpResponse response = HttpClients.createDefault().execute(request);
+    HttpResponse response = execute(proxyServer.getPort(), request);
+
     assert (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK);
     proxyServer.stop();
   }
@@ -107,14 +72,23 @@ public class ProxyServerTest {
       proxyServer = new ProxyServer(new ProxyConfig(
           0,
           (512 * 1024),
-          BASE_URL + ":" + service1.port(),
           UUID.randomUUID(),
           "classpath:/fake_private_key"
       ));
+      proxyServer.serve();
     } catch (URISyntaxException e) {
       e.printStackTrace();
     }
-    proxyServer.serve();
     return proxyServer;
+  }
+
+  private HttpResponse execute(int proxyServerPort, HttpGet request) throws IOException {
+    HttpHost proxy = new HttpHost("localhost", proxyServerPort);
+    DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
+    final CloseableHttpClient httpClient = HttpClients.custom()
+        .setRoutePlanner(routePlanner)
+        .build();
+
+    return httpClient.execute(request);
   }
 }
