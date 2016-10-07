@@ -2,6 +2,7 @@ package com.mdsol.mauth.proxy;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.mdsol.mauth.MAuthRequest;
+import com.typesafe.config.ConfigFactory;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -69,12 +70,7 @@ public class ProxyServerTest {
   private ProxyServer getProxyServer() throws IOException {
     ProxyServer proxyServer = null;
     try {
-      proxyServer = new ProxyServer(new ProxyConfig(
-          0,
-          (512 * 1024),
-          UUID.randomUUID(),
-          "classpath:/fake_private_key"
-      ));
+      proxyServer = new ProxyServer(new ProxyConfig(ConfigFactory.load().resolve()));
       proxyServer.serve();
     } catch (URISyntaxException e) {
       e.printStackTrace();
