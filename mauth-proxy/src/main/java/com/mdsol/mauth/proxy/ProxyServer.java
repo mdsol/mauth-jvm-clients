@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Map;
 
 public class ProxyServer {
@@ -36,7 +34,7 @@ public class ProxyServer {
 
     httpClientRequestSigner = new HttpClientRequestSigner(
         proxyConfig.getAppUuid(),
-        new String(Files.readAllBytes(Paths.get(proxyConfig.getPrivateKeyFile())))
+        proxyConfig.getPrivateKey()
     );
 
   }

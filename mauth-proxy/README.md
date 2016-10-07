@@ -11,15 +11,10 @@ proxy {
   port: ${?PROXY_PORT}
   buffer_size_in_bytes: 524288
   buffer_size_in_bytes: ${?BUFFER_SIZE_IN_BYTES}
-  forward {
-    base_url: "http://localhost:8080"
-    base_url: ${?FORWARD_BASE_URL}
-  }
 }
 
 app {
   uuid: ${?APP_UUID}
-  private_key_file: ${?APP_PRIVATE_KEY_FILE}
+  private_key_file: ${?APP_PRIVATE_KEY}
 }
 ```
-Forwarding base url can be overridden by `forward-base-url` HTTP request header

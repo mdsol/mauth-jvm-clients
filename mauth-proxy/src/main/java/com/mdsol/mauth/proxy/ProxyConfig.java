@@ -4,15 +4,13 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.UUID;
 
 public class ProxyConfig {
   private static final Logger logger = LoggerFactory.getLogger(ProxyConfig.class);
   private final int proxyPort;
   private final int bufferSizeInByes;
-  private URI privateKeyFile;
+  private String privateKey;
   private final UUID appUuid;
 
   public ProxyConfig(Config config) {
@@ -24,22 +22,11 @@ public class ProxyConfig {
     );
   }
 
-  public ProxyConfig(int proxyPort, int bufferSizeInByes, UUID appUuid, String privateKeyFile) {
+  public ProxyConfig(int proxyPort, int bufferSizeInByes, UUID appUuid, String privateKey) {
     this.proxyPort = proxyPort;
     this.bufferSizeInByes = bufferSizeInByes;
     this.appUuid = appUuid;
-    try {
-      URI uri = new URI(privateKeyFile);
-      if(null == uri.getScheme()){
-        uri = new URI("file", uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath(), uri.getQuery(), uri.getFragment());
-      } else if(uri.getScheme().equalsIgnoreCase("classpath")){
-        uri = ClassLoader.getSystemResource(uri.getPath().replaceAll("^/", "")).toURI();
-      }
-      this.privateKeyFile = uri;
-    } catch (URISyntaxException e) {
-      logger.error("Couldn't generate URI from :" + privateKeyFile, e);
-    }
-
+    this.privateKey = privateKey;
   }
 
 
@@ -51,8 +38,8 @@ public class ProxyConfig {
     return bufferSizeInByes;
   }
 
-  public URI getPrivateKeyFile() {
-    return privateKeyFile;
+  public String getPrivateKey() {
+    return privateKey;
   }
 
   public UUID getAppUuid() {

@@ -6,7 +6,7 @@
     </appender>
 
      <appender name="application_file" class="ch.qos.logback.core.FileAppender">
-         <file>mauth-testing-authenticator.log</file>
+         <file>log/mauth-proxy.log</file>
          <encoder>
              <pattern>"%-6level [%date{yyyy-MM-dd'T'HH:mm:ss.S,UTC}] [%t] %logger{5} - %X{code} %msg %n"</pattern>
          </encoder>
