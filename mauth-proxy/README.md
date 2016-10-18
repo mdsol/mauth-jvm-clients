@@ -15,6 +15,6 @@ proxy {
 
 app {
   uuid: ${?APP_UUID}
-  private_key_file: ${?APP_PRIVATE_KEY}
+  private_key: ${?APP_PRIVATE_KEY}
 }
 ```

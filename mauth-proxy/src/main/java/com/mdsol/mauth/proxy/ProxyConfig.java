@@ -18,7 +18,7 @@ public class ProxyConfig {
         config.getInt("proxy.port"),
         config.getInt("proxy.buffer_size_in_bytes"),
         UUID.fromString(config.getString("app.uuid")),
-        config.getString("app.private_key_file")
+        config.getString("app.private_key")
     );
   }
 
