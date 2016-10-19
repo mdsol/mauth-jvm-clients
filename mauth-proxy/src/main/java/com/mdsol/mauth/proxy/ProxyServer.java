@@ -50,15 +50,7 @@ public class ProxyServer {
           }
 
           public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext ctx) {
-            return new HttpFiltersAdapter(originalRequest) {
-              @Override
-              public HttpResponse proxyToServerRequest(HttpObject httpObject) {
-                if (httpObject instanceof FullHttpRequest) {
-                  signRequest((FullHttpRequest) httpObject);
-                }
-                return null;
-              }
-            };
+            return new MAuthRequestFilter(originalRequest, httpClientRequestSigner);
           }
 
         })
@@ -81,23 +73,7 @@ public class ProxyServer {
     return httpProxyServer.getListenAddress().getPort();
   }
 
-  private void signRequest(FullHttpRequest request) {
-    final String verb = request.getMethod().name();
 
-    if(!verb.equalsIgnoreCase("CONNECT")) {
-      final String requestPayload = request.content().toString(Charset.forName("UTF-8"));
-      String uri = request.getUri();
-      try {
-        uri = new URI(uri).getPath();
-      } catch (URISyntaxException e) {
-        logger.error("Couldn't get request uri", e);
-      }
-
-      logger.debug("Generating request headers for Verb: '" + verb + "' URI: '" + uri + "' Payload: " + requestPayload);
-      Map<String, String> mAuthHeaders = httpClientRequestSigner.generateRequestHeaders(verb, uri, requestPayload);
-      mAuthHeaders.entrySet().forEach((header) -> request.headers().add(header.getKey(), header.getValue()));
-    }
-  }
 
   public static void main(String[] args) {
     try {
