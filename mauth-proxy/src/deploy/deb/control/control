@@ -1,0 +1,8 @@
+Package: [[name]]
+Version: [[version]]
+Description: [[description]]
+Maintainer: Site Engagement Team Red Panda <se_team_redpanda@mdsol.com>
+Depends: oracle-java8-installer
+Section: misc
+Priority: low
+Architecture: all
