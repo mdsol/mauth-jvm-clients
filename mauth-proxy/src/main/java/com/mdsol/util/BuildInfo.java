@@ -1,4 +1,4 @@
-package com.mdso.util;
+package com.mdsol.util;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -8,17 +8,17 @@ public class BuildInfo {
   private final String version;
   private final String build;
 
-  @JsonProperty(value = "git_revision")
-  private final String gitRevision;
+  @JsonProperty(value = "git_commit")
+  private final String gitCommit;
 
   @JsonProperty(value = "git_branch")
   private final String gitBranch;
 
-  public BuildInfo(final String name, final String version, final String build, final String gitRevision, final String gitBranch) {
+  public BuildInfo(final String name, final String version, final String build, final String gitCommit, final String gitBranch) {
     this.name = name;
     this.version = version;
     this.build = build;
-    this.gitRevision = gitRevision;
+    this.gitCommit = gitCommit;
     this.gitBranch = gitBranch;
   }
 
@@ -34,8 +34,8 @@ public class BuildInfo {
     return build;
   }
 
-  public String getGitRevision() {
-    return gitRevision;
+  public String getGitCommit() {
+    return gitCommit;
   }
 
   public String getGitBranch() {

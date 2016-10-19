@@ -73,8 +73,6 @@ public class ProxyServer {
     return httpProxyServer.getListenAddress().getPort();
   }
 
-
-
   public static void main(String[] args) {
     try {
       new ProxyServer(new ProxyConfig(ConfigFactory.load().resolve())).serve();

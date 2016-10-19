@@ -2,7 +2,7 @@ package com.mdsol.mauth.proxy;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mdso.util.BuildInfoService;
+import com.mdsol.util.BuildInfoService;
 import com.mdsol.mauth.Signer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -28,10 +28,9 @@ public class MAuthRequestFilter extends HttpFiltersAdapter {
     super(originalRequest);
     this.httpClientRequestSigner = httpClientRequestSigner;
 
-    ObjectMapper mapper = new ObjectMapper();
     String tmpBuildInfo;
     try {
-      tmpBuildInfo = mapper.writeValueAsString(new BuildInfoService().getBuildInfo());
+      tmpBuildInfo = new ObjectMapper().writeValueAsString(new BuildInfoService().getBuildInfo());
     } catch (JsonProcessingException e) {
       tmpBuildInfo = "Couldn't read build information";
       logger.error(tmpBuildInfo, e);

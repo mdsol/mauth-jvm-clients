@@ -1,4 +1,4 @@
-package com.mdso.util;
+package com.mdsol.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,7 @@ public class BuildInfoService {
         buildProperties.getProperty("name", UNKNOWN),
         buildProperties.getProperty("version", UNKNOWN),
         buildProperties.getProperty("build", UNKNOWN),
-        buildProperties.getProperty("git_revision", UNKNOWN),
+        buildProperties.getProperty("git_commit", UNKNOWN),
         buildProperties.getProperty("git_branch", UNKNOWN)
     );
   }
