@@ -86,7 +86,7 @@ public class MAuthRequestFilter extends HttpFiltersAdapter {
   private HttpResponse appStatus() {
     byte[] bodyInBytes = buildInfo.getBytes(Charset.forName("UTF-8"));
     ByteBuf content = Unpooled.copiedBuffer(bodyInBytes);
-    HttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_GATEWAY, content);
+    HttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, content);
     response.headers().set(HttpHeaders.Names.CONTENT_LENGTH, bodyInBytes.length);
     response.headers().set("Content-Type", "application/json; charset=UTF-8");
     response.headers().set("Date", ProxyUtils.formatDate(new Date()));
