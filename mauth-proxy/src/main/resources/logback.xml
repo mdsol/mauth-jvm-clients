@@ -19,7 +19,7 @@
          </rollingPolicy>
      </appender>
 
-    <root level="info">
+    <root level="debug">
         <appender-ref ref="stdout" />
          <appender-ref ref="application_file" />
     </root>

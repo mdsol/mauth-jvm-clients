@@ -1,95 +1,22 @@
 # Java Client for MAuth
 
-This is a standalone MAuth client for use by internal Medidata teams and authorized 3rd parties.
+This is a standalone client for Medidata Authentication
+
+# Medidata Authentication
+
+The Medidata authentication process bounds - in this case verifies - an API message against its origin.
+
+Medidata authentication provides a fault tolerant, service-to-service authentication scheme for Medidata and third-party applications that use web services to communicate with each other.
+
+The process and integrity algorithm are based on digital signatures encrypted and decrypted with private/public key pairs.
+
+Medidata's authentication process requires public key management, which is done by way of an API. It provides message integrity and provenance validation by verifying a message sender's signature. Each public key is associated with an application and is used to authenticate message signatures. Each private key is stored by the application signing requests with the private key. 
+
+**NOTE:** Only the signing application has any knowledge of the application's private key.
 
 ## Usage
+Medidata Authentication has two parts:
 
-1. Instantiate MAuthService using MAuthServiceClient implementation
-MAuthServiceClient is thread-safe. This means you only need to instantiate it once for given configuration.
-  * Using [Typesafe Config](https://github.com/typesafehub/config)
-  Create `application.conf` on your classpath with following content
-```json
-app {
-  uuid: "aaaa-bbbbb-ccccc-ddddd-eeeee"
-  private_key: "avasdfasdfadf"
-}
-
-mauth {
-  base_url: "http://localhost"
-}
-```
-
-**Defaults:**
-If following settings are omitted the default values will be used.
-```json
-app {
-  uuid: ${?APP_UUID}
-  private_key: ${?APP_PRIVATE_KEY}
-}
-
-mauth {
-  base_url: ${?MAUTH_URL}
-  request_url: "/mauth/v1"
-  token_url: "/security_tokens/%s.json"
-  cache {
-    time_to_live_seconds: 90
-  }
-}
-```
-        
-```java
-MAuthService mAuthService = new MAuthServiceClient();
-```
-        
-  * Using `MAuthConfiguration` builder
-```java
-MAuthConfiguration mAuthConfiguration = MAuthConfiguration.Builder.get()
-    .withAppUUID(UUID.fromString("UUID of your application as in MAuth registry"))
-    .withMAuthUrl("mauth-server.example.com")
-    .withDefaultMAuthPaths()
-    .withPrivateKey("Private key needed for signing the requests")
-    .withPublicKey("Public key for the private key you have provided")
-    .build();
-MAuthService mAuthService = new MAuthServiceClient(configuration);
-```
-1. Sign requests using Apache HttpClient
-  * Use an interceptor to sign all requests processed
-```java
-CloseableHttpClient httpClient = HttpClients
-        .custom()
-        .addInterceptorFirst(new MAuthSignerRequestInterceptor(config))
-        .build();
-```
-and then use `httpClient` as normal
-  * Manually signing requests
-```java
-HttpGet request = new HttpGet("http://example.com/resources/1");
-Map<String, String> headers = mAuthService.generateRequestHeaders(request.getMethod(), "/resources/1", null);
-for (Entry<String, String> header : headers.entrySet()) {
-    request.addHeader(header.getKey(), header.getValue());
-}
-```
-or to validate (authenticate) incoming ones, e.g. (using Servlet Filter):
-```java
-@Override
-public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
-    HttpServletRequest request = (HttpServletRequest) req;
-    MAuthRequest request = MAuthRequest.Builder.get()
-        .withAuthenticationHeaderValue(request.getHeader(MAuthRequest.MAUTH_AUTHENTICATION_HEADER_NAME))
-        .withTimeHeaderValue(request.getHeader(MAuthRequest.MAUTH_TIME_HEADER_NAME))
-        .withHttpMethod(request.getMethod())
-        .withResourcePath(request.getServletPath())
-        .withMessagePayload(retrieveRequestBody(request))
-        .build();
-    boolean validated = mAuthService.validate(request);
-    if (validated) {
-        // validation succeeded, proceed...
-    } else {
-        // validation failed, respond with 401...
-    }
-}
-
-private byte[] retrieveRequestBody(HttpServletRequest request){
-    // get request body from the request...
-}
-```
+  * Client Side - [Client needs to sign each request](mauth-signer-apachehttp/README.md)
+  
+  * Server Side - [Server authenticates each request](mauth-authenticator-apachehttp/README.md)

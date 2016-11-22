@@ -40,12 +40,13 @@ public class MAuthRequestFilter extends HttpFiltersAdapter {
 
   @Override
   public HttpResponse clientToProxyRequest(HttpObject httpObject) {
-    if(httpObject instanceof HttpRequest) {
+    if (httpObject instanceof HttpRequest) {
       HttpRequest request = (HttpRequest) httpObject;
-      if(request.getMethod().equals(HttpMethod.GET)) {
+      if (request.getMethod().equals(HttpMethod.GET) ||
+          request.getMethod().equals(HttpMethod.HEAD)) {
         try {
           final URI uri = new URI(request.getUri());
-          if(null == uri.getScheme() && null == uri.getHost() && -1 == uri.getPort()) {
+          if (null == uri.getScheme() && null == uri.getHost() && -1 == uri.getPort()) {
             return appStatus();
           }
         } catch (URISyntaxException e) {
@@ -64,11 +65,10 @@ public class MAuthRequestFilter extends HttpFiltersAdapter {
     return null;
   }
 
-
   private void signRequest(FullHttpRequest request) {
     final String verb = request.getMethod().name();
 
-    if(!verb.equalsIgnoreCase("CONNECT")) {
+    if (!verb.equalsIgnoreCase("CONNECT")) {
       final String requestPayload = request.content().toString(Charset.forName("UTF-8"));
       String uri = request.getUri();
       try {

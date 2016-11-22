@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.mdsol.mauth.MAuthConfiguration;
+import com.mdsol.mauth.AuthenticatorConfiguration;
 import com.mdsol.mauth.Signer;
 import com.mdsol.mauth.exception.HttpClientPublicKeyProviderException;
 import com.mdsol.mauth.util.MAuthKeysHelper;
@@ -32,14 +32,14 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpClientPublicKeyProvider.class);
 
-  private final MAuthConfiguration configuration;
+  private final AuthenticatorConfiguration configuration;
   private final Signer signer;
   private final CloseableHttpClient httpclient;
   private final PublicKeyResponseHandler publicKeyResponseHandler;
 
   private LoadingCache<UUID, PublicKey> publicKeyCache;
 
-  public HttpClientPublicKeyProvider(MAuthConfiguration configuration, Signer signer) {
+  public HttpClientPublicKeyProvider(AuthenticatorConfiguration configuration, Signer signer) {
     this.configuration = configuration;
     this.signer = signer;
     this.httpclient = HttpClients.createDefault();
