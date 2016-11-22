@@ -5,7 +5,8 @@ This is an implementation of Medidata Authentication Client Authenticator to val
 ## Usage
 
 1. Configuration
-  * MAuth uses [Typesafe Config](https://github.com/typesafehub/config). Create `application.conf` on your classpath with following content
+  * MAuth uses [Typesafe Config](https://github.com/typesafehub/config).
+  Create `application.conf` on your classpath with following content.
 
         app {
             uuid: "aaaa-bbbbb-ccccc-ddddd-eeeee"
