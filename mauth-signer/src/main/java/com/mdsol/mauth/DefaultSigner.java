@@ -30,7 +30,7 @@ public class DefaultSigner implements Signer {
     Security.addProvider(new BouncyCastleProvider());
   }
 
-  public DefaultSigner(MAuthConfiguration configuration) {
+  public DefaultSigner(SignerConfiguration configuration) {
     this(configuration.getAppUUID(), configuration.getPrivateKey());
   }
 
