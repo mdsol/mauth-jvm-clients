@@ -1,6 +1,7 @@
 package com.mdsol.mauth;
 
 import com.mdsol.mauth.exception.MAuthValidationException;
+import com.mdsol.mauth.util.CurrentEpochTimeProvider;
 import com.mdsol.mauth.util.EpochTimeProvider;
 import com.mdsol.mauth.util.MAuthSignatureHelper;
 import com.mdsol.mauth.utils.ClientPublicKeyProvider;
@@ -23,6 +24,27 @@ public class RequestAuthenticator implements Authenticator {
 
   static {
     Security.addProvider(new BouncyCastleProvider());
+  }
+
+  /**
+   * Uses
+   * 10L as default value for request validation timeout
+   * {@link com.mdsol.mauth.utils.ClientPublicKeyProvider} as the EpochTimeProvider
+   *
+   * @param clientPublicKeyProvider
+   */
+  public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider) {
+    this(clientPublicKeyProvider, 10L);
+  }
+
+  /**
+   * Uses {@link com.mdsol.mauth.utils.ClientPublicKeyProvider} as the EpochTimeProvider
+   *
+   * @param clientPublicKeyProvider
+   * @param requestValidationTimeoutSeconds
+   */
+  public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider, long requestValidationTimeoutSeconds) {
+    this(clientPublicKeyProvider, requestValidationTimeoutSeconds, new CurrentEpochTimeProvider());
   }
 
   public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider, long requestValidationTimeoutSeconds, EpochTimeProvider epochTimeProvider) {
