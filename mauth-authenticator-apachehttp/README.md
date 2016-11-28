@@ -42,7 +42,7 @@ This is an implementation of Medidata Authentication Client Authenticator to val
 
 1. To validate (authenticate) incoming requests, e.g. (using Servlet Filter):
 
-        HttpClientRequestSigner signer = new HttpClientRequestSigner(singerConfiguration);
+        HttpClientRequestSigner signer = new HttpClientRequestSigner(signerConfiguration);
         HttpClientPublicKeyProvider provider = new HttpClientPublicKeyProvider(authConfiguration, signer);
         RequestAuthenticator authenticator = new RequestAuthenticator(authenticator);
         
