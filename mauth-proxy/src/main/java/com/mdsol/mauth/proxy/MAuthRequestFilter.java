@@ -37,7 +37,7 @@ public class MAuthRequestFilter extends HttpFiltersAdapter {
     }
     buildInfo = tmpBuildInfo;
   }
-
+/* TODO: Getting direct requests to proxy doesn't work for HTTPS calls, need to figure out the problem
   @Override
   public HttpResponse clientToProxyRequest(HttpObject httpObject) {
     if (httpObject instanceof HttpRequest) {
@@ -56,7 +56,7 @@ public class MAuthRequestFilter extends HttpFiltersAdapter {
     }
     return null;
   }
-
+*/
   @Override
   public HttpResponse proxyToServerRequest(HttpObject httpObject) {
     if (httpObject instanceof FullHttpRequest) {
