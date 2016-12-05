@@ -141,6 +141,16 @@
                                     </mapper>
                                 </data>
                                 <data>
+                                    <src>${project.build.outputDirectory}/config</src>
+                                    <type>directory</type>
+                                    <mapper>
+                                        <type>perm</type>
+                                        <user>${deploy.user}</user>
+                                        <group>${deploy.group}</group>
+                                        <prefix>${deploy.home}/config</prefix>
+                                    </mapper>
+                                </data>
+                                <data>
                                     <src>${project.build.outputDirectory}/upstart/${deploy.service-name}.conf</src>
                                     <type>file</type>
                                     <mapper>
@@ -152,6 +162,65 @@
                                 </data>
                             </dataSet>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources-1</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/classes/bin</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/deploy/bin</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-resources-2</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/classes/config</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/deploy/config</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- NOTE: We don't need a groupId specification because the group is
+                     org.apache.maven.plugins ...which is assumed by default.
+                 -->
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/deploy/zip.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id> <!-- this is used for inheritance merges -->
+                        <phase>package</phase> <!-- bind to the packaging phase -->
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
