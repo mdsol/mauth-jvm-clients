@@ -1,0 +1,26 @@
+<configuration scan="true" scanPeriod="30 seconds">
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>"%-6level [%date{yyyy-MM-dd'T'HH:mm:ss.S,UTC}] [%t] %logger{5} - %X{code} %msg %n"</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="application_file" class="ch.qos.logback.core.FileAppender">
+        <file>log/mauth-proxy.log</file>
+        <encoder>
+            <pattern>"%-6level [%date{yyyy-MM-dd'T'HH:mm:ss.S,UTC}] [%t] %logger{5} - %X{code} %msg %n"</pattern>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>log/mauth-proxy-%d.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="stdout"/>
+        <appender-ref ref="application_file"/>
+    </root>
+</configuration>
