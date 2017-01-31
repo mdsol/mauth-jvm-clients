@@ -139,12 +139,12 @@
         <repository>
             <id>central</id>
             <name>ctms-releases</name>
-            <url>https://etlhydra-artifactory-sandbox.imedidata.net/artifactory/ctms-releases/</url>
+            <url>https://artv4.imedidata.net/artifactory/ctms-releases/</url>
         </repository>
         <snapshotRepository>
             <id>snapshot</id>
             <name>snapshot</name>
-            <url>https://etlhydra-artifactory-sandbox.imedidata.net/artifactory/ctms-snapshots/</url>
+            <url>https://artv4.imedidata.net/artifactory/ctms-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 
@@ -152,12 +152,12 @@
         <repository>
             <id>central</id>
             <name>all-repos-release</name>
-            <url>https://etlhydra-artifactory-sandbox.imedidata.net/artifactory/all-repos-release</url>
+            <url>https://artv4.imedidata.net/artifactory/all-repos-release</url>
         </repository>
         <repository>
             <id>snapshot</id>
             <name>snapshot</name>
-            <url>https://etlhydra-artifactory-sandbox.imedidata.net/artifactory/snapshot/</url>
+            <url>https://artv4.imedidata.net/artifactory/snapshot/</url>
             <snapshots>
                 <enabled>true</enabled>
                 <updatePolicy>always</updatePolicy>
