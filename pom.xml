@@ -36,6 +36,19 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -84,7 +97,7 @@
             <dependency>
                 <groupId>org.littleshoot</groupId>
                 <artifactId>littleproxy</artifactId>
-                <version>1.1.0</version>
+                <version>1.1.1</version>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
@@ -139,12 +152,12 @@
         <repository>
             <id>central</id>
             <name>ctms-releases</name>
-            <url>https://etlhydra-artifactory-sandbox.imedidata.net/artifactory/ctms-releases/</url>
+            <url>https://artv4.imedidata.net/artifactory/ctms-releases/</url>
         </repository>
         <snapshotRepository>
             <id>snapshot</id>
             <name>snapshot</name>
-            <url>https://etlhydra-artifactory-sandbox.imedidata.net/artifactory/ctms-snapshots/</url>
+            <url>https://artv4.imedidata.net/artifactory/ctms-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 
@@ -152,12 +165,12 @@
         <repository>
             <id>central</id>
             <name>all-repos-release</name>
-            <url>https://etlhydra-artifactory-sandbox.imedidata.net/artifactory/all-repos-release</url>
+            <url>https://artv4.imedidata.net/artifactory/all-repos-release</url>
         </repository>
         <repository>
             <id>snapshot</id>
             <name>snapshot</name>
-            <url>https://etlhydra-artifactory-sandbox.imedidata.net/artifactory/snapshot/</url>
+            <url>https://artv4.imedidata.net/artifactory/snapshot/</url>
             <snapshots>
                 <enabled>true</enabled>
                 <updatePolicy>always</updatePolicy>
