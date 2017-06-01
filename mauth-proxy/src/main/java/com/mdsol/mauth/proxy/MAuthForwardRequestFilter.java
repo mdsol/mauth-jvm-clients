@@ -12,8 +12,6 @@ import org.littleshoot.proxy.impl.ProxyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Date;
 
@@ -23,7 +21,7 @@ public class MAuthForwardRequestFilter extends HttpFiltersAdapter {
   private final MAuthHttpRequestSigner requestSigner;
   private final String buildInfo;
 
-  public MAuthForwardRequestFilter(HttpRequest originalRequest, Signer httpClientRequestSigner) {
+  MAuthForwardRequestFilter(HttpRequest originalRequest, Signer httpClientRequestSigner) {
     super(originalRequest);
     this.requestSigner = new MAuthHttpRequestSigner(httpClientRequestSigner);
 
@@ -66,8 +64,6 @@ public class MAuthForwardRequestFilter extends HttpFiltersAdapter {
     }
     return null;
   }
-
-
 
   private HttpResponse appStatus() {
     byte[] bodyInBytes = buildInfo.getBytes(Charset.forName("UTF-8"));

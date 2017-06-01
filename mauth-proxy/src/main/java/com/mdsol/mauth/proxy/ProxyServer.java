@@ -33,6 +33,7 @@ public class ProxyServer {
 
   void serve() {
     final HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap().withPort(proxyConfig.getProxyPort());
+    bootstrap.withManInTheMiddle(new SelfSignedMitmManager());
 
     httpProxyServer = bootstrap.withFiltersSource(new HttpFiltersSourceAdapter() {
       @Override

@@ -11,15 +11,15 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Map;
 
-public class MAuthHttpRequestSigner {
+class MAuthHttpRequestSigner {
   private static final Logger logger = LoggerFactory.getLogger(MAuthHttpRequestSigner.class);
   private final Signer httpClientRequestSigner;
 
-  public MAuthHttpRequestSigner(Signer httpClientRequestSigner) {
+  MAuthHttpRequestSigner(Signer httpClientRequestSigner) {
     this.httpClientRequestSigner = httpClientRequestSigner;
   }
 
-  public void signRequest(HttpRequest request) {
+  void signRequest(HttpRequest request) {
     final String verb = request.getMethod().name();
 
     String requestPayload = null;
@@ -35,6 +35,6 @@ public class MAuthHttpRequestSigner {
 
     logger.debug("Generating request headers for Verb: '" + verb + "' URI: '" + uri + "' Payload: " + requestPayload);
     Map<String, String> mAuthHeaders = httpClientRequestSigner.generateRequestHeaders(verb, uri, requestPayload);
-    mAuthHeaders.entrySet().forEach((header) -> request.headers().add(header.getKey(), header.getValue()));
+    mAuthHeaders.forEach((key, value) -> request.headers().add(key, value));
   }
 }
