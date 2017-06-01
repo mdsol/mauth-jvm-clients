@@ -2,8 +2,8 @@ package com.mdsol.mauth.proxy;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mdsol.util.BuildInfoService;
 import com.mdsol.mauth.Signer;
+import com.mdsol.util.BuildInfoService;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
@@ -12,21 +12,18 @@ import org.littleshoot.proxy.impl.ProxyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Date;
-import java.util.Map;
 
-public class MAuthRequestFilter extends HttpFiltersAdapter {
+public class MAuthForwardRequestFilter extends HttpFiltersAdapter {
 
-  private static final Logger logger = LoggerFactory.getLogger(MAuthRequestFilter.class);
-  private final Signer httpClientRequestSigner;
+  private static final Logger logger = LoggerFactory.getLogger(MAuthForwardRequestFilter.class);
+  private final MAuthHttpRequestSigner requestSigner;
   private final String buildInfo;
 
-  public MAuthRequestFilter(HttpRequest originalRequest, Signer httpClientRequestSigner) {
+  MAuthForwardRequestFilter(HttpRequest originalRequest, Signer httpClientRequestSigner) {
     super(originalRequest);
-    this.httpClientRequestSigner = httpClientRequestSigner;
+    this.requestSigner = new MAuthHttpRequestSigner(httpClientRequestSigner);
 
     String tmpBuildInfo;
     try {
@@ -37,7 +34,7 @@ public class MAuthRequestFilter extends HttpFiltersAdapter {
     }
     buildInfo = tmpBuildInfo;
   }
-
+/* TODO: Getting direct requests to proxy doesn't work for HTTPS calls, need to figure out the problem
   @Override
   public HttpResponse clientToProxyRequest(HttpObject httpObject) {
     if (httpObject instanceof HttpRequest) {
@@ -56,31 +53,16 @@ public class MAuthRequestFilter extends HttpFiltersAdapter {
     }
     return null;
   }
-
+*/
   @Override
   public HttpResponse proxyToServerRequest(HttpObject httpObject) {
     if (httpObject instanceof FullHttpRequest) {
-      signRequest((FullHttpRequest) httpObject);
+      final FullHttpRequest request = (FullHttpRequest) httpObject;
+      if (!request.getMethod().name().equalsIgnoreCase("CONNECT")) {
+        requestSigner.signRequest(request);
+      }
     }
     return null;
-  }
-
-  private void signRequest(FullHttpRequest request) {
-    final String verb = request.getMethod().name();
-
-    if (!verb.equalsIgnoreCase("CONNECT")) {
-      final String requestPayload = request.content().toString(Charset.forName("UTF-8"));
-      String uri = request.getUri();
-      try {
-        uri = new URI(uri).getPath();
-      } catch (URISyntaxException e) {
-        logger.error("Couldn't get request uri", e);
-      }
-
-      logger.debug("Generating request headers for Verb: '" + verb + "' URI: '" + uri + "' Payload: " + requestPayload);
-      Map<String, String> mAuthHeaders = httpClientRequestSigner.generateRequestHeaders(verb, uri, requestPayload);
-      mAuthHeaders.entrySet().forEach((header) -> request.headers().add(header.getKey(), header.getValue()));
-    }
   }
 
   private HttpResponse appStatus() {

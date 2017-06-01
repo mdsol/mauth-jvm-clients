@@ -4,7 +4,7 @@
 
     <groupId>com.mdsol.clients</groupId>
     <artifactId>mauth-client</artifactId>
-    <version>2016.3.1</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <name>mauth-client</name>
@@ -35,6 +35,19 @@
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -84,7 +97,7 @@
             <dependency>
                 <groupId>org.littleshoot</groupId>
                 <artifactId>littleproxy</artifactId>
-                <version>1.1.0</version>
+                <version>1.1.2</version>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
