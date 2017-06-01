@@ -14,29 +14,8 @@ before_install:
 install: mvn install -Dmaven.javadoc.skip=true -B -V --settings travis/settings.xml
 script: mvn test --settings travis/settings.xml
 
-before_deploy:
-- mkdir mauth-proxy/target/distro
-# lowercase the branch name, replace / and _ with -
-- branchName=$((echo $TRAVIS_BRANCH | tr '[:upper:]' '[:lower:]') | tr '\/_' '-')
-- cp mauth-proxy/target/mauth-proxy-*-shade.jar mauth-proxy/target/distro/mauth-proxy-$branchName-$TRAVIS_BUILD_NUMBER.jar
-# only overwrite the main zip file when deploying from develop
-- if [ $TRAVIS_BRANCH = 'develop' ] ; then cp mauth-proxy/target/mauth-proxy-*-shade.jar target/distro/mauth-proxy.jar ; fi
-# list the files to upload - useful when debugging
-- echo "Files to upload to s3:"
-- ls mauth-proxy/target/distro
 deploy:
-  provider: s3
-  access_key_id: AKIAI76EKWQYWOEZYPXQ
-  secret_access_key:
-    secure: ZENBh6EbL7ybIjyB1bn/cYQXwxdM79e099oXLShHukFnji5dXvJ32zNGpir4KA/kwbQdCHsoXkKDurHtIoBVcwKnuVKYZiC94wXS/pmpqaOuI9vIkQPUHNAQfG98yvHXmuBvG+yXS98PaO9JHYoi16nmM63MvN1UW8TiTWBfoaL8oBdY2xd0IE5Wg73Qd2OstKKomvQDrEEHZafcM5+ftIPrZvlHi3T7WATbUtsxSBVNxkuagTHXgUp38rLfR4Kgv3XHYb+ASmAjFKHA1ZylglhWC0VPKDez2DAbPEZEzf/QZvSvX4S6kAMBhbnDhM/dDGqNmBk1QfPj1H1GDmXh/+vsItTc5kXueMikGjhlHpV35DkBmHmA4zLIHikQn6J/X/9sSHVLDcMJHy90B8oBu/PHsCiLEmV5RWI9UMeqXmx/pTaQNyRQYf/PlCldqAsNSd9IqzSnOnemWO3QFyXKxL3s6X1BPC/CLq3QTAT38zZ72RwVss27xGwjvmFI8Eit+mI7atQeeBPpHeka4crLGACQm42syNSZ/LZsPkWCrzwS+rhkGNdsGFcBDTkVU58hx+9bFFUgf2I/sHskC6uTtLdDpUW4Vv7lvO1fiJJOYX3ITrM5mGNRc11wKmy8zDsTolLIe5HJq/37pI2Vw9M7cq/KxURewTLfpT55KTT6Lyo=
-  skip_cleanup: true
-  bucket: strategic-monitoring
-  local-dir: mauth-proxy/target/distro
-  upload-dir: sandbox/mauth/jobs/travis
-  acl: private
+  provider: script
+  script: mvn deploy -DskipTests=true --settings travis/settings.xml
   on:
-    all_branches: true
-after_deploy:
-- echo "Deployed to S3"
-after_script:
-- echo "Finished! :)"
+    branch: develop
