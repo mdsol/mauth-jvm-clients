@@ -194,10 +194,11 @@ public class MAuthClient
      * @param resourceUrl the resource url of the http request
      * @param body the body of the http request (if available or empty string if none)
      * @param appId the appId of the application under which the validation will be performed
+     * @param encoding the character encoding of the request
      * @return true or false indicating if the request if valid or not with respect to mAuth
      * @throws Exception
      */
-    public Boolean validateRequest(String signatureInHeader, String epochTime, String verb, String resourceUrl, String body, String appId) throws Exception
+    public Boolean validateRequest(String signatureInHeader, String epochTime, String verb, String resourceUrl, String body, String appId, String encoding) throws Exception
     {
     	// Perform routine validations of parameters
     	if (null==signatureInHeader || signatureInHeader.equals("")) {
@@ -240,7 +241,7 @@ public class MAuthClient
         
         // Recreate the plaintext signature, based on the incoming request parameters, and hash it
         String stringToSign = getStringToSign(verb, resourceUrl, body, appId, epochTime);
-        byte[] stringToSign_bytes = stringToSign.getBytes("US-ASCII");
+        byte[] stringToSign_bytes = stringToSign.getBytes(encoding);
         byte[] messageDigest_bytes = getHex(getMessageDigest(stringToSign_bytes).digest()).getBytes();
         
         // Compare the decrypted signature and the recreated signature hashes
@@ -249,7 +250,11 @@ public class MAuthClient
  
         return result;
     }
-    
+
+    public Boolean validateRequest(String signatureInHeader, String epochTime, String verb, String resourceUrl, String body, String appId) throws Exception {
+        return validateRequest(signatureInHeader, epochTime, verb, resourceUrl, body, appId, "US-ASCII");
+    }
+
     /**
      * Gets a public key, of a requesting appId, from the mAuth service, and caches it
      * 
