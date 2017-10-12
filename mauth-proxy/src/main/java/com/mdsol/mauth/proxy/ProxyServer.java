@@ -10,7 +10,6 @@ import org.littleshoot.proxy.HttpProxyServer;
 import org.littleshoot.proxy.extras.SelfSignedMitmManager;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
 import java.net.InetSocketAddress;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 
@@ -31,8 +30,10 @@ public class ProxyServer {
 
   void serve() {
 
+	  httpProxyServer = 
 	    DefaultHttpProxyServer.bootstrap()
 			.withManInTheMiddle(new SelfSignedMitmManager())
+			.withPort(proxyConfig.getProxyPort())
 			.withAddress(new InetSocketAddress("0.0.0.0",proxyConfig.getProxyPort()))
    			.withFiltersSource(new HttpFiltersSourceAdapter() {
 		      @Override
