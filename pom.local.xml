@@ -147,34 +147,4 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <distributionManagement>
-        <repository>
-            <id>central</id>
-            <name>ctms-releases</name>
-            <url>https://artv4.imedidata.net/artifactory/ctms-releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>snapshot</id>
-            <name>snapshot</name>
-            <url>https://artv4.imedidata.net/artifactory/ctms-snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
-
-    <repositories>
-        <repository>
-            <id>central</id>
-            <name>all-repos-release</name>
-            <url>https://artv4.imedidata.net/artifactory/all-repos-release</url>
-        </repository>
-        <repository>
-            <id>snapshot</id>
-            <name>snapshot</name>
-            <url>https://artv4.imedidata.net/artifactory/snapshot/</url>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-            </snapshots>
-        </repository>
-    </repositories>
 </project>
