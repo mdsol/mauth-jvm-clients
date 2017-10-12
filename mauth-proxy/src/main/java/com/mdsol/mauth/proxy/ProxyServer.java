@@ -7,11 +7,9 @@ import io.netty.handler.codec.http.HttpRequest;
 import org.littleshoot.proxy.HttpFilters;
 import org.littleshoot.proxy.HttpFiltersSourceAdapter;
 import org.littleshoot.proxy.HttpProxyServer;
-import org.littleshoot.proxy.HttpProxyServerBootstrap;
 import org.littleshoot.proxy.extras.SelfSignedMitmManager;
 import org.littleshoot.proxy.impl.DefaultHttpProxyServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.net.InetSocketAddress;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -32,19 +30,20 @@ public class ProxyServer {
   }
 
   void serve() {
-    final HttpProxyServerBootstrap bootstrap = DefaultHttpProxyServer.bootstrap().withPort(proxyConfig.getProxyPort());
-    bootstrap.withManInTheMiddle(new SelfSignedMitmManager());
 
-    httpProxyServer = bootstrap.withFiltersSource(new HttpFiltersSourceAdapter() {
-      @Override
-      public int getMaximumRequestBufferSizeInBytes() {
-        return proxyConfig.getBufferSizeInByes();
-      }
+	    DefaultHttpProxyServer.bootstrap()
+			.withManInTheMiddle(new SelfSignedMitmManager())
+			.withAddress(new InetSocketAddress("0.0.0.0",proxyConfig.getProxyPort()))
+   			.withFiltersSource(new HttpFiltersSourceAdapter() {
+		      @Override
+		      public int getMaximumRequestBufferSizeInBytes() {
+		        return proxyConfig.getBufferSizeInByes();
+		      }
 
-      public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext clientCtx) {
-        return new MAuthForwardRequestFilter(originalRequest, httpClientRequestSigner);
-      }
-    })
+		      public HttpFilters filterRequest(HttpRequest originalRequest, ChannelHandlerContext clientCtx) {
+		        return new MAuthForwardRequestFilter(originalRequest, httpClientRequestSigner);
+		      }
+   			})
         .start();
   }
 
