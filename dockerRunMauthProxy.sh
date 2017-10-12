@@ -4,8 +4,6 @@ function die() {
   exit 1
 }
 
-mvn package -pl mauth-proxy -am -Dmaven.test.skip=true || die "Could not package"
-
 fullPath=`dirname $0`
 jar=`find $fullPath/mauth-proxy/target/mauth-proxy*-shade.jar`
 cp=`echo $jar | sed 's,./,'$fullPath'/,'`
