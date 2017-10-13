@@ -15,14 +15,13 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 public class ProxyServerTest {
 
-  private static final String BASE_URL = "http://0.0.0.0";
+  private static final String BASE_URL = "http://localhost";
   private static final String MY_RESOURCE = "/my/resource";
 
   @Rule
