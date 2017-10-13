@@ -160,6 +160,4 @@
             <url>https://artv4.imedidata.net/artifactory/ctms-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
-
-
 </project>
