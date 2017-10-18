@@ -4,7 +4,9 @@ jdk:
 env:
   global:
   - APP_UUID=398ea708-50eb-499f-98d3-14cc7692668c
- cache:
+  - secure: n++Arc8CcxaAG17/0hXWM43QuAqFOyM83o1OuFh5hAz7nMeearWUTM7o/LaOw1tD0bqWoOEwZbiZ1T1PBPo8ItQmn7FYdo9yEpdf2/eJPGxViYagpBYEU8UZDwv9tQvUq3gYB1Jly60LhsuG/n/3cpclMHpGlBI11Q/Qm3pN66o=
+  - secure: OK5crzS2IVb0urPleQLXomHYKYBEcF2XJSHJ1zqGc8ibqt/YSMSIf4Huc9r89s6IIrjLhNv9HkyqNrxWcAKAvGinobOvVoSMB1DojH3k6CG8hpWLusjDty3RwjDYUrvYS39MGaHsGuIDnH7fXEKo7DvGl2/7KmkPcgE6NDh1xNo=
+cache:
   directories:
   - $HOME/.m2
 before_install:
