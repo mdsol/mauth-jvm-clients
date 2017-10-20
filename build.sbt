@@ -4,8 +4,6 @@ import Dependencies._
 conflictManager := ConflictManager.strict
 val withExclusions: (ModuleID) => ModuleID = moduleId => moduleId.excludeAll(Dependencies.exclusions: _*)
 
-
-
 lazy val common = (project in file("modules/mauth-common"))
   .settings(
     basicSettings,
@@ -13,7 +11,7 @@ lazy val common = (project in file("modules/mauth-common"))
     name := "mauth-common",
     libraryDependencies ++=
       Dependencies.compile(commonsCodec, commonsLang3, bouncycastlePkix, slf4jApi, typesafeConfig).map(withExclusions) ++
-    Dependencies.test(hamcrestAll, jUnitInterface).map(withExclusions)
+        Dependencies.test(hamcrestAll, jUnitInterface).map(withExclusions)
   )
 
 lazy val testUtils = (project in file("modules/mauth-test-utils"))
@@ -22,7 +20,7 @@ lazy val testUtils = (project in file("modules/mauth-test-utils"))
     crossPaths := false,
     name := "mauth-test-utils",
     libraryDependencies ++=
-        Dependencies.compile(commonsIO, wiremock).map(withExclusions)
+      Dependencies.compile(commonsIO, wiremock).map(withExclusions)
   )
 
 lazy val signer = (project in file("modules/mauth-signer"))

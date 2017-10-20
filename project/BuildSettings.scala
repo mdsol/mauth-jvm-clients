@@ -16,6 +16,7 @@ object BuildSettings {
     scalaVersion := "2.11.8",
     resolvers += Resolver.mavenLocal,
     resolvers ++= Dependencies.resolutionRepos,
+    javacOptions ++= Seq("-encoding", "UTF-8"),
     scalacOptions := Seq("-encoding", "utf8", "-feature", "-unchecked", "-deprecation", "-target:jvm-1.8", "-language:_", "-Xlog-reflective-calls", "-Ywarn-adapted-args"),
     credentials += Credentials("Artifactory Realm", "artv4.imedidata.net", artifactoryUser, artifactoryToken),
     publishTo := {
