@@ -43,7 +43,7 @@ public class HttpClientRequestSigner extends DefaultSigner {
   /**
    * Convenience method for clients using Apache {@link HttpClient}. Generates mAuth headers and
    * includes them into the provided {@link HttpUriRequest}.
-   * <p/>
+   *
    * NOTE: mAuth headers are time sensitive. The headers must be verified by the receiving service
    * within 5 minutes of being generated otherwise the request will fail.
    *

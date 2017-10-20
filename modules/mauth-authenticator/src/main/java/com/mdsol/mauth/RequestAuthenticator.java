@@ -31,7 +31,7 @@ public class RequestAuthenticator implements Authenticator {
    * 10L as default value for request validation timeout
    * {@link com.mdsol.mauth.utils.ClientPublicKeyProvider} as the EpochTimeProvider
    *
-   * @param clientPublicKeyProvider
+   * @param clientPublicKeyProvider PublicKey provider
    */
   public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider) {
     this(clientPublicKeyProvider, 10L);
@@ -40,8 +40,8 @@ public class RequestAuthenticator implements Authenticator {
   /**
    * Uses {@link com.mdsol.mauth.utils.ClientPublicKeyProvider} as the EpochTimeProvider
    *
-   * @param clientPublicKeyProvider
-   * @param requestValidationTimeoutSeconds
+   * @param clientPublicKeyProvider  PublicKey provider
+   * @param requestValidationTimeoutSeconds timeout
    */
   public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider, long requestValidationTimeoutSeconds) {
     this(clientPublicKeyProvider, requestValidationTimeoutSeconds, new CurrentEpochTimeProvider());

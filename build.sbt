@@ -9,6 +9,7 @@ val withExclusions: (ModuleID) => ModuleID = moduleId => moduleId.excludeAll(Dep
 lazy val common = (project in file("modules/mauth-common"))
   .settings(
     basicSettings,
+    crossPaths := false,
     name := "mauth-common",
     libraryDependencies ++=
       Dependencies.compile(commonsCodec, commonsLang3, bouncycastlePkix, slf4jApi, typesafeConfig).map(withExclusions) ++
@@ -18,6 +19,7 @@ lazy val common = (project in file("modules/mauth-common"))
 lazy val testUtils = (project in file("modules/mauth-test-utils"))
   .settings(
     basicSettings,
+    crossPaths := false,
     name := "mauth-test-utils",
     libraryDependencies ++=
         Dependencies.compile(commonsIO, wiremock).map(withExclusions)
@@ -27,6 +29,7 @@ lazy val signer = (project in file("modules/mauth-signer"))
   .dependsOn(common, testUtils % "test")
   .settings(
     basicSettings,
+    crossPaths := false,
     name := "mauth-signer",
     libraryDependencies ++=
       Dependencies.test(commonsIO, hamcrestAll, jUnitInterface, mockito).map(withExclusions)
@@ -36,6 +39,7 @@ lazy val signerApache = (project in file("modules/mauth-signer-apachehttp"))
   .dependsOn(signer, testUtils % "test")
   .settings(
     basicSettings,
+    crossPaths := false,
     name := "mauth-signer-apachehttp",
     libraryDependencies ++=
       Dependencies.test(commonsIO, jUnitInterface, mockito).map(withExclusions) ++
@@ -46,6 +50,7 @@ lazy val authenticator = (project in file("modules/mauth-authenticator"))
   .dependsOn(common, testUtils % "test")
   .settings(
     basicSettings,
+    crossPaths := false,
     name := "mauth-authenticator",
     libraryDependencies ++=
       Dependencies.compile().map(withExclusions) ++
@@ -56,6 +61,7 @@ lazy val authenticatorApache = (project in file("modules/mauth-authenticator-apa
   .dependsOn(authenticator, signerApache, testUtils % "test")
   .settings(
     basicSettings,
+    crossPaths := false,
     name := "mauth-authenticator-apachehttp",
     libraryDependencies ++=
       Dependencies.compile(jacksonDataBind, guava, slf4jApi).map(withExclusions) ++
@@ -66,6 +72,7 @@ lazy val proxy = (project in file("modules/mauth-proxy"))
   .dependsOn(signerApache)
   .settings(
     basicSettings,
+    crossPaths := false,
     name := "mauth-proxy",
     libraryDependencies ++=
       Dependencies.compile(jacksonDataBind, littleProxy, logbackClassic, logbackCore).map(withExclusions) ++

@@ -5,7 +5,7 @@ public interface Authenticator {
 
   /**
    * Performs the validation of an incoming HTTP request.
-   * <p/>
+   *
    * The validation process consists of recreating the mAuth hashed signature from the request data
    * and comparing it to the decrypted hash signature from the mAuth header.
    *
