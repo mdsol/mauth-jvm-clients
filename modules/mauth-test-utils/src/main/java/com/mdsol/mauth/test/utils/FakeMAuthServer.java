@@ -30,7 +30,11 @@ public class FakeMAuthServer {
       wireMockServer.stop();
     }
   }
-  
+
+  public static void resetMappings() {
+    wireMockServer.resetMappings();
+  }
+
   public static void return200() {
     WireMock.configureFor("localhost", PORT_NUMBER);
     WireMock.reset();
