@@ -7,7 +7,6 @@ val withExclusions: (ModuleID) => ModuleID = moduleId => moduleId.excludeAll(Dep
 lazy val common = (project in file("modules/mauth-common"))
   .settings(
     basicSettings,
-    crossPaths := false,
     name := "mauth-common",
     libraryDependencies ++=
       Dependencies.compile(commonsCodec, commonsLang3, bouncycastlePkix, slf4jApi, typesafeConfig).map(withExclusions) ++
