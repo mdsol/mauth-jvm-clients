@@ -12,5 +12,5 @@ trait ClientPublicKeyProviderAsync {
     * @param appUUID , UUID of the application for which we want to retrieve its public key.
     * @return Future of { @link PublicKey} registered in MAuth for the application with given appUUID.
     */
-  def getPublicKey(appUUID: UUID): Future[PublicKey]
+  def getPublicKey(appUUID: UUID): Future[Option[PublicKey]]
 }
