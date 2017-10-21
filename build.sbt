@@ -89,7 +89,6 @@ lazy val authenticatorAkka = (project in file("modules/mauth-authenticator-akka-
   .dependsOn(authenticator, mauthAkka, signerAkka, testUtils % "test")
   .settings(
     basicSettings,
-    crossPaths := false,
     name := "mauth-authenticator-akka-http",
     libraryDependencies ++=
       Dependencies.provided(akkaHttp) ++

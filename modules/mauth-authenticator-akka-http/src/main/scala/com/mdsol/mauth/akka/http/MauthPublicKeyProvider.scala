@@ -10,8 +10,8 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mdsol.mauth.http.HttpClient
+import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
 import com.mdsol.mauth.util.MAuthKeysHelper
-import com.mdsol.mauth.utils.async.ClientPublicKeyProviderAsync
 import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequestSigner, UnsignedRequest}
 import com.typesafe.scalalogging.StrictLogging
 
@@ -24,7 +24,7 @@ import scalacache._
 import scalacache.guava._
 import scalacache.memoization._
 
-class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner) extends ClientPublicKeyProviderAsync with StrictLogging {
+class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner) extends ClientPublicKeyProvider with StrictLogging {
 
   implicit val scalaCache: ScalaCache[NoSerialization] = ScalaCache(GuavaCache())
   private val mapper = new ObjectMapper

@@ -1,11 +1,11 @@
-package com.mdsol.mauth.utils.async
+package com.mdsol.mauth.scaladsl.utils
 
 import java.security.PublicKey
 import java.util.UUID
 
 import scala.concurrent.Future
 
-trait ClientPublicKeyProviderAsync {
+trait ClientPublicKeyProvider {
   /**
     * Returns the associated public key for a given application UUID.
     *
