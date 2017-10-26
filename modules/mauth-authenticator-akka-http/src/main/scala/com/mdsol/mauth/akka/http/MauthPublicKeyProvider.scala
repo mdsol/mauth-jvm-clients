@@ -61,6 +61,8 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
               logger.error("Request to get MAuth public key couldn't be signed", error)
               promise.success(None)
           }
+        }.recover {
+          case e => println(e)
         }
     }
     promise.future

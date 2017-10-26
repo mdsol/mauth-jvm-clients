@@ -2,8 +2,8 @@ package com.mdsol.mauth.http
 
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpHeader, HttpRequest, Uri}
-import com.mdsol.mauth.http.HttpVerbOps._
 import com.mdsol.mauth.SignedRequest
+import com.mdsol.mauth.http.HttpVerbOps._
 
 import scala.language.implicitConversions
 

@@ -8,11 +8,10 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Flow, Sink}
 import akka.util.ByteString
 import com.mdsol.mauth.SignedRequest
+import com.mdsol.mauth.http.Implicits._
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.{ExecutionContext, Future}
-
-import Implicits._
 
 trait HttpClient extends LazyLogging {
 

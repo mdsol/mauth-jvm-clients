@@ -26,6 +26,13 @@ case class UnsignedRequest(httpMethod: String = "GET", uri: URI, body: Option[St
   */
 case class SignedRequest(req: UnsignedRequest, authHeader: String, timeHeader: String)
 
+/**
+  * Generic crypto error container
+  * @param msg
+  * @param cause
+  */
+case class CryptoError(msg: String, cause: Option[Throwable] = None)
+
 trait MAuthRequestSigner extends DefaultSigner {
 
   /**

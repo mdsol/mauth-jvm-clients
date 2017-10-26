@@ -2,24 +2,18 @@ package com.mdsol.mauth.apache;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mdsol.mauth.AuthenticatorConfiguration;
-import com.mdsol.mauth.MAuthConfiguration;
 import com.mdsol.mauth.Signer;
 import com.mdsol.mauth.exception.HttpClientPublicKeyProviderException;
 import com.mdsol.mauth.test.utils.FakeMAuthServer;
-import com.mdsol.mauth.test.utils.FixturesLoader;
 import com.mdsol.mauth.utils.ClientPublicKeyProvider;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import java.security.Security;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static org.mockito.Matchers.eq;
@@ -43,6 +37,11 @@ public class HttpClientPublicKeyProviderTest {
   public static void setup() {
     FakeMAuthServer.start(9001);
     Security.addProvider(new BouncyCastleProvider());
+  }
+
+  @Before
+  public void beforeEach(){
+    FakeMAuthServer.resetMappings();
   }
 
   @AfterClass
@@ -76,10 +75,10 @@ public class HttpClientPublicKeyProviderTest {
     FakeMAuthServer.return200();
     ClientPublicKeyProvider client = getClientWithMockedSigner();
 
-    client.getPublicKey(UUID.fromString(FakeMAuthServer.EXISTING_CLIENT_APP_UUID));
+    client.getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID);
 
     WireMock.verify(getRequestedFor(
-        WireMock.urlEqualTo(getRequestUrlPath(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)))
+        WireMock.urlEqualTo(getRequestUrlPath(FakeMAuthServer.EXISTING_CLIENT_APP_UUID.toString())))
         .withHeader(X_MWS_TIME_HEADER_NAME.toLowerCase(),
             WireMock.equalTo(EXPECTED_TIME_HEADER_VALUE))
         .withHeader(X_MWS_AUTHENTICATION_HEADER_NAME.toLowerCase(),
@@ -94,6 +93,6 @@ public class HttpClientPublicKeyProviderTest {
     expectedException.expect(HttpClientPublicKeyProviderException.class);
     expectedException.expectMessage("Invalid response code returned by server: 401");
 
-    client.getPublicKey(UUID.fromString(FakeMAuthServer.NON_EXISTING_CLIENT_APP_UUID));
+    client.getPublicKey(FakeMAuthServer.NON_EXISTING_CLIENT_APP_UUID);
   }
 }

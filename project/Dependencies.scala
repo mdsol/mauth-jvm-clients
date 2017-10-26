@@ -28,7 +28,6 @@ object Dependencies {
   val commonsLang3: ModuleID = "org.apache.commons" % "commons-lang3" % "3.6"
   val guava: ModuleID = "com.google.guava" % "guava" % "23.0"
   val jacksonDataBind: ModuleID = "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.2"
-  val jUnitInterface: ModuleID = "com.novocode" % "junit-interface" % "0.11"
   val littleProxy: ModuleID = "org.littleshoot" % "littleproxy" % "1.1.2"
   val logbackClassic: ModuleID = "ch.qos.logback" % "logback-classic" % Version.logback
   val logbackCore: ModuleID = "ch.qos.logback" % "logback-core" % Version.logback
@@ -41,7 +40,8 @@ object Dependencies {
   // TEST DEPENDENCIES
   val commonsIO: ModuleID = "commons-io" % "commons-io" % "2.6"
   val hamcrestAll: ModuleID = "org.hamcrest" % "hamcrest-all" % "1.3"
-//  val junit: ModuleID = "junit" % "junit" % "4.12"
+  val junit: ModuleID = "junit" % "junit" % "4.12"
+  val jUnitInterface: ModuleID = "com.novocode" % "junit-interface" % "0.11" exclude("junit", "junit")
   val mockito: ModuleID = "org.mockito" % "mockito-all" % "1.10.19"
   val wiremock: ModuleID = "com.github.tomakehurst" % "wiremock" % "1.58"
 

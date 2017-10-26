@@ -5,34 +5,35 @@ import java.util.UUID
 
 import akka.http.javadsl.server.AuthorizationFailedRejection
 import akka.http.scaladsl.model.{HttpEntity, HttpRequest}
-import akka.http.scaladsl.server.{Directive0, Directive1, MalformedHeaderRejection, Rejection}
 import akka.http.scaladsl.server.Directives.{headerValueByType, reject}
 import akka.http.scaladsl.server.directives.BasicDirectives._
 import akka.http.scaladsl.server.directives.FutureDirectives.onComplete
+import akka.http.scaladsl.server.{Directive0, Directive1, MalformedHeaderRejection, Rejection}
 import akka.http.scaladsl.util.FastFuture
+import com.mdsol.mauth.akka.http.MAuthSignatureEngine.{buildSignature, compareDigests}
 import com.mdsol.mauth.http.{HttpVerbOps, X_MWS_Authentication, X_MWS_Time}
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
 trait MAuthDirectives extends StrictLogging {
 
   case class AuthHeaderDetail(appId: UUID, hash: String)
-  
+
   case object MdsolAuthFailedRejection
     extends AuthorizationFailedRejection with Rejection
-  
+
   /**
     * Directive to wrap all routes that require MAuth authentication check.
     * Should only be used once per route branch, as any HttpEntity is forced
     * to be strict, and serialised into the request.
     *
-    * @param kl
-    * @param timeout
-    * @return
+    * @param kl MAuth Public Key Provider
+    * @param timeout request timeout duration
+    * @return Directive to authenticate the request
     */
   def authenticate(implicit kl: MauthPublicKeyProvider, timeout: FiniteDuration): Directive0 = {
     extractExecutionContext.flatMap { implicit ec =>
@@ -52,7 +53,7 @@ trait MAuthDirectives extends StrictLogging {
 
   val extractMAuthHeader: Directive1[AuthHeaderDetail] =
     headerValueByType[X_MWS_Authentication]((): Unit).flatMap {
-      case hdr =>
+      hdr =>
         extractAuthHeaderDetail(hdr.value) match {
           case Some(ahd: AuthHeaderDetail) => provide(ahd)
           case None =>
@@ -78,28 +79,16 @@ trait MAuthDirectives extends StrictLogging {
   /////////////////////////////////////////////
   //  Utility functions
   /////////////////////////////////////////////
-
-  /**
-    * Check MAuth Signature
-    *
-    * @param request
-    * @param ahd
-    * @param timestamp
-    * @param publicKeyProvier
-    * @param ec
-    * @param timeout
-    * @return
-    */
   private def checkSig(request: HttpRequest,
                        ahd: AuthHeaderDetail,
                        timestamp: Long,
-                       publicKeyProvier: MauthPublicKeyProvider)
+                       publicKeyProvider: MauthPublicKeyProvider)
                       (implicit ec: ExecutionContext, timeout: FiniteDuration): Future[Boolean] = {
     request.entity match {
       case entity: HttpEntity.Strict => {
         val body = entity.data.utf8String
 
-        publicKeyProvier.getPublicKey(ahd.appId) map {
+        publicKeyProvider.getPublicKey(ahd.appId) map {
           case None =>
             logger.warn(s"MAUTH: No public key for App: ${ahd.appId}")
             false
@@ -121,43 +110,25 @@ trait MAuthDirectives extends StrictLogging {
         FastFuture.successful(false)
     }
   }
-  
+
   private def extractAuthHeaderDetail(str: String): Option[AuthHeaderDetail] = {
-    str.startsWith("MWS ") match {
-      case true =>
-        str.replaceFirst("MWS ", "").split(":").toList match {
-          case List(uuid, hash) =>
-            try {
-              Some(AuthHeaderDetail(UUID.fromString(uuid), hash))
-            } catch {
-              case NonFatal(e) =>
-                println(s"Bad format for UUID in authentication header: $str")
-                None
-            }
-          case _ =>
-            println(s"Bad format for authentication header: $str")
-            None
-        }
-      case _ =>
-        println(s"Bad format for authentication header: $str")
-        None
-    }
-  }
-
-
-  /**
-    * Convenience method for server side digest authentication
-    * @param base64Header Base 64 value taken directly from the authentication header (minus prefix and UUID)
-    * @param signatureString The signature String from the buildSignature method
-    * @return Boolean true if there is a match, false if not
-    */
-  def compareDigests(base64Header: String, key: PublicKey, signatureString: String): Boolean = {
-    decryptFromBase64(base64Header, key) match {
-      case Left(CryptoError(msg, Some(e))) => logger.debug(msg + " : " + e.getMessage, e); false
-      case Left(CryptoError(msg, None)) => logger.debug(msg); false
-      case Right(headerDigest: Array[Byte]) =>
-        val newDigest = asHex(getDigest(signatureString))
-        java.util.Arrays.equals(newDigest.getBytes("UTF-8"), headerDigest)
+    if (str.startsWith("MWS ")) {
+      str.replaceFirst("MWS ", "").split(":").toList match {
+        case List(uuid, hash) =>
+          try {
+            Some(AuthHeaderDetail(UUID.fromString(uuid), hash))
+          } catch {
+            case NonFatal(e) =>
+              println(s"Bad format for UUID in authentication header: $str")
+              None
+          }
+        case _ =>
+          println(s"Bad format for authentication header: $str")
+          None
+      }
+    } else {
+      println(s"Bad format for authentication header: $str")
+      None
     }
   }
 }
