@@ -48,7 +48,7 @@ trait MAuthRequestSigner extends DefaultSigner {
     }
 
     Try(generateRequestHeaders(request.httpMethod, request.uri.getPath, body)) match {
-      case Success(mauthHeaders) => Right(SignedRequest(request, mauthHeaders.get(MAuthRequest.MAUTH_AUTHENTICATION_HEADER_NAME), mauthHeaders.get(MAuthRequest.MAUTH_TIME_HEADER_NAME)))
+      case Success(mauthHeaders) => Right(SignedRequest(request, mauthHeaders.get(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME), mauthHeaders.get(MAuthRequest.X_MWS_TIME_HEADER_NAME)))
       case Failure(e) => Left(e)
     }
   }

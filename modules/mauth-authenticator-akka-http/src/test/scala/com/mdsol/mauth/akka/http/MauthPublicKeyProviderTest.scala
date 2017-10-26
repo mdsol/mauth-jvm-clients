@@ -15,9 +15,7 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import scala.util.Right
 
 class MauthPublicKeyProviderTest extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach with ScalaFutures with IntegrationPatience with Matchers {
-  private val X_MWS_TIME_HEADER_NAME = "x-mws-time"
   private val EXPECTED_TIME_HEADER_VALUE = "1444672125"
-  private val X_MWS_AUTHENTICATION_HEADER_NAME = "x-mws-authentication"
   private val EXPECTED_AUTHENTICATION_HEADER_VALUE = "MWS 92a1869e-c80d-4f06-8775-6c4ebb0758e0:lTMYNWPaG4..."
   private val MAUTH_PORT = 9001
   private val MAUTH_BASE_URL = s"http://localhost:$MAUTH_PORT"

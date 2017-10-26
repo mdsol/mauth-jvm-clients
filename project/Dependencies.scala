@@ -38,6 +38,7 @@ object Dependencies {
   val scalaTest: ModuleID = "org.scalatest" %% "scalatest" % "3.0.3"
 
   // TEST DEPENDENCIES
+  val akkaHttpTestKit: ModuleID = "com.typesafe.akka" %% "akka-http-testkit" % Version.akkaHttp
   val commonsIO: ModuleID = "commons-io" % "commons-io" % "2.6"
   val hamcrestAll: ModuleID = "org.hamcrest" % "hamcrest-all" % "1.3"
   val junit: ModuleID = "junit" % "junit" % "4.12"

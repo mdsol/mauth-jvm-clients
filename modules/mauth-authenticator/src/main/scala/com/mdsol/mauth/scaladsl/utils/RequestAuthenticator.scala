@@ -31,7 +31,7 @@ class RequestAuthenticator(
     if (!validateTime(mAuthRequest.getRequestTime)) {
       val message = "MAuth request validation failed because of timeout " + requestValidationTimeoutSeconds + "s"
       logger.error(message)
-      throw new MAuthValidationException(message)
+      return Future.failed(new MAuthValidationException(message))
     }
 
     publicKeyProvider.getPublicKey(mAuthRequest.getAppUUID).map {

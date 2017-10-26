@@ -30,8 +30,8 @@ public class ProxyServerTest {
   @Test
   public void shouldCorrectlyModifyRequestToAddMAuthHeaders() throws IOException {
     service1.stubFor(get(urlEqualTo(MY_RESOURCE))
-        .withHeader(MAuthRequest.MAUTH_AUTHENTICATION_HEADER_NAME, containing("MWS "))
-        .withHeader(MAuthRequest.MAUTH_TIME_HEADER_NAME, matching(".*"))
+        .withHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, containing("MWS "))
+        .withHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, matching(".*"))
         .willReturn(aResponse()
             .withStatus(HttpStatus.SC_OK)
             .withBody("success")));
@@ -48,8 +48,8 @@ public class ProxyServerTest {
     final String WRONG_MAUTH_HEADER = "This is a wrong Mauth Header";
 
     service1.stubFor(get(urlEqualTo(MY_RESOURCE))
-        .withHeader(MAuthRequest.MAUTH_AUTHENTICATION_HEADER_NAME, notMatching(WRONG_MAUTH_HEADER))
-        .withHeader(MAuthRequest.MAUTH_TIME_HEADER_NAME, notMatching(WRONG_MAUTH_HEADER))
+        .withHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, notMatching(WRONG_MAUTH_HEADER))
+        .withHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, notMatching(WRONG_MAUTH_HEADER))
         .willReturn(aResponse()
             .withStatus(HttpStatus.SC_OK)
             .withBody("success")));
@@ -57,8 +57,8 @@ public class ProxyServerTest {
     ProxyServer proxyServer = getProxyServer();
 
     final HttpGet request = new HttpGet(BASE_URL + ":" + service1.port() + MY_RESOURCE);
-    request.addHeader(MAuthRequest.MAUTH_AUTHENTICATION_HEADER_NAME, WRONG_MAUTH_HEADER);
-    request.addHeader(MAuthRequest.MAUTH_TIME_HEADER_NAME, WRONG_MAUTH_HEADER);
+    request.addHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, WRONG_MAUTH_HEADER);
+    request.addHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, WRONG_MAUTH_HEADER);
 
     HttpResponse response = execute(proxyServer.getPort(), request);
 

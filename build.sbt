@@ -50,7 +50,8 @@ lazy val signerAkka = (project in file("modules/mauth-signer-akka-http"))
     name := "mauth-signer-akka-http",
     libraryDependencies ++=
       Dependencies.provided(akkaHttp).map(withExclusions) ++
-        Dependencies.compile(scalaLogging).map(withExclusions)
+        Dependencies.compile(scalaLogging).map(withExclusions) ++
+        Dependencies.test(scalaTest).map(withExclusions)
   )
 
 lazy val authenticator = (project in file("modules/mauth-authenticator"))
@@ -61,7 +62,7 @@ lazy val authenticator = (project in file("modules/mauth-authenticator"))
     name := "mauth-authenticator",
     libraryDependencies ++=
       Dependencies.compile().map(withExclusions) ++
-        Dependencies.test(hamcrestAll, junit, jUnitInterface, mockito).map(withExclusions)
+        Dependencies.test(hamcrestAll, junit, jUnitInterface, mockito, scalaTest).map(withExclusions)
   )
 
 lazy val authenticatorApache = (project in file("modules/mauth-authenticator-apachehttp"))
@@ -82,8 +83,8 @@ lazy val authenticatorAkka = (project in file("modules/mauth-authenticator-akka-
     name := "mauth-authenticator-akka-http",
     libraryDependencies ++=
       Dependencies.provided(akkaHttp) ++
-      Dependencies.compile(jacksonDataBind, scalaCache).map(withExclusions) ++
-        Dependencies.test(hamcrestAll, mockito, scalaTest, wiremock).map(withExclusions)
+        Dependencies.compile(jacksonDataBind, scalaCache).map(withExclusions) ++
+        Dependencies.test(akkaHttpTestKit, hamcrestAll, mockito, scalaTest, wiremock).map(withExclusions)
   )
 
 lazy val proxy = (project in file("modules/mauth-proxy"))

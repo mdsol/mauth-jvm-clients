@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.mdsol.mauth.MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME;
+import static com.mdsol.mauth.MAuthRequest.X_MWS_TIME_HEADER_NAME;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -24,9 +26,7 @@ public class HttpClientPublicKeyProviderTest {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
-  private static final String X_MWS_TIME_HEADER_NAME = "x-mws-time";
   private static final String EXPECTED_TIME_HEADER_VALUE = "1444672125";
-  private static final String X_MWS_AUTHENTICATION_HEADER_NAME = "x-mws-authentication";
   private static final String EXPECTED_AUTHENTICATION_HEADER_VALUE = "MWS 92a1869e-c80d-4f06-8775-6c4ebb0758e0:lTMYNWPaG4...";
 
   private static final String MAUTH_BASE_URL = "http://localhost:9001";

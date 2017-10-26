@@ -5,13 +5,15 @@ import java.util.UUID
 
 import akka.http.javadsl.server.AuthorizationFailedRejection
 import akka.http.scaladsl.model.{HttpEntity, HttpRequest}
-import akka.http.scaladsl.server.Directives.{headerValueByType, reject}
+import akka.http.scaladsl.server.Directives.headerValueByType
+import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.directives.BasicDirectives._
 import akka.http.scaladsl.server.directives.FutureDirectives.onComplete
-import akka.http.scaladsl.server.{Directive0, Directive1, MalformedHeaderRejection, Rejection}
+import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import akka.http.scaladsl.util.FastFuture
 import com.mdsol.mauth.akka.http.MAuthSignatureEngine.{buildSignature, compareDigests}
 import com.mdsol.mauth.http.{HttpVerbOps, X_MWS_Authentication, X_MWS_Time}
+import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.duration.FiniteDuration
@@ -31,11 +33,11 @@ trait MAuthDirectives extends StrictLogging {
     * Should only be used once per route branch, as any HttpEntity is forced
     * to be strict, and serialised into the request.
     *
-    * @param kl MAuth Public Key Provider
+    * @param kl      MAuth Public Key Provider
     * @param timeout request timeout duration
     * @return Directive to authenticate the request
     */
-  def authenticate(implicit kl: MauthPublicKeyProvider, timeout: FiniteDuration): Directive0 = {
+  def authenticate(implicit kl: ClientPublicKeyProvider, timeout: FiniteDuration): Directive0 = {
     extractExecutionContext.flatMap { implicit ec =>
       extractMAuthHeader.flatMap { ahd =>
         extractMwsTimeHeader.flatMap { time =>
@@ -52,28 +54,26 @@ trait MAuthDirectives extends StrictLogging {
   }
 
   val extractMAuthHeader: Directive1[AuthHeaderDetail] =
-    headerValueByType[X_MWS_Authentication]((): Unit).flatMap {
-      hdr =>
-        extractAuthHeaderDetail(hdr.value) match {
-          case Some(ahd: AuthHeaderDetail) => provide(ahd)
-          case None =>
-            val msg = s"x-mws-authentication header supplied with bad format: [${hdr.value}]"
-            logger.error(msg)
-            reject(MalformedHeaderRejection(headerName = X_MWS_Authentication.name, errorMsg = msg, None))
+    headerValueByType[X_MWS_Authentication]((): Unit).flatMap { hdr =>
+      extractAuthHeaderDetail(hdr.value) match {
+        case Some(ahd: AuthHeaderDetail) => provide(ahd)
+        case None =>
+          val msg = s"${X_MWS_Authentication.name} header supplied with bad format: [${hdr.value}]"
+          logger.error(msg)
+          reject(MalformedHeaderRejection(headerName = X_MWS_Authentication.name, errorMsg = msg, None))
 
-        }
+      }
     }
 
   val extractMwsTimeHeader: Directive1[Long] =
-    headerValueByType[X_MWS_Time]((): Unit).flatMap {
-      time =>
-        Try(time.value.toLong).toOption match {
-          case Some(t: Long) => provide(t)
-          case None =>
-            val msg = s"x-mws-time header supplied with bad format: [${time.value}]"
-            logger.error(msg)
-            reject(MalformedHeaderRejection(headerName = X_MWS_Time.name, errorMsg = msg, None))
-        }
+    headerValueByType[X_MWS_Time]((): Unit).flatMap { time =>
+      Try(time.value.toLong).toOption match {
+        case Some(t: Long) => provide(t)
+        case None =>
+          val msg = s"${X_MWS_Time.name} header supplied with bad format: [${time.value}]"
+          logger.error(msg)
+          reject(MalformedHeaderRejection(headerName = X_MWS_Time.name, errorMsg = msg, None))
+      }
     }
 
   /////////////////////////////////////////////
@@ -82,7 +82,7 @@ trait MAuthDirectives extends StrictLogging {
   private def checkSig(request: HttpRequest,
                        ahd: AuthHeaderDetail,
                        timestamp: Long,
-                       publicKeyProvider: MauthPublicKeyProvider)
+                       publicKeyProvider: ClientPublicKeyProvider)
                       (implicit ec: ExecutionContext, timeout: FiniteDuration): Future[Boolean] = {
     request.entity match {
       case entity: HttpEntity.Strict => {
@@ -106,7 +106,7 @@ trait MAuthDirectives extends StrictLogging {
       case _ =>
         // should never call this code as this function should always
         // be used after a toStrictEntity Directive
-        logger.error(s"MAUTH: Non-Strict Entity in Request :(")
+        logger.error(s"MAUTH: Non-Strict Entity in Request")
         FastFuture.successful(false)
     }
   }
@@ -119,15 +119,15 @@ trait MAuthDirectives extends StrictLogging {
             Some(AuthHeaderDetail(UUID.fromString(uuid), hash))
           } catch {
             case NonFatal(e) =>
-              println(s"Bad format for UUID in authentication header: $str")
+              logger.error(s"Bad format for UUID in authentication header: $str", e)
               None
           }
         case _ =>
-          println(s"Bad format for authentication header: $str")
+          logger.error(s"Bad format for authentication header: $str")
           None
       }
     } else {
-      println(s"Bad format for authentication header: $str")
+      logger.error(s"Bad format for authentication header: $str")
       None
     }
   }
