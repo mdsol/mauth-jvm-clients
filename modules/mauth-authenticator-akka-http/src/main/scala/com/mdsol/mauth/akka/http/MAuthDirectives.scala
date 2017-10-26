@@ -14,14 +14,16 @@ import akka.http.scaladsl.util.FastFuture
 import com.mdsol.mauth.akka.http.MAuthSignatureEngine.{buildSignature, compareDigests}
 import com.mdsol.mauth.http.{HttpVerbOps, X_MWS_Authentication, X_MWS_Time}
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
+import com.mdsol.mauth.util.{CurrentEpochTimeProvider, EpochTimeProvider}
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.postfixOps
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
-trait MAuthDirectives extends StrictLogging {
+trait MAuthDirectives extends EpochTimeProvider with StrictLogging {
 
   case class AuthHeaderDetail(appId: UUID, hash: String)
 
@@ -33,11 +35,12 @@ trait MAuthDirectives extends StrictLogging {
     * Should only be used once per route branch, as any HttpEntity is forced
     * to be strict, and serialised into the request.
     *
-    * @param kl      MAuth Public Key Provider
-    * @param timeout request timeout duration
+    * @param kl                       MAuth Public Key Provider
+    * @param timeout                  request timeout duration, defaults to 10 seconds
+    * @param requestValidationTimeout request validation timeout duration, defaults to 10 seconds
     * @return Directive to authenticate the request
     */
-  def authenticate(implicit kl: ClientPublicKeyProvider, timeout: FiniteDuration): Directive0 = {
+  def authenticate(implicit kl: ClientPublicKeyProvider, timeout: FiniteDuration, requestValidationTimeout: Duration): Directive0 = {
     extractExecutionContext.flatMap { implicit ec =>
       extractMAuthHeader.flatMap { ahd =>
         extractMwsTimeHeader.flatMap { time =>
@@ -83,7 +86,12 @@ trait MAuthDirectives extends StrictLogging {
                        ahd: AuthHeaderDetail,
                        timestamp: Long,
                        publicKeyProvider: ClientPublicKeyProvider)
-                      (implicit ec: ExecutionContext, timeout: FiniteDuration): Future[Boolean] = {
+                      (implicit ec: ExecutionContext, timeout: FiniteDuration, requestValidationTimeout: Duration): Future[Boolean] = {
+    if (!validateTime(timestamp)) {
+      val message = "MAuth request validation failed because of timeout " + requestValidationTimeout + "s"
+      logger.error(message)
+      return Future(false)
+    }
     request.entity match {
       case entity: HttpEntity.Strict => {
         val body = entity.data.utf8String
@@ -111,6 +119,10 @@ trait MAuthDirectives extends StrictLogging {
     }
   }
 
+  private def validateTime(requestTime: Long)(implicit requestValidationTimeout: Duration) = {
+    (inSeconds() - requestTime) < requestValidationTimeout.toSeconds
+  }
+
   private def extractAuthHeaderDetail(str: String): Option[AuthHeaderDetail] = {
     if (str.startsWith("MWS ")) {
       str.replaceFirst("MWS ", "").split(":").toList match {
@@ -133,4 +145,4 @@ trait MAuthDirectives extends StrictLogging {
   }
 }
 
-object MAuthDirectives extends MAuthDirectives
+object MAuthDirectives extends CurrentEpochTimeProvider with MAuthDirectives
