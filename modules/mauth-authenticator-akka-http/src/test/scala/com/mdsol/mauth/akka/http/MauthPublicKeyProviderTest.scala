@@ -3,7 +3,6 @@ package com.mdsol.mauth.akka.http
 import java.net.URI
 import java.security.{PublicKey, Security}
 
-import akka.stream.TLSClientAuth.None
 import com.mdsol.mauth.test.utils.FakeMAuthServer
 import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequestSigner, SignedRequest, UnsignedRequest}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -58,8 +57,9 @@ class MauthPublicKeyProviderTest extends FlatSpec with BeforeAndAfterAll with Be
     val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, EXPECTED_AUTHENTICATION_HEADER_VALUE, EXPECTED_TIME_HEADER_VALUE))
     when(mockedSigner.signRequest(any(classOf[UnsignedRequest]))).thenReturn(mockedResponse)
 
-    whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) { result: Option[PublicKey] =>
-      result.toString shouldBe None
+    whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) {
+      case Some(_) => fail("returned a public key, expected None")
+      case None =>
     }
   }
 

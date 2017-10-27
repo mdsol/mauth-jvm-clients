@@ -99,7 +99,7 @@ lazy val proxy = (project in file("modules/mauth-proxy"))
   )
 
 lazy val mauthClients = (project in file("."))
-  .aggregate(authenticator, authenticatorApache, common, proxy, signer, signerApache, testUtils)
+  .aggregate(authenticator, authenticatorAkka, authenticatorApache, common, proxy, signer, signerAkka, signerApache, testUtils)
   .settings(
     basicSettings,
     publishArtifact := false

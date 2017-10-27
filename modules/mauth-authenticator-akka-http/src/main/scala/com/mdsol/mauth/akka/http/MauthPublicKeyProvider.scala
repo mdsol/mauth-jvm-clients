@@ -55,6 +55,7 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
               }
             } else {
               logger.error(s"Unexpected response returned by server -- status: ${response.status} response: $body")
+              promise.success(None)
             }
           }.recover {
             case error =>
