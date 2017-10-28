@@ -18,10 +18,11 @@ Medidata's authentication process requires public key management, which is done 
 A Medidata server requires the requests to be signed using Medidata Authentication
 
   * Client Side - Client needs to sign each request using an implementation of [Signer](modules/mauth-signer/src/main/java/com/mdsol/mauth/Signer.java) interface.
-
-  Implementations provided
-    - [akka-http](modules/mauth-signer-akka-http) (asynchronous)
-    - [apache-http](modules/mauth-signer-apachehttp) (synchronous)
+    - Asynchronous
+      - [apache-http](modules/mauth-signer-apachehttp)
+    
+    - Synchronous
+      - [akka-http](modules/mauth-signer-akka-http)
   
   * Server Side - Server authenticates each request using an implementation of
     - Asynchronous [Authenticator](modules/mauth-authenticator/src/main/java/com/mdsol/mauth/Authenticator.java) and [ClientPublicKeyProvider](modules/mauth-authenticator/src/main/java/com/mdsol/mauth/utils/ClientPublicKeyProvider.java)
