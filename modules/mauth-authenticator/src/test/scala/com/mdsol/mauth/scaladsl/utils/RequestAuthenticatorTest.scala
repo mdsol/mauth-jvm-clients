@@ -4,6 +4,7 @@ import java.security.Security
 
 import com.mdsol.mauth.RequestAuthenticatorTestBase
 import com.mdsol.mauth.exception.MAuthValidationException
+import com.mdsol.mauth.scaladsl.RequestAuthenticator
 import com.mdsol.mauth.test.utils.FakeMAuthServer.EXISTING_CLIENT_APP_UUID
 import com.mdsol.mauth.util.MAuthKeysHelper
 import org.bouncycastle.jce.provider.BouncyCastleProvider

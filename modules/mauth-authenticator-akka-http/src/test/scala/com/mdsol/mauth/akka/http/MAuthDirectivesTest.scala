@@ -38,7 +38,7 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
   "authenticate" should {
     val publicKey = MAuthKeysHelper.getPublicKeyFromString(FixturesLoader.getPublicKey)
     implicit val timeout: FiniteDuration = 10 seconds
-    implicit val requestValidationTimeout: FiniteDuration = 10 seconds
+    implicit val requestValidationTimeout: Duration = 10 seconds
 
     "pass successfully authenticated request" in {
       val client = mock(classOf[ClientPublicKeyProvider])

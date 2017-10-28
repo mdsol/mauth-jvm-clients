@@ -1,11 +1,11 @@
-package com.mdsol.mauth.scaladsl.utils
+package com.mdsol.mauth.scaladsl
 
 import java.nio.charset.StandardCharsets
 import java.util
 
 import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.exception.MAuthValidationException
-import com.mdsol.mauth.scaladsl.Authenticator
+import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
 import com.mdsol.mauth.util.{CurrentEpochTimeProvider, EpochTimeProvider, MAuthSignatureHelper}
 import org.slf4j.LoggerFactory
 
