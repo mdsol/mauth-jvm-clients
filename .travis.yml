@@ -1,19 +1,24 @@
-language: java
+language: scala
+scala:
+  - 2.11.8
 jdk:
-- oraclejdk8
+  - oraclejdk8
 env:
   global:
   - APP_UUID=398ea708-50eb-499f-98d3-14cc7692668c
 cache:
   directories:
-  - $HOME/.m2
+  - $HOME/.ivy2/cache
+  - $HOME/.sbt/boot/
+before_cache:
+- find $HOME/.ivy2 -name "ivydata-*.properties" -delete
+- find $HOME/.sbt -name "*.lock" -delete
 before_install:
- - export APP_PRIVATE_KEY=$(cat travis/fake_private_key_for_testing)
-install: mvn install -Dmaven.javadoc.skip=true -B -V --settings travis/settings.xml
-script: mvn test --settings travis/settings.xml
+  - export APP_PRIVATE_KEY=$(cat travis/fake_private_key_for_testing)
+script: sbt ++$TRAVIS_SCALA_VERSION test
 
 deploy:
-  provider: script
-  script: mvn deploy -DskipTests=true --settings travis/settings.xml
-  on:
-    branch: develop
+  - provider: script
+    script: sbt ++$TRAVIS_SCALA_VERSION clean publish
+    on:
+      branch: develop
