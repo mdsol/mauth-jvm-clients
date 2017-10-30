@@ -5,6 +5,8 @@ import sbt.Keys._
 import sbt.{url, _}
 import sbtrelease.ReleasePlugin.autoImport._
 import sbtrelease.ReleaseStateTransformations._
+import sbtassembly.AssemblyKeys._
+import sbtassembly.MergeStrategy
 
 
 object BuildSettings {
@@ -57,5 +59,17 @@ object BuildSettings {
       releaseStepCommand("sonatypeReleaseAll"),
       pushChanges
     )
+  )
+
+
+  lazy val assemblySettings = Seq(
+    test in assembly := {},
+    mainClass in assembly := Some("com.mdsol.mauth.proxy.ProxyServer"),
+    assemblyJarName in assembly := s"mauth-proxy-${version.value}.jar",
+    assemblyMergeStrategy in assembly := {
+      case "logback.xml" => MergeStrategy.first
+      case x => val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+    }
   )
 }

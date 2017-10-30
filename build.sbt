@@ -103,15 +103,36 @@ lazy val `mauth-authenticator-akka-http` = (project in file("modules/mauth-authe
   )
 
 lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
+  .enablePlugins(DockerPlugin)
   .dependsOn(`mauth-signer-apachehttp`)
   .settings(
     basicSettings,
     publishSettings,
+    assemblySettings,
     crossPaths := false,
     name := "mauth-proxy",
     libraryDependencies ++=
       Dependencies.compile(jacksonDataBind, littleProxy, logbackClassic, logbackCore).map(withExclusions) ++
-        Dependencies.test(hamcrestAll, junit, jUnitInterface, wiremock).map(withExclusions)
+        Dependencies.test(hamcrestAll, junit, jUnitInterface, wiremock).map(withExclusions),
+    dockerfile in docker := {
+      // The assembly task generates a fat JAR file
+      val artifact: File = assembly.value
+      val artifactTargetPath = s"/app/${artifact.name}"
+
+      new Dockerfile {
+        from("java")
+        add(artifact, artifactTargetPath)
+        entryPoint("java", "-jar", artifactTargetPath)
+      }
+    },
+    imageNames in docker := Seq(
+      ImageName(s"${organization.value}/${name.value}:latest"),
+      ImageName(
+        namespace = Some(organization.value),
+        repository = name.value,
+        tag = Some("v" + version.value)
+      )
+    )
   )
 
 lazy val `mauth-java-client` = (project in file("."))

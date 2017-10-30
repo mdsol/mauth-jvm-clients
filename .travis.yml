@@ -3,6 +3,8 @@ scala:
 - 2.11.8
 jdk:
 - oraclejdk8
+services:
+  - docker
 env:
   global:
   - APP_UUID=398ea708-50eb-499f-98d3-14cc7692668c
@@ -22,4 +24,12 @@ deploy:
   script: travis/deploy.sh
   on:
     all_branches: true
+    tags: false
+- provider: script
+  script: travis/dockerPublish.sh
+  on:
+    branches:
+      only:
+      - master
+      - develop
     tags: false

@@ -1,5 +1,0 @@
-#!/bin/sh
-
-if [ -f [[deploy.home]]/[[artifactId]].jar ] ; then
-  rm [[deploy.home]]/[[artifactId]].jar
-fi
