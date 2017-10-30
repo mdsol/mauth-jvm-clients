@@ -9,9 +9,10 @@ import akka.http.scaladsl.server._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.http.{X_MWS_Authentication, X_MWS_Time}
+import com.mdsol.mauth.scaladsl.RequestAuthenticator
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
 import com.mdsol.mauth.test.utils.FixturesLoader
-import com.mdsol.mauth.util.MAuthKeysHelper
+import com.mdsol.mauth.util.{EpochTimeProvider, MAuthKeysHelper}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.mockito.Matchers.{eq => eqTo}
 import org.mockito.Mockito.{mock, when}
@@ -35,16 +36,18 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
   private val authHeader: String = s"$authPrefix $appUuid:$signature"
   private val timeHeader: Long = 1509041057L
 
+  private implicit val timeout: FiniteDuration = 10 seconds
+  private implicit val requestValidationTimeout: Duration = 10 seconds
+  private val client = mock(classOf[ClientPublicKeyProvider])
+  private val mockEpochTimeProvider: EpochTimeProvider = mock(classOf[EpochTimeProvider])
+  when(mockEpochTimeProvider.inSeconds()).thenReturn(timeHeader)
+  private implicit val authenticator: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
+
   "authenticate" should {
+    lazy val route: Route = authenticate.apply(complete(HttpResponse()))
     val publicKey = MAuthKeysHelper.getPublicKeyFromString(FixturesLoader.getPublicKey)
-    implicit val timeout: FiniteDuration = 10 seconds
-    implicit val requestValidationTimeout: Duration = 10 seconds
 
     "pass successfully authenticated request" in {
-      val client = mock(classOf[ClientPublicKeyProvider])
-      val route: Route = authenticate(client, timeout, requestValidationTimeout) {
-        complete(HttpResponse())
-      }
       when(client.getPublicKey(eqTo(appUuid))).thenReturn(Future(Some(publicKey)))
 
       Get("/").withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString), RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
@@ -53,10 +56,6 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
     }
 
     "reject if request validation timeout passed" in {
-      val client = mock(classOf[ClientPublicKeyProvider])
-      val route: Route = authenticate(client, timeout, requestValidationTimeout) {
-        complete(HttpResponse())
-      }
       when(client.getPublicKey(eqTo(appUuid))).thenReturn(Future(None))
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, (timeHeader - requestValidationTimeout.toSeconds - 10).toString), RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
@@ -65,10 +64,6 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
     }
 
     "reject if public key cannot be found" in {
-      val client = mock(classOf[ClientPublicKeyProvider])
-      val route: Route = authenticate(client, timeout, requestValidationTimeout) {
-        complete(HttpResponse())
-      }
       when(client.getPublicKey(eqTo(appUuid))).thenReturn(Future(None))
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString), RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
@@ -77,10 +72,6 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
     }
 
     "reject if Authentication header is missing" in {
-      val client = mock(classOf[ClientPublicKeyProvider])
-      val route: Route = authenticate(client, timeout, requestValidationTimeout) {
-        complete(HttpResponse())
-      }
       when(client.getPublicKey(eqTo(appUuid))).thenReturn(Future(Some(publicKey)))
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString)) ~> route ~> check {
@@ -91,10 +82,6 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
     }
 
     "reject if Time header is missing" in {
-      val client = mock(classOf[ClientPublicKeyProvider])
-      val route: Route = authenticate(client, timeout, requestValidationTimeout) {
-        complete(HttpResponse())
-      }
       when(client.getPublicKey(eqTo(appUuid))).thenReturn(Future(Some(publicKey)))
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
@@ -184,6 +171,4 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
       }
     }
   }
-
-  override def inSeconds(): Long = timeHeader
 }

@@ -46,7 +46,7 @@ This is an implementation of Medidata Authentication Client Authenticator to val
             implicit val publicKeyProvider: ClientPublicKeyProvider = new MauthPublicKeyProvider(authConfig, MAuthRequestSigner(singerConfiguration))
             implicit val timeout: FiniteDuration = 10 seconds
             implicit val requestValidationTimeout: Duration = authConfig.getTimeToLive seconds
-            implicit val authenticator: RequestAuthenticator = new RequestAuthenticator(publicKeyProvider)
+            implicit val authenticator: RequestAuthenticator = new RequestAuthenticator(publicKeyProvider, new CurrentEpochTimeProvider)
             
             def getResource = authenticate.apply {
                 get {

@@ -6,13 +6,13 @@ import java.util
 import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.exception.MAuthValidationException
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
-import com.mdsol.mauth.util.{CurrentEpochTimeProvider, MAuthSignatureHelper}
+import com.mdsol.mauth.util.{EpochTimeProvider, MAuthSignatureHelper}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
-class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider) extends CurrentEpochTimeProvider with Authenticator {
+class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTimeProvider: EpochTimeProvider) extends Authenticator {
 
   private val logger = LoggerFactory.getLogger(classOf[RequestAuthenticator])
 
@@ -27,7 +27,7 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider) extends C
     */
   override def authenticate(mAuthRequest: MAuthRequest)(implicit ex: ExecutionContext, requestValidationTimeout: Duration): Future[Boolean] = {
     if (!validateTime(mAuthRequest.getRequestTime)(requestValidationTimeout)) {
-      val message = "MAuth request validation failed because of timeout " + requestValidationTimeout + "s"
+      val message = s"MAuth request validation failed because of timeout $requestValidationTimeout"
       logger.error(message)
       return Future.failed(new MAuthValidationException(message))
     }
@@ -52,6 +52,6 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider) extends C
 
   // Check epoch time is not older than specified interval.
   protected def validateTime(requestTime: Long)(requestValidationTimeout: Duration): Boolean = {
-    (inSeconds - requestTime) < requestValidationTimeout.toSeconds
+    (epochTimeProvider.inSeconds - requestTime) < requestValidationTimeout.toSeconds
   }
 }

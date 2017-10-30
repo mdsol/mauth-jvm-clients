@@ -3,6 +3,8 @@ package com.mdsol.mauth.akka.http
 import java.net.URI
 import java.security.{PublicKey, Security}
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import com.mdsol.mauth.test.utils.FakeMAuthServer
 import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequestSigner, SignedRequest, UnsignedRequest}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -14,6 +16,9 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import scala.util.Right
 
 class MauthPublicKeyProviderTest extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach with ScalaFutures with IntegrationPatience with Matchers {
+
+  implicit val system: ActorSystem = ActorSystem()
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
   private val EXPECTED_TIME_HEADER_VALUE = "1444672125"
   private val EXPECTED_AUTHENTICATION_HEADER_VALUE = "MWS 92a1869e-c80d-4f06-8775-6c4ebb0758e0:lTMYNWPaG4..."
   private val MAUTH_PORT = 9001
