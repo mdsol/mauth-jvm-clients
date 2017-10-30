@@ -24,12 +24,11 @@ import scalacache._
 import scalacache.guava._
 import scalacache.memoization._
 
-class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner) extends ClientPublicKeyProvider with StrictLogging {
+class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner)(implicit system: ActorSystem, materializer: ActorMaterializer)
+  extends ClientPublicKeyProvider with StrictLogging {
 
   implicit val scalaCache: ScalaCache[NoSerialization] = ScalaCache(GuavaCache())
   private val mapper = new ObjectMapper
-  implicit val system: ActorSystem = ActorSystem()
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   /**
     * Returns the associated public key for a given application UUID.
@@ -37,9 +36,9 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
     * @param appUUID , UUID of the application for which we want to retrieve its public key.
     * @return { @link PublicKey} registered in MAuth for the application with given appUUID.
     */
-  override def getPublicKey(appUUID: UUID): Future[Option[PublicKey]] = memoize(60 seconds) {
+  override def getPublicKey(appUUID: UUID): Future[Option[PublicKey]] = memoize(configuration.getTimeToLive seconds) {
     val promise = Promise[Option[PublicKey]]()
-    signer.signRequest(UnsignedRequest("GET", new URI(getRequestUrlPath(appUUID)))) match {
+    signer.signRequest(UnsignedRequest("GET", new URI(configuration.getBaseUrl + getRequestUrlPath(appUUID)))) match {
       case Left(e) =>
         logger.error("Request to get MAuth public key couldn't be signed", e)
         promise.success(None)

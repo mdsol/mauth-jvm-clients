@@ -36,16 +36,19 @@ This is an implementation of Medidata Authentication Client Authenticator to val
 
 1. To validate (authenticate) incoming requests, e.g. (using Servlet Filter):
 
-        class MyController extends MAuthDirectives{
+        class MyController extends MAuthDirectives {
             final Config typeSafeConfig = ConfigFactory.load();
-            SignerConfiguration singerConfiguration = new SignerConfiguration(typeSafeConfig);
-            AuthenticatorConfiguration authConfiguration = new AuthenticatorConfiguration(typeSafeConfig);
+            val singerConfiguration = new SignerConfiguration(typeSafeConfig);
+            val authConfig = new AuthenticatorConfiguration(typeSafeConfig);
             
-            implicit val publicKeyProvider = MauthPublicKeyProvider(authConfiguration, MAuthRequestSigner(singerConfiguration))
+            implicit val system: ActorSystem = ActorSystem()
+            implicit val materializer: ActorMaterializer = ActorMaterializer()
+            implicit val publicKeyProvider: ClientPublicKeyProvider = new MauthPublicKeyProvider(authConfig, MAuthRequestSigner(singerConfiguration))
             implicit val timeout: FiniteDuration = 10 seconds
-            implicit val requestValidationTimeout: Duration = 10 seconds
+            implicit val requestValidationTimeout: Duration = authConfig.getTimeToLive seconds
+            implicit val authenticator: RequestAuthenticator = new RequestAuthenticator(publicKeyProvider)
             
-            def getResource = authenticate {
+            def getResource = authenticate.apply {
                 get {
                     path("resources") {
                         complete("OK")

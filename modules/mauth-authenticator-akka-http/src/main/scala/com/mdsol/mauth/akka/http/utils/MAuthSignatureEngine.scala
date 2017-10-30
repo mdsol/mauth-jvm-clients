@@ -1,4 +1,4 @@
-package com.mdsol.mauth.akka.http
+package com.mdsol.mauth.akka.http.utils
 
 import java.io.IOException
 import java.nio.charset.StandardCharsets

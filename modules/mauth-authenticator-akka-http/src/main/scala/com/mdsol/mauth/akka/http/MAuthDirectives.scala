@@ -1,29 +1,26 @@
 package com.mdsol.mauth.akka.http
 
-import java.security.PublicKey
 import java.util.UUID
 
 import akka.http.javadsl.server.AuthorizationFailedRejection
-import akka.http.scaladsl.model.{HttpEntity, HttpRequest}
-import akka.http.scaladsl.server.Directives.headerValueByType
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.server.Directives.{headerValueByName, headerValueByType}
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.directives.BasicDirectives._
 import akka.http.scaladsl.server.directives.FutureDirectives.onComplete
 import akka.http.scaladsl.server.directives.RouteDirectives.reject
-import akka.http.scaladsl.util.FastFuture
-import com.mdsol.mauth.akka.http.MAuthSignatureEngine.{buildSignature, compareDigests}
+import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.http.{HttpVerbOps, X_MWS_Authentication, X_MWS_Time}
-import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
-import com.mdsol.mauth.util.{CurrentEpochTimeProvider, EpochTimeProvider}
+import com.mdsol.mauth.scaladsl.Authenticator
 import com.typesafe.scalalogging.StrictLogging
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
-import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
-trait MAuthDirectives extends EpochTimeProvider with StrictLogging {
+trait MAuthDirectives extends StrictLogging {
 
   case class AuthHeaderDetail(appId: UUID, hash: String)
 
@@ -35,26 +32,38 @@ trait MAuthDirectives extends EpochTimeProvider with StrictLogging {
     * Should only be used once per route branch, as any HttpEntity is forced
     * to be strict, and serialised into the request.
     *
-    * @param kl                       MAuth Public Key Provider
+    * @param authenticator            MAuth Public Key Provider
     * @param timeout                  request timeout duration, defaults to 10 seconds
     * @param requestValidationTimeout request validation timeout duration, defaults to 10 seconds
     * @return Directive to authenticate the request
     */
-  def authenticate(implicit kl: ClientPublicKeyProvider, timeout: FiniteDuration, requestValidationTimeout: Duration): Directive0 = {
+  def authenticate(implicit ex: ExecutionContext, authenticator: Authenticator, timeout: FiniteDuration, requestValidationTimeout: Duration): Directive0 = {
     extractExecutionContext.flatMap { implicit ec =>
-      extractMAuthHeader.flatMap { ahd =>
+      extractMwsAuthenticationHeader.flatMap { mAuthHeader =>
         extractMwsTimeHeader.flatMap { time =>
           toStrictEntity(timeout) &
             extractRequest.flatMap { req =>
-              onComplete(checkSig(req, ahd, time, kl)).flatMap[Unit] {
-                case Success(true) => pass
-                case _ => reject(MdsolAuthFailedRejection)
+              val isAuthed: Directive[Unit] = req.entity match {
+                case entity: HttpEntity.Strict => {
+                  onComplete(authenticator.authenticate(
+                    new MAuthRequest(mAuthHeader, entity.data.toArray[Byte], HttpVerbOps.httpVerb(req.method), time.toString, req.uri.path.toString)
+                  )).flatMap[Unit] {
+                    case Success(true) => pass
+                    case _ => reject(MdsolAuthFailedRejection)
+                  }
+                }
+                case _ =>
+                  logger.error(s"MAUTH: Non-Strict Entity in Request")
+                  reject(MdsolAuthFailedRejection)
               }
+              isAuthed
             }
         }
       }
     }
   }
+
+  val extractMwsAuthenticationHeader: Directive1[String] = headerValueByName(X_MWS_Authentication.name)
 
   val extractMAuthHeader: Directive1[AuthHeaderDetail] =
     headerValueByType[X_MWS_Authentication]((): Unit).flatMap { hdr =>
@@ -82,46 +91,6 @@ trait MAuthDirectives extends EpochTimeProvider with StrictLogging {
   /////////////////////////////////////////////
   //  Utility functions
   /////////////////////////////////////////////
-  private def checkSig(request: HttpRequest,
-                       ahd: AuthHeaderDetail,
-                       timestamp: Long,
-                       publicKeyProvider: ClientPublicKeyProvider)
-                      (implicit ec: ExecutionContext, timeout: FiniteDuration, requestValidationTimeout: Duration): Future[Boolean] = {
-    if (!validateTime(timestamp)) {
-      val message = "MAuth request validation failed because of timeout " + requestValidationTimeout + "s"
-      logger.error(message)
-      return Future(false)
-    }
-    request.entity match {
-      case entity: HttpEntity.Strict => {
-        val body = entity.data.utf8String
-
-        publicKeyProvider.getPublicKey(ahd.appId) map {
-          case None =>
-            logger.warn(s"MAUTH: No public key for App: ${ahd.appId}")
-            false
-
-          case Some(k: PublicKey) =>
-            val method = HttpVerbOps.httpVerb(request.method)
-            val path = request.uri.path.toString()
-            val time = timestamp.toString
-
-            val verified = compareDigests(ahd.hash, k, buildSignature(ahd.appId, method, path, body, time))
-            logger.debug(s"MAUTH: VERIFIED=$verified")
-            verified
-        }
-      }
-      case _ =>
-        // should never call this code as this function should always
-        // be used after a toStrictEntity Directive
-        logger.error(s"MAUTH: Non-Strict Entity in Request")
-        FastFuture.successful(false)
-    }
-  }
-
-  private def validateTime(requestTime: Long)(implicit requestValidationTimeout: Duration) = {
-    (inSeconds() - requestTime) < requestValidationTimeout.toSeconds
-  }
 
   private def extractAuthHeaderDetail(str: String): Option[AuthHeaderDetail] = {
     if (str.startsWith("MWS ")) {
@@ -145,4 +114,4 @@ trait MAuthDirectives extends EpochTimeProvider with StrictLogging {
   }
 }
 
-object MAuthDirectives extends CurrentEpochTimeProvider with MAuthDirectives
+object MAuthDirectives extends MAuthDirectives

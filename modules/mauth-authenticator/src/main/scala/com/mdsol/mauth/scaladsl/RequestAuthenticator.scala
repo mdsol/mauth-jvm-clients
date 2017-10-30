@@ -6,15 +6,13 @@ import java.util
 import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.exception.MAuthValidationException
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
-import com.mdsol.mauth.util.{CurrentEpochTimeProvider, EpochTimeProvider, MAuthSignatureHelper}
+import com.mdsol.mauth.util.{CurrentEpochTimeProvider, MAuthSignatureHelper}
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
-class RequestAuthenticator(
-                            publicKeyProvider: ClientPublicKeyProvider,
-                            requestValidationTimeoutSeconds: Long = 10L,
-                            epochTimeProvider: EpochTimeProvider = new CurrentEpochTimeProvider()) extends Authenticator {
+class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider) extends CurrentEpochTimeProvider with Authenticator {
 
   private val logger = LoggerFactory.getLogger(classOf[RequestAuthenticator])
 
@@ -27,9 +25,9 @@ class RequestAuthenticator(
     * @param mAuthRequest Data from the incoming HTTP request necessary to perform the validation.
     * @return True or false indicating if the request is valid or not with respect to mAuth.
     */
-  override def authenticate(mAuthRequest: MAuthRequest)(implicit ex: ExecutionContext): Future[Boolean] = {
-    if (!validateTime(mAuthRequest.getRequestTime)) {
-      val message = "MAuth request validation failed because of timeout " + requestValidationTimeoutSeconds + "s"
+  override def authenticate(mAuthRequest: MAuthRequest)(implicit ex: ExecutionContext, requestValidationTimeout: Duration): Future[Boolean] = {
+    if (!validateTime(mAuthRequest.getRequestTime)(requestValidationTimeout)) {
+      val message = "MAuth request validation failed because of timeout " + requestValidationTimeout + "s"
       logger.error(message)
       return Future.failed(new MAuthValidationException(message))
     }
@@ -53,8 +51,7 @@ class RequestAuthenticator(
   }
 
   // Check epoch time is not older than specified interval.
-  private def validateTime(requestTime: Long) = {
-    val currentTime = epochTimeProvider.inSeconds
-    (currentTime - requestTime) < requestValidationTimeoutSeconds
+  protected def validateTime(requestTime: Long)(requestValidationTimeout: Duration): Boolean = {
+    (inSeconds - requestTime) < requestValidationTimeout.toSeconds
   }
 }
