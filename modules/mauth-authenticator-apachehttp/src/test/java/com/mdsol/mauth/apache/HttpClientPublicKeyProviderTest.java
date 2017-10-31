@@ -2,26 +2,22 @@ package com.mdsol.mauth.apache;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.mdsol.mauth.AuthenticatorConfiguration;
-import com.mdsol.mauth.MAuthConfiguration;
 import com.mdsol.mauth.Signer;
 import com.mdsol.mauth.exception.HttpClientPublicKeyProviderException;
 import com.mdsol.mauth.test.utils.FakeMAuthServer;
-import com.mdsol.mauth.test.utils.FixturesLoader;
 import com.mdsol.mauth.utils.ClientPublicKeyProvider;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import java.security.Security;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.mdsol.mauth.MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME;
+import static com.mdsol.mauth.MAuthRequest.X_MWS_TIME_HEADER_NAME;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -30,9 +26,7 @@ public class HttpClientPublicKeyProviderTest {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
-  private static final String X_MWS_TIME_HEADER_NAME = "x-mws-time";
   private static final String EXPECTED_TIME_HEADER_VALUE = "1444672125";
-  private static final String X_MWS_AUTHENTICATION_HEADER_NAME = "x-mws-authentication";
   private static final String EXPECTED_AUTHENTICATION_HEADER_VALUE = "MWS 92a1869e-c80d-4f06-8775-6c4ebb0758e0:lTMYNWPaG4...";
 
   private static final String MAUTH_BASE_URL = "http://localhost:9001";
@@ -43,6 +37,11 @@ public class HttpClientPublicKeyProviderTest {
   public static void setup() {
     FakeMAuthServer.start(9001);
     Security.addProvider(new BouncyCastleProvider());
+  }
+
+  @Before
+  public void beforeEach(){
+    FakeMAuthServer.resetMappings();
   }
 
   @AfterClass
@@ -76,10 +75,10 @@ public class HttpClientPublicKeyProviderTest {
     FakeMAuthServer.return200();
     ClientPublicKeyProvider client = getClientWithMockedSigner();
 
-    client.getPublicKey(UUID.fromString(FakeMAuthServer.EXISTING_CLIENT_APP_UUID));
+    client.getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID);
 
     WireMock.verify(getRequestedFor(
-        WireMock.urlEqualTo(getRequestUrlPath(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)))
+        WireMock.urlEqualTo(getRequestUrlPath(FakeMAuthServer.EXISTING_CLIENT_APP_UUID.toString())))
         .withHeader(X_MWS_TIME_HEADER_NAME.toLowerCase(),
             WireMock.equalTo(EXPECTED_TIME_HEADER_VALUE))
         .withHeader(X_MWS_AUTHENTICATION_HEADER_NAME.toLowerCase(),
@@ -94,6 +93,6 @@ public class HttpClientPublicKeyProviderTest {
     expectedException.expect(HttpClientPublicKeyProviderException.class);
     expectedException.expectMessage("Invalid response code returned by server: 401");
 
-    client.getPublicKey(UUID.fromString(FakeMAuthServer.NON_EXISTING_CLIENT_APP_UUID));
+    client.getPublicKey(FakeMAuthServer.NON_EXISTING_CLIENT_APP_UUID);
   }
 }

@@ -7,11 +7,10 @@ val withExclusions: (ModuleID) => ModuleID = moduleId => moduleId.excludeAll(Dep
 lazy val common = (project in file("modules/mauth-common"))
   .settings(
     basicSettings,
-    crossPaths := false,
     name := "mauth-common",
     libraryDependencies ++=
-      Dependencies.compile(commonsCodec, commonsLang3, bouncycastlePkix, slf4jApi, typesafeConfig).map(withExclusions) ++
-        Dependencies.test(hamcrestAll, jUnitInterface).map(withExclusions)
+      Dependencies.compile(commonsCodec, commonsLang3, bouncyCastlePkix, slf4jApi, typeSafeConfig).map(withExclusions) ++
+        Dependencies.test(hamcrestAll, junit, jUnitInterface).map(withExclusions)
   )
 
 lazy val testUtils = (project in file("modules/mauth-test-utils"))
@@ -30,7 +29,7 @@ lazy val signer = (project in file("modules/mauth-signer"))
     crossPaths := false,
     name := "mauth-signer",
     libraryDependencies ++=
-      Dependencies.test(commonsIO, hamcrestAll, jUnitInterface, mockito).map(withExclusions)
+      Dependencies.test(commonsIO, hamcrestAll, junit, jUnitInterface, mockito).map(withExclusions)
   )
 
 lazy val signerApache = (project in file("modules/mauth-signer-apachehttp"))
@@ -40,8 +39,19 @@ lazy val signerApache = (project in file("modules/mauth-signer-apachehttp"))
     crossPaths := false,
     name := "mauth-signer-apachehttp",
     libraryDependencies ++=
-      Dependencies.test(commonsIO, jUnitInterface, mockito).map(withExclusions) ++
-        Dependencies.compile(appacheHttpClient).map(withExclusions)
+      Dependencies.test(commonsIO, junit, jUnitInterface, mockito).map(withExclusions) ++
+        Dependencies.compile(apacheHttpClient).map(withExclusions)
+  )
+
+lazy val signerAkka = (project in file("modules/mauth-signer-akka-http"))
+  .dependsOn(signer, testUtils % "test")
+  .settings(
+    basicSettings,
+    name := "mauth-signer-akka-http",
+    libraryDependencies ++=
+      Dependencies.provided(akkaHttp).map(withExclusions) ++
+        Dependencies.compile(scalaLogging).map(withExclusions) ++
+        Dependencies.test(scalaTest).map(withExclusions)
   )
 
 lazy val authenticator = (project in file("modules/mauth-authenticator"))
@@ -52,7 +62,7 @@ lazy val authenticator = (project in file("modules/mauth-authenticator"))
     name := "mauth-authenticator",
     libraryDependencies ++=
       Dependencies.compile().map(withExclusions) ++
-        Dependencies.test(hamcrestAll, jUnitInterface, mockito).map(withExclusions)
+        Dependencies.test(hamcrestAll, junit, jUnitInterface, mockito, scalaTest).map(withExclusions)
   )
 
 lazy val authenticatorApache = (project in file("modules/mauth-authenticator-apachehttp"))
@@ -63,7 +73,18 @@ lazy val authenticatorApache = (project in file("modules/mauth-authenticator-apa
     name := "mauth-authenticator-apachehttp",
     libraryDependencies ++=
       Dependencies.compile(jacksonDataBind, guava, slf4jApi).map(withExclusions) ++
-        Dependencies.test(hamcrestAll, jUnitInterface, mockito, wiremock).map(withExclusions)
+        Dependencies.test(hamcrestAll, junit, jUnitInterface, mockito, wiremock).map(withExclusions)
+  )
+
+lazy val authenticatorAkka = (project in file("modules/mauth-authenticator-akka-http"))
+  .dependsOn(authenticator, signerAkka, testUtils % "test")
+  .settings(
+    basicSettings,
+    name := "mauth-authenticator-akka-http",
+    libraryDependencies ++=
+      Dependencies.provided(akkaHttp) ++
+        Dependencies.compile(jacksonDataBind, scalaCache).map(withExclusions) ++
+        Dependencies.test(akkaHttpTestKit, hamcrestAll, mockito, scalaTest, wiremock).map(withExclusions)
   )
 
 lazy val proxy = (project in file("modules/mauth-proxy"))
@@ -74,11 +95,11 @@ lazy val proxy = (project in file("modules/mauth-proxy"))
     name := "mauth-proxy",
     libraryDependencies ++=
       Dependencies.compile(jacksonDataBind, littleProxy, logbackClassic, logbackCore).map(withExclusions) ++
-        Dependencies.test(hamcrestAll, jUnitInterface, wiremock).map(withExclusions)
+        Dependencies.test(hamcrestAll, junit, jUnitInterface, wiremock).map(withExclusions)
   )
 
 lazy val mauthClients = (project in file("."))
-  .aggregate(authenticator, authenticatorApache, common, proxy, signer, signerApache, testUtils)
+  .aggregate(authenticator, authenticatorAkka, authenticatorApache, common, proxy, signer, signerAkka, signerApache, testUtils)
   .settings(
     basicSettings,
     publishArtifact := false

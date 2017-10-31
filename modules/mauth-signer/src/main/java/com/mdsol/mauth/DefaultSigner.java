@@ -73,10 +73,10 @@ public class DefaultSigner implements Signer {
 
     HashMap<String, String> headers = new HashMap<>();
     headers.put(
-        MAuthRequest.MAUTH_AUTHENTICATION_HEADER_NAME,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME,
         MAuthHeadersHelper.createAuthenticationHeaderValue(appUUID, encryptedSignature)
     );
-    headers.put(MAuthRequest.MAUTH_TIME_HEADER_NAME, MAuthHeadersHelper.createTimeHeaderValue(currentTime));
+    headers.put(MAuthRequest.X_MWS_TIME_HEADER_NAME, MAuthHeadersHelper.createTimeHeaderValue(currentTime));
 
     return headers;
   }
