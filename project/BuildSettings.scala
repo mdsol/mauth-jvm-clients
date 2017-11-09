@@ -10,7 +10,7 @@ object BuildSettings {
 
   lazy val basicSettings = Seq(
     homepage := Some(new URL("https://github.com/mdsol/mauth-java-client")),
-    organization := "mdsol",
+    organization := "com.mdsol.clients",
     organizationHomepage := Some(new URL("http://mdsol.com")),
     description := "MAuth clients",
     scalaVersion := "2.11.8",

@@ -26,4 +26,7 @@ This is an implementation of Medidata Authentication Client Signer to sign the H
 
 1. Sign requests using Akka HttpClient
         
-        HttpClient.call(MAuthRequestSigner(configuration).signRequest(UnsignedRequest(uri=URI("http://server")))
+        MAuthRequestSigner(configuration).signRequest(UnsignedRequest(httpMethod, URI.create("http://server"), body, headers)) match {
+          case Left(e) => Future.failed(e)
+          case Right(signedRequest) => HttpClient.call(signedRequest)
+        }
