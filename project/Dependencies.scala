@@ -35,7 +35,6 @@ object Dependencies {
   val typeSafeConfig: ModuleID = "com.typesafe" % "config" % "1.3.2"
   val scalaCache: ModuleID = "com.github.cb372" %% "scalacache-guava" % "0.10.0"
   val scalaLogging: ModuleID = "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2"
-  val scalaTest: ModuleID = "org.scalatest" %% "scalatest" % "3.0.3"
 
   // TEST DEPENDENCIES
   val akkaHttpTestKit: ModuleID = "com.typesafe.akka" %% "akka-http-testkit" % Version.akkaHttp
@@ -44,6 +43,7 @@ object Dependencies {
   val junit: ModuleID = "junit" % "junit" % "4.12"
   val jUnitInterface: ModuleID = "com.novocode" % "junit-interface" % "0.11" exclude("junit", "junit")
   val mockito: ModuleID = "org.mockito" % "mockito-all" % "1.10.19"
+  val scalaTest: ModuleID = "org.scalatest" %% "scalatest" % "3.0.3"
   val wiremock: ModuleID = "com.github.tomakehurst" % "wiremock" % "1.58"
 
 
