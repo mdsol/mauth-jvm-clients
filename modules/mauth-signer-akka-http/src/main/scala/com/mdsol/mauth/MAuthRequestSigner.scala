@@ -4,7 +4,7 @@ import java.net.URI
 import java.security.PrivateKey
 import java.util.UUID
 
-import com.mdsol.mauth.util.EpochTimeProvider
+import com.mdsol.mauth.util.{CurrentEpochTimeProvider, EpochTimeProvider, MAuthKeysHelper}
 
 import scala.util.{Failure, Success, Try}
 
@@ -28,12 +28,25 @@ case class SignedRequest(req: UnsignedRequest, authHeader: String, timeHeader: S
 
 /**
   * Generic crypto error container
+  *
   * @param msg
   * @param cause
   */
 case class CryptoError(msg: String, cause: Option[Throwable] = None)
 
-trait MAuthRequestSigner extends DefaultSigner {
+trait RequestSigner {
+  def signRequest(request: UnsignedRequest): Either[Throwable, SignedRequest]
+}
+
+class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider) extends DefaultSigner(appUUID, privateKey, epochTimeProvider) with RequestSigner {
+
+  def this(configuration: SignerConfiguration) = this(configuration.getAppUUID, configuration.getPrivateKey)
+
+  def this(appUUID: UUID, privateKey: String) = this(appUUID, MAuthKeysHelper.getPrivateKeyFromString(privateKey))
+
+  def this(appUUID: UUID, privateKey: String, epochTimeProvider: EpochTimeProvider) = this(appUUID, MAuthKeysHelper.getPrivateKeyFromString(privateKey), epochTimeProvider)
+
+  def this(appUUID: UUID, privateKey: PrivateKey) = this(appUUID, privateKey, new CurrentEpochTimeProvider)
 
   /**
     * Sign a request specification and return the desired header signatures
@@ -41,7 +54,7 @@ trait MAuthRequestSigner extends DefaultSigner {
     * @param request The request to sign
     * @return A signed API request or an Error
     */
-  def signRequest(request: UnsignedRequest): Either[Throwable, SignedRequest] = {
+  override def signRequest(request: UnsignedRequest): Either[Throwable, SignedRequest] = {
     val body = request.body match {
       case Some(entityBody) => entityBody
       case None => ""
@@ -55,13 +68,13 @@ trait MAuthRequestSigner extends DefaultSigner {
 }
 
 object MAuthRequestSigner {
-  def apply(configuration: SignerConfiguration) = new DefaultSigner(configuration) with MAuthRequestSigner
+  def apply(configuration: SignerConfiguration) = new MAuthRequestSigner(configuration)
 
-  def apply(appUUID: UUID, privateKey: String) = new DefaultSigner(appUUID, privateKey) with MAuthRequestSigner
+  def apply(appUUID: UUID, privateKey: String) = new MAuthRequestSigner(appUUID, privateKey)
 
-  def apply(appUUID: UUID, privateKey: String, epochTimeProvider: EpochTimeProvider) = new DefaultSigner(appUUID, privateKey, epochTimeProvider) with MAuthRequestSigner
+  def apply(appUUID: UUID, privateKey: String, epochTimeProvider: EpochTimeProvider) = new MAuthRequestSigner(appUUID, privateKey, epochTimeProvider)
 
-  def apply(appUUID: UUID, privateKey: PrivateKey) = new DefaultSigner(appUUID, privateKey) with MAuthRequestSigner
+  def apply(appUUID: UUID, privateKey: PrivateKey) = new MAuthRequestSigner(appUUID, privateKey)
 
-  def apply(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider) = new DefaultSigner(appUUID, privateKey, epochTimeProvider) with MAuthRequestSigner
+  def apply(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider) = new MAuthRequestSigner(appUUID, privateKey, epochTimeProvider)
 }
