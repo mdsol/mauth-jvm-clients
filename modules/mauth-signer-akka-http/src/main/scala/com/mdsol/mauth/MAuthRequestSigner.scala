@@ -40,13 +40,13 @@ trait RequestSigner {
 
 class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider) extends DefaultSigner(appUUID, privateKey, epochTimeProvider) with RequestSigner {
 
-  def this(configuration: SignerConfiguration) = this(configuration.getAppUUID, configuration.getPrivateKey)
+  def this(appUUID: UUID, privateKey: PrivateKey) = this(appUUID, privateKey, new CurrentEpochTimeProvider)
 
   def this(appUUID: UUID, privateKey: String) = this(appUUID, MAuthKeysHelper.getPrivateKeyFromString(privateKey))
 
-  def this(appUUID: UUID, privateKey: String, epochTimeProvider: EpochTimeProvider) = this(appUUID, MAuthKeysHelper.getPrivateKeyFromString(privateKey), epochTimeProvider)
+  def this(configuration: SignerConfiguration) = this(configuration.getAppUUID, configuration.getPrivateKey)
 
-  def this(appUUID: UUID, privateKey: PrivateKey) = this(appUUID, privateKey, new CurrentEpochTimeProvider)
+  def this(appUUID: UUID, privateKey: String, epochTimeProvider: EpochTimeProvider) = this(appUUID, MAuthKeysHelper.getPrivateKeyFromString(privateKey), epochTimeProvider)
 
   /**
     * Sign a request specification and return the desired header signatures
