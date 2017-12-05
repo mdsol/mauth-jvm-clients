@@ -77,10 +77,9 @@ trait HttpClient extends LazyLogging {
     * @param ec           The ExecutionContext to use
     * @param system       The ActorSystem to use
     * @param materializer The ActorMaterialise used for this call
-    * @tparam T Type of the request body
     * @return The Response
     */
-  def call[T](request: SignedRequest)
+  def call(request: SignedRequest)
              (implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer): Future[HttpResponse] = {
     call(fromSignedRequestToHttpRequest(request))
   }
