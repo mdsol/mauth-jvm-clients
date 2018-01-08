@@ -2,6 +2,7 @@ import java.util
 
 import sbt.Keys._
 import sbt._
+import sbtrelease.ReleasePlugin.autoImport.releaseVersionBump
 
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
@@ -26,6 +27,7 @@ object BuildSettings {
       else
         Some("Artifactory releases" at repoUrl + "ctms-releases/")
     },
-    publishMavenStyle := true
+    publishMavenStyle := true,
+    releaseVersionBump := sbtrelease.Version.Bump.Bugfix
   )
 }
