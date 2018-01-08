@@ -8,14 +8,14 @@ import akka.stream.ActorMaterializer
 import com.mdsol.mauth.test.utils.FakeMAuthServer
 import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequestSigner, SignedRequest, UnsignedRequest}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.mockito.Matchers.any
-import org.mockito.Mockito.{mock, when}
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 
 import scala.util.Right
 
-class MauthPublicKeyProviderTest extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach with ScalaFutures with IntegrationPatience with Matchers {
+class MauthPublicKeyProviderTest extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach with ScalaFutures
+  with IntegrationPatience with Matchers with MockFactory {
 
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: ActorMaterializer = ActorMaterializer()
@@ -45,10 +45,10 @@ class MauthPublicKeyProviderTest extends FlatSpec with BeforeAndAfterAll with Be
 
   "MauthPublicKeyProvider" should "retrieve PublicKey from MAuth Server" in {
     FakeMAuthServer.return200()
-    val mockedSigner = mock(classOf[MAuthRequestSigner])
+    val mockedSigner = mock[MAuthRequestSigner]
     val unsignedRequest = UnsignedRequest("GET", URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.EXISTING_CLIENT_APP_UUID.toString)))
     val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, EXPECTED_AUTHENTICATION_HEADER_VALUE, EXPECTED_TIME_HEADER_VALUE))
-    when(mockedSigner.signRequest(any(classOf[UnsignedRequest]))).thenReturn(mockedResponse)
+    (mockedSigner.signRequest _).expects(*).returns(mockedResponse)
 
     whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) { result: Option[PublicKey] =>
       result.toString should not be empty
@@ -57,10 +57,10 @@ class MauthPublicKeyProviderTest extends FlatSpec with BeforeAndAfterAll with Be
 
   it should "fail on invalid response from MAuth Server" in {
     FakeMAuthServer.return401()
-    val mockedSigner = mock(classOf[MAuthRequestSigner])
+    val mockedSigner = mock[MAuthRequestSigner]
     val unsignedRequest = UnsignedRequest("GET", URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.NON_EXISTING_CLIENT_APP_UUID.toString)))
     val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, EXPECTED_AUTHENTICATION_HEADER_VALUE, EXPECTED_TIME_HEADER_VALUE))
-    when(mockedSigner.signRequest(any(classOf[UnsignedRequest]))).thenReturn(mockedResponse)
+    (mockedSigner.signRequest _).expects(*).returns(mockedResponse)
 
     whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) {
       case Some(_) => fail("returned a public key, expected None")
