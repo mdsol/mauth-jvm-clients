@@ -14,11 +14,13 @@ before_cache:
 - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
 - find $HOME/.sbt -name "*.lock" -delete
 before_install:
-  - export APP_PRIVATE_KEY=$(cat travis/fake_private_key_for_testing)
+- export APP_PRIVATE_KEY=$(cat travis/fake_private_key_for_testing)
+- echo -e "machine github.com\n  login $GITHUB_AUTH_TOKEN" >> ~/.netrc
 script: sbt ++$TRAVIS_SCALA_VERSION test
 
 deploy:
-  - provider: script
-    script: sbt ++$TRAVIS_SCALA_VERSION clean publish
-    on:
-      branch: develop
+- provider: script
+  script: travis/deploy.sh
+  on:
+    all_branches: true
+if: tag IS blank
