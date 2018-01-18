@@ -6,3 +6,4 @@ target/
 *.iml
 littleproxy_*
 *.log
+project/.gnupg/secring.asc

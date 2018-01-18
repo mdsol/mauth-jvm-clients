@@ -9,7 +9,7 @@
 
 ## Continuous Integration Server (Travis)
 Travis server is configured via .travis.yml file.  To get environment variable in to the build container
-`ARTIFACTORY_USER` and `ARTIFACTORY_TOKEN` should be defined on travis settings.
+`SONATYPE_USER` and `SONATYPE_TOKEN` should be defined on travis settings.
 
 
 ## Deploying artifacts

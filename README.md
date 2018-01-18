@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/mdsol/mauth-java-client.png?branch=develop)](https://travis-ci.org/mdsol/mauth-java-client)
 # Java Client for MAuth
 
 This is a standalone client for Medidata Authentication

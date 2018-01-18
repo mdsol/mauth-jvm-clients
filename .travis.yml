@@ -1,15 +1,15 @@
 language: scala
 scala:
-  - 2.11.8
+- 2.11.8
 jdk:
-  - oraclejdk8
+- oraclejdk8
 env:
   global:
   - APP_UUID=398ea708-50eb-499f-98d3-14cc7692668c
 cache:
   directories:
-  - $HOME/.ivy2/cache
-  - $HOME/.sbt/boot/
+  - "$HOME/.ivy2/cache"
+  - "$HOME/.sbt/boot/"
 before_cache:
 - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
 - find $HOME/.sbt -name "*.lock" -delete
@@ -17,10 +17,8 @@ before_install:
 - export APP_PRIVATE_KEY=$(cat travis/fake_private_key_for_testing)
 - echo -e "machine github.com\n  login $GITHUB_AUTH_TOKEN" >> ~/.netrc
 script: sbt ++$TRAVIS_SCALA_VERSION test
-
 deploy:
 - provider: script
   script: travis/deploy.sh
   on:
     all_branches: true
-if: tag IS blank
