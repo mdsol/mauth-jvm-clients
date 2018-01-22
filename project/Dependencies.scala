@@ -2,10 +2,6 @@ import sbt._
 
 object Dependencies {
 
-  val resolutionRepos = Seq(
-    "Artifactory" at "https://artv4.imedidata.net/artifactory/all-repos-release"
-  )
-
   def compile(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "compile")
 
   def provided(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "provided")

@@ -1,33 +1,61 @@
 import java.util
 
+import com.typesafe.sbt.pgp.PgpKeys
 import sbt.Keys._
-import sbt._
-import sbtrelease.ReleasePlugin.autoImport.releaseVersionBump
+import sbt.{url, _}
+import sbtrelease.ReleasePlugin.autoImport._
+import sbtrelease.ReleaseStateTransformations._
+
 
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
-  val artifactoryUser: String = env.get("ARTIFACTORY_USER")
-  val artifactoryToken: String = env.get("ARTIFACTORY_TOKEN")
 
   lazy val basicSettings = Seq(
     homepage := Some(new URL("https://github.com/mdsol/mauth-java-client")),
-    organization := "com.mdsol.clients",
+    organization := "com.mdsol",
     organizationHomepage := Some(new URL("http://mdsol.com")),
     description := "MAuth clients",
     scalaVersion := "2.11.8",
     resolvers += Resolver.mavenLocal,
-    resolvers ++= Dependencies.resolutionRepos,
+    resolvers += Resolver.sonatypeRepo("releases"),
     javacOptions ++= Seq("-encoding", "UTF-8"),
     scalacOptions := Seq("-encoding", "utf8", "-feature", "-unchecked", "-deprecation", "-target:jvm-1.8", "-language:_", "-Xlog-reflective-calls", "-Ywarn-adapted-args"),
-    credentials += Credentials("Artifactory Realm", "artv4.imedidata.net", artifactoryUser, artifactoryToken),
-    publishTo := {
-      val repoUrl = "https://artv4.imedidata.net/artifactory/"
+    credentials += Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", env.get("SONATYPE_USER"), env.get("SONATYPE_TOKEN")),
+    publishTo := Some(
       if (isSnapshot.value)
-        Some("Artifactory snapshots" at repoUrl + "ctms-snapshots;build.timestamp=" + new java.util.Date().getTime)
+        Opts.resolver.sonatypeSnapshots
       else
-        Some("Artifactory releases" at repoUrl + "ctms-releases/")
-    },
+        Opts.resolver.sonatypeStaging
+    )
+  )
+
+  lazy val publishSettings = Seq(
     publishMavenStyle := true,
-    releaseVersionBump := sbtrelease.Version.Bump.Bugfix
+    licenses := Seq("MDSOL" -> url("https://github.com/mdsol/mauth-java-client/blob/master/LICENSE.txt")),
+    pomIncludeRepository := { _ => false },
+    scmInfo := Some(
+      ScmInfo(
+        url("https://github.com/mdsol/mauth-java-client"),
+        "scm:git@github.com:mdsol/mauth-java-client.git"
+      )
+    ),
+    developers := List(
+      Developer(id = "austek", name = "Ali Ustek", email = "austek@mdsol.com", url = url("https://github.com/austek"))
+    ),
+    releasePublishArtifactsAction := PgpKeys.publishSigned.value,
+    releaseVersionBump := sbtrelease.Version.Bump.Bugfix,
+    releaseProcess := Seq[ReleaseStep](
+      checkSnapshotDependencies,
+      inquireVersions,
+      runClean,
+      setReleaseVersion,
+      commitReleaseVersion,
+      tagRelease,
+      releaseStepCommand("publishSigned"),
+      setNextVersion,
+      commitNextVersion,
+      releaseStepCommand("sonatypeReleaseAll"),
+      pushChanges
+    )
   )
 }

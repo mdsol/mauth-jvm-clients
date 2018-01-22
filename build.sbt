@@ -2,11 +2,18 @@ import BuildSettings._
 import Dependencies._
 
 conflictManager := ConflictManager.strict
+useGpg := false
+usePgpKeyHex("87558ab01f3201fc")
+pgpPublicRing := baseDirectory.value / "project" / ".gnupg" / "pubring.asc"
+pgpSecretRing := baseDirectory.value / "project" / ".gnupg" / "secring.asc"
+pgpPassphrase := sys.env.get("PGP_PASS").map(_.toArray)
+
 val withExclusions: (ModuleID) => ModuleID = moduleId => moduleId.excludeAll(Dependencies.exclusions: _*)
 
 lazy val common = (project in file("modules/mauth-common"))
   .settings(
     basicSettings,
+    publishSettings,
     crossPaths := false,
     name := "mauth-common",
     libraryDependencies ++=
@@ -17,6 +24,7 @@ lazy val common = (project in file("modules/mauth-common"))
 lazy val testUtils = (project in file("modules/mauth-test-utils"))
   .settings(
     basicSettings,
+    publishSettings,
     crossPaths := false,
     name := "mauth-test-utils",
     libraryDependencies ++=
@@ -27,6 +35,7 @@ lazy val signer = (project in file("modules/mauth-signer"))
   .dependsOn(common, testUtils % "test")
   .settings(
     basicSettings,
+    publishSettings,
     crossPaths := false,
     name := "mauth-signer",
     libraryDependencies ++=
@@ -37,6 +46,7 @@ lazy val signerApache = (project in file("modules/mauth-signer-apachehttp"))
   .dependsOn(signer, testUtils % "test")
   .settings(
     basicSettings,
+    publishSettings,
     crossPaths := false,
     name := "mauth-signer-apachehttp",
     libraryDependencies ++=
@@ -48,6 +58,7 @@ lazy val signerAkka = (project in file("modules/mauth-signer-akka-http"))
   .dependsOn(signer, testUtils % "test")
   .settings(
     basicSettings,
+    publishSettings,
     name := "mauth-signer-akka-http",
     libraryDependencies ++=
       Dependencies.provided(akkaHttp).map(withExclusions) ++
@@ -59,6 +70,7 @@ lazy val authenticator = (project in file("modules/mauth-authenticator"))
   .dependsOn(common, testUtils % "test")
   .settings(
     basicSettings,
+    publishSettings,
     crossPaths := false,
     name := "mauth-authenticator",
     libraryDependencies ++=
@@ -70,6 +82,7 @@ lazy val authenticatorApache = (project in file("modules/mauth-authenticator-apa
   .dependsOn(authenticator, signerApache, testUtils % "test")
   .settings(
     basicSettings,
+    publishSettings,
     crossPaths := false,
     name := "mauth-authenticator-apachehttp",
     libraryDependencies ++=
@@ -81,6 +94,7 @@ lazy val authenticatorAkka = (project in file("modules/mauth-authenticator-akka-
   .dependsOn(authenticator, signerAkka, testUtils % "test")
   .settings(
     basicSettings,
+    publishSettings,
     name := "mauth-authenticator-akka-http",
     libraryDependencies ++=
       Dependencies.provided(akkaHttp) ++
@@ -92,6 +106,7 @@ lazy val proxy = (project in file("modules/mauth-proxy"))
   .dependsOn(signerApache)
   .settings(
     basicSettings,
+    publishSettings,
     crossPaths := false,
     name := "mauth-proxy",
     libraryDependencies ++=
