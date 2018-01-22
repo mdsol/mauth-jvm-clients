@@ -4,7 +4,7 @@ import java.net.URI
 import java.security.PublicKey
 import java.util.UUID
 
-import _root_.akka.http.scaladsl.model.StatusCodes
+import _root_.akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.actor.ActorSystem
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
@@ -43,28 +43,34 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
       case Left(e) =>
         logger.error("Request to get MAuth public key couldn't be signed", e)
         promise.success(None)
-      case Right(signedRequest) =>
-        HttpClient.call(signedRequest).flatMap { response =>
-          Unmarshal(response.entity).to[String].map { body =>
-            if (response.status == StatusCodes.OK) {
-              Try(MAuthKeysHelper.getPublicKeyFromString(mapper.readTree(body).findValue("public_key_str").asText)) match {
-                case Success(publicKey) => promise.success(Some(publicKey))
-                case Failure(error) =>
-                  logger.error("Converting string to Public Key failed", error)
-                  promise.success(None)
-              }
-            } else {
-              logger.error(s"Unexpected response returned by server -- status: ${response.status} response: $body")
-              promise.success(None)
-            }
-          }.recover {
-            case error =>
-              logger.error("Request to get MAuth public key couldn't be signed", error)
+      case Right(signedRequest) => retrievePublicKey()(HttpClient.call(signedRequest))
+    }
+    promise.future
+  }
+
+  protected def retrievePublicKey()(mauthPublicKeyFetcher: => Future[HttpResponse]): Future[Option[PublicKey]] = {
+    val promise = Promise[Option[PublicKey]]()
+    mauthPublicKeyFetcher.flatMap { response =>
+      Unmarshal(response.entity).to[String].map { body =>
+        if (response.status == StatusCodes.OK) {
+          Try(MAuthKeysHelper.getPublicKeyFromString(mapper.readTree(body).findValue("public_key_str").asText)) match {
+            case Success(publicKey) => promise.success(Some(publicKey))
+            case Failure(error) =>
+              logger.error("Converting string to Public Key failed", error)
               promise.success(None)
           }
-        }.recover {
-          case e => println(e)
+        } else {
+          logger.error(s"Unexpected response returned by server -- status: ${response.status} response: $body")
+          promise.success(None)
         }
+      }.recover {
+        case error =>
+          logger.error("Request to get MAuth public key couldn't be signed", error)
+          promise.success(None)
+      }
+    }.recover {
+      case error => logger.error("Request to get MAuth public key couldn't be completed", error)
+        promise.success(None)
     }
     promise.future
   }
@@ -87,28 +93,7 @@ class TraceMauthPublicKeyProvider(configuration: AuthenticatorConfiguration, sig
       case Left(e) =>
         logger.error("Request to get MAuth public key couldn't be signed", e)
         promise.success(None)
-      case Right(signedRequest) =>
-        traceHttpClient.traceCall(signedRequest, traceName, parentSpan).flatMap { response =>
-          Unmarshal(response.entity).to[String].map { body =>
-            if (response.status == StatusCodes.OK) {
-              Try(MAuthKeysHelper.getPublicKeyFromString(mapper.readTree(body).findValue("public_key_str").asText)) match {
-                case Success(publicKey) => promise.success(Some(publicKey))
-                case Failure(error) =>
-                  logger.error("Converting string to Public Key failed", error)
-                  promise.success(None)
-              }
-            } else {
-              logger.error(s"Unexpected response returned by server -- status: ${response.status} response: $body")
-              promise.success(None)
-            }
-          }.recover {
-            case error =>
-              logger.error("Request to get MAuth public key couldn't be signed", error)
-              promise.success(None)
-          }
-        }.recover {
-          case e => println(e)
-        }
+      case Right(signedRequest) => retrievePublicKey()(traceHttpClient.traceCall(signedRequest, traceName, parentSpan))
     }
     promise.future
   }
