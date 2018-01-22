@@ -28,9 +28,8 @@ trait HttpClient extends LazyLogging {
     */
   def call[T](request: HttpRequest, flow: Flow[ByteString, T, NotUsed])
              (implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer): Future[T] = {
-    logger.debug(s"HTTP CLIENT CALL : ${request.uri}")
     val start = System.currentTimeMillis()
-    Http().singleRequest(request).flatMap { response =>
+    call(request).flatMap { response =>
       val elapsed = System.currentTimeMillis() - start
       logger.trace(s"Response type : ${response.entity.contentType}")
       logger.debug(s"Status: ${response.status}")
@@ -66,7 +65,7 @@ trait HttpClient extends LazyLogging {
     */
   def call(request: HttpRequest)
           (implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer): Future[HttpResponse] = {
-    logger.info(s"HTTP CLIENT CALL : $request")
+    logger.debug(s"HTTP CLIENT CALL : ${request.uri}")
     Http().singleRequest(request)
   }
 

@@ -23,4 +23,5 @@ object Implicits {
 
   private def mapToHeaderSequence(headers: Map[String, String]): Seq[HttpHeader] =
     headers.map { case (k, v) => RawHeader(k, v) }.toSeq
+
 }

@@ -14,15 +14,15 @@ import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
 import com.mdsol.mauth.test.utils.FixturesLoader
 import com.mdsol.mauth.util.{EpochTimeProvider, MAuthKeysHelper}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.mockito.Matchers.{eq => eqTo}
-import org.mockito.Mockito.{mock, when}
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Inside, Matchers, WordSpec}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest with MAuthDirectives with Directives with Inside {
+class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest with MAuthDirectives with Directives
+  with Inside with MockFactory {
 
   Security.addProvider(new BouncyCastleProvider)
 
@@ -38,9 +38,8 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
 
   private implicit val timeout: FiniteDuration = 10 seconds
   private implicit val requestValidationTimeout: Duration = 10 seconds
-  private val client = mock(classOf[ClientPublicKeyProvider])
-  private val mockEpochTimeProvider: EpochTimeProvider = mock(classOf[EpochTimeProvider])
-  when(mockEpochTimeProvider.inSeconds()).thenReturn(timeHeader)
+  private val client = mock[ClientPublicKeyProvider]
+  private val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
   private implicit val authenticator: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
   "authenticate" should {
@@ -48,7 +47,8 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
     val publicKey = MAuthKeysHelper.getPublicKeyFromString(FixturesLoader.getPublicKey)
 
     "pass successfully authenticated request" in {
-      when(client.getPublicKey(eqTo(appUuid))).thenReturn(Future(Some(publicKey)))
+      (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
+      (mockEpochTimeProvider.inSeconds _).expects().returns(timeHeader)
 
       Get("/").withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString), RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
         status shouldEqual StatusCodes.OK
@@ -56,7 +56,8 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
     }
 
     "reject if request validation timeout passed" in {
-      when(client.getPublicKey(eqTo(appUuid))).thenReturn(Future(None))
+      (client.getPublicKey _).expects(*).never
+      (mockEpochTimeProvider.inSeconds _).expects().returns(timeHeader)
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, (timeHeader - requestValidationTimeout.toSeconds - 10).toString), RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
         inside(rejection) { case MdsolAuthFailedRejection ⇒ }
@@ -64,7 +65,8 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
     }
 
     "reject if public key cannot be found" in {
-      when(client.getPublicKey(eqTo(appUuid))).thenReturn(Future(None))
+      (client.getPublicKey _).expects(appUuid).returns(Future(None))
+      (mockEpochTimeProvider.inSeconds _).expects().returns(timeHeader)
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString), RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
         inside(rejection) { case MdsolAuthFailedRejection ⇒ }
@@ -72,7 +74,7 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
     }
 
     "reject if Authentication header is missing" in {
-      when(client.getPublicKey(eqTo(appUuid))).thenReturn(Future(Some(publicKey)))
+      (client.getPublicKey _).expects(appUuid).never
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString)) ~> route ~> check {
         inside(rejection) {
@@ -82,7 +84,7 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
     }
 
     "reject if Time header is missing" in {
-      when(client.getPublicKey(eqTo(appUuid))).thenReturn(Future(Some(publicKey)))
+      (client.getPublicKey _).expects(appUuid).never
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
         inside(rejection) {

@@ -25,8 +25,25 @@ This is an implementation of Medidata Authentication Client Signer to sign the H
         SignerConfiguration configuration = new SignerConfiguration(ConfigFactory.load());
 
 1. Sign requests using Akka HttpClient
-        
-        MAuthRequestSigner(configuration).signRequest(UnsignedRequest(httpMethod, URI.create("http://server"), body, headers)) match {
-          case Left(e) => Future.failed(e)
+
+            MAuthRequestSigner(configuration).signRequest(UnsignedRequest(httpMethod, URI.create("http://server"), body, headers)) match {
+              case Left(e) => Future.failed(e)
           case Right(signedRequest) => HttpClient.call(signedRequest)
+        }
+
+1. Sign requests using Akka HttpClient with distributed tracing
+
+        public class ExampleClass extends TraceHttpClient {
+        
+          val sender = OkHttpSender.create("http://localhost:9411/api/v2/spans")
+          val spanReporter = AsyncReporter.create(sender)
+          override implicit val tracer: Tracer = Tracing.newBuilder().localServiceName("serviceName")
+            .sampler(Sampler.ALWAYS_SAMPLE).spanReporter(spanReporter).build() 
+          
+          def clientCall(span: Span) = {
+            MAuthRequestSigner(configuration).signRequest(UnsignedRequest(httpMethod, URI.create("http://server"), body, headers)) match {
+              case Left(e) => Future.failed(e)
+              case Right(signedRequest) => HttpRequest(signedRequest, "traceName", span)
+            }
+          }
         }
