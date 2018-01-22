@@ -38,14 +38,12 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
     * @return { @link PublicKey} registered in MAuth for the application with given appUUID.
     */
   override def getPublicKey(appUUID: UUID): Future[Option[PublicKey]] = memoize(configuration.getTimeToLive seconds) {
-    val promise = Promise[Option[PublicKey]]()
     signer.signRequest(UnsignedRequest("GET", new URI(configuration.getBaseUrl + getRequestUrlPath(appUUID)))) match {
       case Left(e) =>
         logger.error("Request to get MAuth public key couldn't be signed", e)
-        promise.success(None)
+        Future(None)
       case Right(signedRequest) => retrievePublicKey()(HttpClient.call(signedRequest))
     }
-    promise.future
   }
 
   protected def retrievePublicKey()(mauthPublicKeyFetcher: => Future[HttpResponse]): Future[Option[PublicKey]] = {
@@ -88,13 +86,11 @@ class TraceMauthPublicKeyProvider(configuration: AuthenticatorConfiguration, sig
     * @return { @link PublicKey} registered in MAuth for the application with given appUUID.
     */
   def traceGetPublicKey(appUUID: UUID, traceName: String, parentSpan: Span): Future[Option[PublicKey]] = memoize(configuration.getTimeToLive seconds) {
-    val promise = Promise[Option[PublicKey]]()
     signer.signRequest(UnsignedRequest("GET", new URI(configuration.getBaseUrl + getRequestUrlPath(appUUID)))) match {
       case Left(e) =>
         logger.error("Request to get MAuth public key couldn't be signed", e)
-        promise.success(None)
+        Future(None)
       case Right(signedRequest) => retrievePublicKey()(traceHttpClient.traceCall(signedRequest, traceName, parentSpan))
     }
-    promise.future
   }
 }
