@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-sbt 'project proxy' run
+sbt 'project mauth-proxy' run
