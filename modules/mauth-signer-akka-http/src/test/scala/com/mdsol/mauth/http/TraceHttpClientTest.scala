@@ -70,13 +70,13 @@ class TraceHttpClientTest extends FlatSpec with TraceHttpClient with BeforeAndAf
 
     wiremock.stubFor(
       get(urlMatching(".*"))
-        .willReturn(aResponse().withStatus(200))
+        .willReturn(aResponse().withStatus(StatusCodes.OK.intValue))
     )
 
     test(span)
   }
 
-  private def verifyTraceHeaders(span: Span) = {
+  private def verifyTraceHeaders(span: Span): Unit = {
     wiremock.verify(
       getRequestedFor(urlEqualTo("/test"))
         .withHeader("X-B3-TraceId", equalTo(span.context.traceId.toString))

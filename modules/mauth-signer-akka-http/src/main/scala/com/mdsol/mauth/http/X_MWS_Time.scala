@@ -5,18 +5,13 @@ import com.mdsol.mauth.MAuthRequest
 
 import scala.util.Try
 
-/**
-  * Akka custom header for Medidata Time data
- *
-  * @param token
-  */
 final class X_MWS_Time(token: String) extends ModeledCustomHeader[X_MWS_Time] {
-  override def renderInRequests = true
-  override def renderInResponses = true
-  override val companion = X_MWS_Time
+  override def renderInRequests: Boolean = true
+  override def renderInResponses: Boolean = true
+  override val companion: X_MWS_Time.type = X_MWS_Time
   override def value: String = token
 }
 object X_MWS_Time extends ModeledCustomHeaderCompanion[X_MWS_Time] {
-  override val name = MAuthRequest.X_MWS_TIME_HEADER_NAME
-  override def parse(value: String) = Try(new X_MWS_Time(value))
+  override val name: String = MAuthRequest.X_MWS_TIME_HEADER_NAME
+  override def parse(value: String): Try[X_MWS_Time] = Try(new X_MWS_Time(value))
 }

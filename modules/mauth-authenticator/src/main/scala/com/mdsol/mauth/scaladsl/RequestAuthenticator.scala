@@ -10,7 +10,7 @@ import com.mdsol.mauth.util.{EpochTimeProvider, MAuthSignatureHelper}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
 class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTimeProvider: EpochTimeProvider) extends Authenticator {
 
@@ -26,28 +26,40 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
     * @return True or false indicating if the request is valid or not with respect to mAuth.
     */
   override def authenticate(mAuthRequest: MAuthRequest)(implicit ex: ExecutionContext, requestValidationTimeout: Duration): Future[Boolean] = {
+    val promise = Promise[Boolean]
     if (!validateTime(mAuthRequest.getRequestTime)(requestValidationTimeout)) {
       val message = s"MAuth request validation failed because of timeout $requestValidationTimeout"
       logger.error(message)
-      return Future.failed(new MAuthValidationException(message))
+      promise.failure(new MAuthValidationException(message))
     }
 
-    publicKeyProvider.getPublicKey(mAuthRequest.getAppUUID).map {
-      case None =>
-        logger.error("Public Key couldn't be retrieved")
-        false
-      case Some(clientPublicKey) =>
-        // Decrypt the signature with public key from requesting application.
-        val decryptedSignature = MAuthSignatureHelper.decryptSignature(clientPublicKey, mAuthRequest.getRequestSignature)
+    promise.completeWith(
+      publicKeyProvider.getPublicKey(mAuthRequest.getAppUUID).map {
+        case None =>
+          logger.error("Public Key couldn't be retrieved")
+          false
+        case Some(clientPublicKey) =>
+          // Decrypt the signature with public key from requesting application.
+          val decryptedSignature = MAuthSignatureHelper.decryptSignature(clientPublicKey, mAuthRequest.getRequestSignature)
 
-        // Recreate the plain text signature, based on the incoming request parameters, and hash it.
-        val unencryptedRequestString = MAuthSignatureHelper.generateUnencryptedSignature(mAuthRequest.getAppUUID, mAuthRequest.getHttpMethod, mAuthRequest.getResourcePath, new String(mAuthRequest.getMessagePayload, StandardCharsets.UTF_8), String.valueOf(mAuthRequest.getRequestTime))
-        val messageDigest_bytes = MAuthSignatureHelper.getHexEncodedDigestedString(unencryptedRequestString).getBytes(StandardCharsets.UTF_8)
+          // Recreate the plain text signature, based on the incoming request parameters, and hash it.
+          val unencryptedRequestString =
+            MAuthSignatureHelper.generateUnencryptedSignature(
+              mAuthRequest.getAppUUID,
+              mAuthRequest.getHttpMethod,
+              mAuthRequest.getResourcePath,
+              new String(mAuthRequest.getMessagePayload, StandardCharsets.UTF_8),
+              String.valueOf(mAuthRequest.getRequestTime)
+            )
+          val messageDigest_bytes = MAuthSignatureHelper.getHexEncodedDigestedString(unencryptedRequestString).getBytes(StandardCharsets.UTF_8)
 
-        // Compare the decrypted signature and the recreated signature hashes.
-        // If both match, the request was signed by the requesting application and is valid.
-        util.Arrays.equals(messageDigest_bytes, decryptedSignature)
-    }
+          // Compare the decrypted signature and the recreated signature hashes.
+          // If both match, the request was signed by the requesting application and is valid.
+          util.Arrays.equals(messageDigest_bytes, decryptedSignature)
+      }
+    )
+
+    promise.future
   }
 
   // Check epoch time is not older than specified interval.

@@ -44,14 +44,13 @@ trait MAuthDirectives extends StrictLogging {
           toStrictEntity(timeout) &
             extractRequest.flatMap { req =>
               val isAuthed: Directive[Unit] = req.entity match {
-                case entity: HttpEntity.Strict => {
+                case entity: HttpEntity.Strict =>
                   onComplete(authenticator.authenticate(
                     new MAuthRequest(mAuthHeader, entity.data.toArray[Byte], HttpVerbOps.httpVerb(req.method), time.toString, req.uri.path.toString)
                   )).flatMap[Unit] {
                     case Success(true) => pass
                     case _ => reject(MdsolAuthFailedRejection)
                   }
-                }
                 case _ =>
                   logger.error(s"MAUTH: Non-Strict Entity in Request")
                   reject(MdsolAuthFailedRejection)

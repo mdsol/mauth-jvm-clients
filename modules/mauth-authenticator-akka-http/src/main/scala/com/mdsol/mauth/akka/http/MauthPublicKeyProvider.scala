@@ -25,7 +25,8 @@ import scalacache._
 import scalacache.guava._
 import scalacache.memoization._
 
-class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner)(implicit system: ActorSystem, materializer: ActorMaterializer)
+class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner)
+                            (implicit system: ActorSystem, materializer: ActorMaterializer)
   extends ClientPublicKeyProvider with StrictLogging {
 
   implicit val scalaCache: ScalaCache[NoSerialization] = ScalaCache(GuavaCache())
@@ -73,10 +74,12 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
     promise.future
   }
 
-  protected def getRequestUrlPath(appUUID: UUID): String = configuration.getRequestUrlPath + String.format(configuration.getSecurityTokensUrlPath, appUUID.toString)
+  protected def getRequestUrlPath(appUUID: UUID): String =
+    configuration.getRequestUrlPath + String.format(configuration.getSecurityTokensUrlPath, appUUID.toString)
 }
 
-class TraceMauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, traceHttpClient: TraceHttpClient)(implicit system: ActorSystem, materializer: ActorMaterializer)
+class TraceMauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, traceHttpClient: TraceHttpClient)
+                                 (implicit system: ActorSystem, materializer: ActorMaterializer)
   extends MauthPublicKeyProvider(configuration, signer) {
 
   /**

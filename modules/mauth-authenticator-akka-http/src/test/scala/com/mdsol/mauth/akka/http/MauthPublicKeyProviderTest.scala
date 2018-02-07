@@ -1,7 +1,7 @@
 package com.mdsol.mauth.akka.http
 
 import java.net.URI
-import java.security.{PublicKey, Security}
+import java.security.Security
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
@@ -25,6 +25,7 @@ class MauthPublicKeyProviderTest extends FlatSpec with BeforeAndAfterAll with Be
   private val MAUTH_BASE_URL = s"http://localhost:$MAUTH_PORT"
   private val MAUTH_URL_PATH = "/mauth/v1"
   private val SECURITY_TOKENS_PATH = "/security_tokens/%s.json"
+  private val FIVE_MINUTES = 300L
 
   override def beforeAll(): Unit = {
     FakeMAuthServer.start(MAUTH_PORT)
@@ -41,7 +42,7 @@ class MauthPublicKeyProviderTest extends FlatSpec with BeforeAndAfterAll with Be
 
   private def getRequestUrlPath(clientAppId: String) = String.format(MAUTH_URL_PATH + SECURITY_TOKENS_PATH, clientAppId)
 
-  private def getMAuthConfiguration = new AuthenticatorConfiguration(MAUTH_BASE_URL, MAUTH_URL_PATH, SECURITY_TOKENS_PATH, 300L)
+  private def getMAuthConfiguration = new AuthenticatorConfiguration(MAUTH_BASE_URL, MAUTH_URL_PATH, SECURITY_TOKENS_PATH, FIVE_MINUTES)
 
   "MauthPublicKeyProvider" should "retrieve PublicKey from MAuth Server" in {
     FakeMAuthServer.return200()
@@ -50,7 +51,7 @@ class MauthPublicKeyProviderTest extends FlatSpec with BeforeAndAfterAll with Be
     val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, EXPECTED_AUTHENTICATION_HEADER_VALUE, EXPECTED_TIME_HEADER_VALUE))
     (mockedSigner.signRequest _).expects(*).returns(mockedResponse)
 
-    whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) { result: Option[PublicKey] =>
+    whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) { result  =>
       result.toString should not be empty
     }
   }
