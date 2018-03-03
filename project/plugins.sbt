@@ -1,8 +1,5 @@
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
-resolvers += Resolver.url(
-  "idio",
-  url("http://dl.bintray.com/idio/sbt-plugins")
-)(Resolver.ivyStylePatterns)
+resolvers += Resolver.url("bintray-sbilinski", url("http://dl.bintray.com/sbilinski/maven"))(Resolver.ivyStylePatterns)
 
 addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.7")
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.0")

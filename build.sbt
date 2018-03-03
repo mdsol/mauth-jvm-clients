@@ -127,7 +127,6 @@ lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
       Dependencies.compile(jacksonDataBind, littleProxy, logbackClassic, logbackCore).map(withExclusions) ++
         Dependencies.test(hamcrestAll, junit, jUnitInterface, wiremock).map(withExclusions),
     dockerfile in docker := {
-      // The assembly task generates a fat JAR file
       val artifact: File = assembly.value
       val artifactTargetPath = s"/app/${artifact.name}"
 
@@ -137,17 +136,10 @@ lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
         entryPoint("java", "-jar", artifactTargetPath)
       }
     },
-    imageNames in docker := Seq(
-      ImageName(s"${organization.value}/${name.value}:latest"),
-      ImageName(
-        namespace = Some(organization.value),
-        repository = name.value,
-        tag = Some("v" + version.value)
-      )
-    ),
     region in Ecr := Region.getRegion(Regions.US_EAST_1),
     repositoryName in Ecr := s"mdsol/${name.value.replaceAll("-", "_")}",
     localDockerImage in Ecr := s"${(repositoryName in Ecr).value}:local",
+    imageNames in docker := Seq(ImageName((localDockerImage in Ecr).value)),
     repositoryTags in Ecr := {
       if (mainBranch.value) {
         Seq("latest", version.value)
@@ -155,7 +147,8 @@ lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
         Seq(currentBranch.value)
       }
     },
-    push in Ecr := ((push in Ecr) dependsOn(createRepository in Ecr, login in Ecr, DockerKeys.docker)).value
+    push in Ecr := ((push in Ecr) dependsOn(createRepository in Ecr, login in Ecr, DockerKeys.docker)).value,
+    buildOptions in docker := BuildOptions(cache = false)
   )
 
 lazy val `mauth-java-client` = (project in file("."))
