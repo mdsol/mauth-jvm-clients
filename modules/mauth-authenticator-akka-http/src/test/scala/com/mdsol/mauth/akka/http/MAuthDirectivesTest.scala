@@ -48,7 +48,8 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
 
     "pass successfully authenticated request" in {
       (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
-      (mockEpochTimeProvider.inSeconds _).expects().returns(timeHeader)
+      //noinspection ConvertibleToMethodValue
+      (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
       Get("/").withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
@@ -58,7 +59,8 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
 
     "reject if request validation timeout passed" in {
       (client.getPublicKey _).expects(*).never
-      (mockEpochTimeProvider.inSeconds _).expects().returns(timeHeader)
+      //noinspection ConvertibleToMethodValue
+      (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, (timeHeader - requestValidationTimeout.toSeconds - 10).toString),
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
@@ -68,7 +70,8 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
 
     "reject if public key cannot be found" in {
       (client.getPublicKey _).expects(appUuid).returns(Future(None))
-      (mockEpochTimeProvider.inSeconds _).expects().returns(timeHeader)
+      //noinspection ConvertibleToMethodValue
+      (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
