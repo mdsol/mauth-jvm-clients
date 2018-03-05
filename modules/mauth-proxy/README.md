@@ -14,8 +14,8 @@ Create `application.conf` file on your classpath with following settings
         }
 
         app {
-            uuid: ${?APP_UUID}
-            private_key: ${?APP_PRIVATE_KEY}
+            uuid: ${?APP_MAUTH_UUID}
+            private_key: ${?APP_MAUTH_PRIVATE_KEY}
         }
 
 ## Running via Docker image
@@ -68,7 +68,7 @@ commands referencing docker images in our ECR repository.
 
 ### Running Mauth Proxy
 
-        export APP_UUID='<the mauth id of the app you are proxying to>
-        export APP_PRIVATE_KEY='<the actual key (not the path) of the app you are proxying to>
+        export APP_MAUTH_UUID=<the mauth id of the app you are proxying to>
+        export APP_MAUTH_PRIVATE_KEY=<the actual key (not the path) of the app you are proxying to>
         docker pull aws_account_id.dkr.ecr.us-west-2.amazonaws.com/mdsol/mauth_proxy:latest
-        docker run --env APP_UUID --env APP_PRIVATE_KEY -it --rm -p 9090:9090 --name <your_name> mdsol/mauth_proxy:latest
+        docker run --env APP_MAUTH_UUID --env APP_MAUTH_PRIVATE_KEY -it --rm -p 9090:9090 mdsol/mauth_proxy:latest
