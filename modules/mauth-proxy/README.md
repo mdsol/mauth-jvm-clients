@@ -1,6 +1,9 @@
 # Mauth Proxy:
-The reason for doing this is so you can use UI REST clients such as [Postman](https://www.getpostman.com/postman) or [Paw](https://paw.cloud/) or even just plain old `curl` to hit Medidata resources
-The goal of this simple service is to append valid mAuth headers to any incoming request and send this (now authenticated) request to the destination service.
+The reason for using the mAuth proxy is to enable the use of UI REST clients like 
+[Postman](https://www.getpostman.com/postman), [Paw](https://paw.cloud/) or curl to request Medidata resources.
+
+The service is appends valid mAuth headers to incoming requests and 
+sends the authenticated request to the requested service.
 
 ## Running via sbt:
 ```bash
