@@ -2,7 +2,7 @@
 The reason for using the mAuth proxy is to enable the use of UI REST clients like 
 [Postman](https://www.getpostman.com/postman), [Paw](https://paw.cloud/) or curl to request Medidata resources.
 
-The service is appends valid mAuth headers to incoming requests and 
+The service appends valid mAuth headers to incoming requests and 
 sends the authenticated request to the requested service.
 
 ## Running via sbt:
