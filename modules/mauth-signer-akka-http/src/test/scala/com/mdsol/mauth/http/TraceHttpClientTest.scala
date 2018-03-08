@@ -53,13 +53,7 @@ class TraceHttpClientTest extends FlatSpec with TraceHttpClient with BeforeAndAf
       response.status == StatusCodes.OK
     }
 
-    wiremock.verify(
-      getRequestedFor(urlEqualTo("/test"))
-      .withHeader("X-B3-TraceId", equalTo(span.context.traceId.toString))
-      .withHeader("X-B3-SpanId", new RegexPattern("\\d*"))
-      .withHeader("X-B3-ParentSpanId", equalTo(span.context.traceId.toString))
-      .withHeader("X-B3-Sampled", equalTo("true"))
-    )
+    verifyTraceHeaders(span)
   }
 
   it should "traceCall with SignedRequest adds tracing headers" in traceContext { (span) =>
@@ -68,13 +62,7 @@ class TraceHttpClientTest extends FlatSpec with TraceHttpClient with BeforeAndAf
       response.status == StatusCodes.OK
     }
 
-    wiremock.verify(
-      getRequestedFor(urlEqualTo("/test"))
-      .withHeader("X-B3-TraceId", equalTo(span.context.traceId.toString))
-      .withHeader("X-B3-SpanId", new RegexPattern("-?\\d*"))
-      .withHeader("X-B3-ParentSpanId", equalTo(span.context.traceId.toString))
-      .withHeader("X-B3-Sampled", equalTo("true"))
-    )
+    verifyTraceHeaders(span)
   }
 
   private def traceContext(test: (Span) => Any): Unit = {
@@ -82,10 +70,20 @@ class TraceHttpClientTest extends FlatSpec with TraceHttpClient with BeforeAndAf
 
     wiremock.stubFor(
       get(urlMatching(".*"))
-        .willReturn(aResponse().withStatus(200))
+        .willReturn(aResponse().withStatus(StatusCodes.OK.intValue))
     )
 
     test(span)
+  }
+
+  private def verifyTraceHeaders(span: Span): Unit = {
+    wiremock.verify(
+      getRequestedFor(urlEqualTo("/test"))
+        .withHeader("X-B3-TraceId", equalTo(span.context.traceId.toString))
+        .withHeader("X-B3-SpanId", new RegexPattern("-?\\d*"))
+        .withHeader("X-B3-ParentSpanId", equalTo(span.context.traceId.toString))
+        .withHeader("X-B3-Sampled", equalTo("true"))
+    )
   }
 
 }

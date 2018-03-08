@@ -21,8 +21,8 @@ This is an implementation of Medidata Authentication Client Authenticator to val
     If any of the settings are omitted then following default values will be used.
 
         app {
-            uuid: ${?APP_UUID}
-            private_key: ${?APP_PRIVATE_KEY}
+            uuid: ${?APP_MAUTH_UUID}
+            private_key: ${?APP_MAUTH_PRIVATE_KEY}
         }
                 
         mauth {

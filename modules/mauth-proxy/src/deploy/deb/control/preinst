@@ -1,5 +1,0 @@
-#!/bin/sh
-
-if ! id -u [[deploy.user]] >/dev/null 2>&1; then
-  adduser --system --group [[deploy.user]]
-fi

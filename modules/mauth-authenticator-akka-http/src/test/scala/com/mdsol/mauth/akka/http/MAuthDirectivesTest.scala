@@ -50,7 +50,8 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
       (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
       (mockEpochTimeProvider.inSeconds _).expects().returns(timeHeader)
 
-      Get("/").withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString), RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
+      Get("/").withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
         status shouldEqual StatusCodes.OK
       }
     }
@@ -59,7 +60,8 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
       (client.getPublicKey _).expects(*).never
       (mockEpochTimeProvider.inSeconds _).expects().returns(timeHeader)
 
-      Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, (timeHeader - requestValidationTimeout.toSeconds - 10).toString), RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
+      Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, (timeHeader - requestValidationTimeout.toSeconds - 10).toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
         inside(rejection) { case MdsolAuthFailedRejection ⇒ }
       }
     }
@@ -68,7 +70,8 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
       (client.getPublicKey _).expects(appUuid).returns(Future(None))
       (mockEpochTimeProvider.inSeconds _).expects().returns(timeHeader)
 
-      Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString), RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
+      Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
         inside(rejection) { case MdsolAuthFailedRejection ⇒ }
       }
     }

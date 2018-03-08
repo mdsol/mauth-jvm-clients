@@ -21,6 +21,9 @@ object Implicits {
         X_MWS_Time(sr.timeHeader)))
   }
 
+  implicit def fromMaybeSignedRequestToMaybeHttpRequest(maybeSignedRequest: Option[SignedRequest]): Option[HttpRequest] =
+    maybeSignedRequest.map(signedRequest => signedRequest)
+
   private def mapToHeaderSequence(headers: Map[String, String]): Seq[HttpHeader] =
     headers.map { case (k, v) => RawHeader(k, v) }.toSeq
 

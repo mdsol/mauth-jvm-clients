@@ -3,6 +3,8 @@ import java.util
 import com.typesafe.sbt.pgp.PgpKeys
 import sbt.Keys._
 import sbt.{url, _}
+import sbtassembly.AssemblyKeys._
+import sbtassembly.MergeStrategy
 import sbtrelease.ReleasePlugin.autoImport._
 import sbtrelease.ReleaseStateTransformations._
 
@@ -19,13 +21,25 @@ object BuildSettings {
     resolvers += Resolver.mavenLocal,
     resolvers += Resolver.sonatypeRepo("releases"),
     javacOptions ++= Seq("-encoding", "UTF-8"),
-    scalacOptions := Seq("-encoding", "utf8", "-feature", "-unchecked", "-deprecation", "-target:jvm-1.8", "-language:_", "-Xlog-reflective-calls", "-Ywarn-adapted-args"),
+    scalacOptions := Seq(
+      "-encoding",
+      "utf8",
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-target:jvm-1.8",
+      "-language:_",
+      "-Xlog-reflective-calls",
+      "-Ywarn-adapted-args"
+    ),
     credentials += Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", env.get("SONATYPE_USER"), env.get("SONATYPE_TOKEN")),
     publishTo := Some(
-      if (isSnapshot.value)
+      if (isSnapshot.value) {
         Opts.resolver.sonatypeSnapshots
-      else
+      }
+      else {
         Opts.resolver.sonatypeStaging
+      }
     )
   )
 
@@ -57,5 +71,17 @@ object BuildSettings {
       releaseStepCommand("sonatypeReleaseAll"),
       pushChanges
     )
+  )
+
+
+  lazy val assemblySettings = Seq(
+    test in assembly := {},
+    mainClass in assembly := Some("com.mdsol.mauth.proxy.ProxyServer"),
+    assemblyJarName in assembly := s"mauth-proxy-${version.value}.jar",
+    assemblyMergeStrategy in assembly := {
+      case "logback.xml" => MergeStrategy.first
+      case x => val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+    }
   )
 }
