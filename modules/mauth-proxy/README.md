@@ -28,7 +28,7 @@ Internal Medidata users please follow [internal guide](https://mdsol.jiveon.com/
 You need to have Docker installed on your machine in order to use Mauth Proxy. The simplest way to get Docker running 
 on a Mac or Windows machine is to follow the instructions at 
 [Docker for Mac](https://docs.docker.com/#/docker-for-mac) for Mac and 
-[Docker for Windows]https://store.docker.com/editions/community/docker-ce-desktop-windows for Windows.
+[Docker for Windows](https://store.docker.com/editions/community/docker-ce-desktop-windows) for Windows.
 
 After doing this you should be able to type 'docker ps' and get a listing of all of the
 docker process running on your machine. Of course, at this point,
