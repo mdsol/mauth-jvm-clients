@@ -57,6 +57,7 @@ object BuildSettings {
     developers := List(
       Developer(id = "austek", name = "Ali Ustek", email = "austek@mdsol.com", url = url("https://github.com/austek"))
     ),
+    releaseCommitMessage := s"Setting version to ${(version in ThisBuild).value} [ci skip]",
     releasePublishArtifactsAction := PgpKeys.publishSigned.value,
     releaseVersionBump := sbtrelease.Version.Bump.Bugfix,
     releaseProcess := Seq[ReleaseStep](
@@ -66,7 +67,7 @@ object BuildSettings {
       setReleaseVersion,
       commitReleaseVersion,
       tagRelease,
-      releaseStepCommand("publishSigned"),
+      releaseStepCommand("+publishSigned"),
       setNextVersion,
       commitNextVersion,
       releaseStepCommand("sonatypeReleaseAll"),
