@@ -25,7 +25,8 @@ class RequestAuthenticatorTest extends FlatSpec with RequestAuthenticatorTestBas
   private val mockEpochTimeProvider = mock[EpochTimeProvider]
 
   "RequestAuthenticator" should "authenticate a valid request" in clientContext { (client) =>
-    (mockEpochTimeProvider.inSeconds _).expects().returns(RequestAuthenticatorTestBase.CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(RequestAuthenticatorTestBase.CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
     whenReady(authenticator.authenticate(getSimpleRequest)) { validationResult =>
@@ -34,7 +35,8 @@ class RequestAuthenticatorTest extends FlatSpec with RequestAuthenticatorTestBas
   }
 
   it should "authenticate a request with unicode chars in body" in clientContext { (client) =>
-    (mockEpochTimeProvider.inSeconds _).expects().returns(RequestAuthenticatorTestBase.CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(RequestAuthenticatorTestBase.CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
     whenReady(authenticator.authenticate(getRequestWithUnicodeCharactersInBody)) { validationResult =>
@@ -43,7 +45,8 @@ class RequestAuthenticatorTest extends FlatSpec with RequestAuthenticatorTestBas
   }
 
   it should "authenticate a request without any body" in clientContext { (client) =>
-    (mockEpochTimeProvider.inSeconds _).expects().returns(RequestAuthenticatorTestBase.CLIENT_NO_BODY_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(RequestAuthenticatorTestBase.CLIENT_NO_BODY_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
     whenReady(authenticator.authenticate(getRequestWithoutMessageBody)) { validationResult =>
@@ -52,7 +55,8 @@ class RequestAuthenticatorTest extends FlatSpec with RequestAuthenticatorTestBas
   }
 
   it should "not authenticate an invalid request" in clientContext { (client) =>
-    (mockEpochTimeProvider.inSeconds _).expects().returns(RequestAuthenticatorTestBase.CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(RequestAuthenticatorTestBase.CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
     val invalidRequest = getSimpleRequestWithWrongSignature
 
@@ -62,7 +66,8 @@ class RequestAuthenticatorTest extends FlatSpec with RequestAuthenticatorTestBas
   }
 
   it should "not authenticate a request after timeout period passed" in {
-    (mockEpochTimeProvider.inSeconds _).expects().returns(RequestAuthenticatorTestBase.CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE.toLong + 600)
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(RequestAuthenticatorTestBase.CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE.toLong + 600)
     val authenticator = new RequestAuthenticator(mock[ClientPublicKeyProvider], mockEpochTimeProvider)
 
     whenReady(authenticator.authenticate(getRequestWithUnicodeCharactersInBody).failed) {
