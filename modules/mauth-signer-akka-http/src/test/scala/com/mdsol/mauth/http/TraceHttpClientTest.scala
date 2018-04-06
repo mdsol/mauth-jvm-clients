@@ -31,7 +31,7 @@ class TraceHttpClientTest extends FlatSpec with TraceHttpClient with BeforeAndAf
   private implicit val dispatcher: ExecutionContext = actorSystem.dispatcher
 
   override implicit val tracer: Tracer = Tracing.newBuilder()
-    .localEndpoint(Endpoint.newBuilder().serviceName("my-service").build())
+    .endpoint(Endpoint.newBuilder().serviceName("my-service").build())
     .build().tracer()
 
 
