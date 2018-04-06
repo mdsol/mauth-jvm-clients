@@ -37,7 +37,6 @@ that should be an empty list.  But if this runs without error then docker is rea
 ### Build Docker Image
 To build an image use the `docker` task. Simply run `sbt docker` from your prompt or `docker` in the sbt console.
 
-
 ### Running Mauth Proxy
 For Bash:
 ```bash
