@@ -5,13 +5,14 @@ import java.security.Security
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.mdsol.mauth.test.utils.FakeMAuthServer
+import com.mdsol.mauth.test.utils.{FakeMAuthServer, PortFinder}
 import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequestSigner, SignedRequest, UnsignedRequest}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Right
 
 class MauthPublicKeyProviderTest extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach with ScalaFutures
@@ -21,7 +22,7 @@ class MauthPublicKeyProviderTest extends FlatSpec with BeforeAndAfterAll with Be
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   private val EXPECTED_TIME_HEADER_VALUE = "1444672125"
   private val EXPECTED_AUTHENTICATION_HEADER_VALUE = "MWS 92a1869e-c80d-4f06-8775-6c4ebb0758e0:lTMYNWPaG4..."
-  private val MAUTH_PORT = 9001
+  private val MAUTH_PORT = PortFinder.findFreePort()
   private val MAUTH_BASE_URL = s"http://localhost:$MAUTH_PORT"
   private val MAUTH_URL_PATH = "/mauth/v1"
   private val SECURITY_TOKENS_PATH = "/security_tokens/%s.json"
@@ -51,7 +52,7 @@ class MauthPublicKeyProviderTest extends FlatSpec with BeforeAndAfterAll with Be
     val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, EXPECTED_AUTHENTICATION_HEADER_VALUE, EXPECTED_TIME_HEADER_VALUE))
     (mockedSigner.signRequest _).expects(*).returns(mockedResponse)
 
-    whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) { result  =>
+    whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) { result =>
       result.toString should not be empty
     }
   }
