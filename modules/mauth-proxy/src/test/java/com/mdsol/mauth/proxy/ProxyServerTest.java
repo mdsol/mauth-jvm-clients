@@ -14,7 +14,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -66,14 +65,9 @@ public class ProxyServerTest {
     proxyServer.stop();
   }
 
-  private ProxyServer getProxyServer() throws IOException {
-    ProxyServer proxyServer = null;
-    try {
-      proxyServer = new ProxyServer(new ProxyConfig(ConfigFactory.load().resolve()));
-      proxyServer.serve();
-    } catch (URISyntaxException e) {
-      e.printStackTrace();
-    }
+  private ProxyServer getProxyServer() {
+    ProxyServer proxyServer = new ProxyServer(new ProxyConfig(ConfigFactory.load().resolve()));
+    proxyServer.serve();
     return proxyServer;
   }
 
