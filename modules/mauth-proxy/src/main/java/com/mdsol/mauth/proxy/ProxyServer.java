@@ -28,7 +28,6 @@ public class ProxyServer {
     }
 
     void serve() {
-
         httpProxyServer =
                 DefaultHttpProxyServer.bootstrap()
                         .withManInTheMiddle(new SelfSignedMitmManager())

@@ -37,10 +37,6 @@ object Dependencies {
   // TEST DEPENDENCIES
   val akkaHttpTestKit: ModuleID = "com.typesafe.akka" %% "akka-http-testkit" % Version.akkaHttp
   val commonsIO: ModuleID = "commons-io" % "commons-io" % "2.6"
-  val hamcrestAll: ModuleID = "org.hamcrest" % "hamcrest-all" % "1.3"
-  val junit: ModuleID = "junit" % "junit" % "4.12"
-  val jUnitInterface: ModuleID = "com.novocode" % "junit-interface" % "0.11" exclude("junit", "junit")
-  val mockito: ModuleID = "org.mockito" % "mockito-all" % "1.10.19"
   val scalaMock: ModuleID = "org.scalamock" %% "scalamock-scalatest-support" % "3.6.0"
   val wiremock: ModuleID = "com.github.tomakehurst" % "wiremock" % "2.16.0"
 
