@@ -72,7 +72,7 @@ lazy val `mauth-signer-akka-http` = (project in file("modules/mauth-signer-akka-
     publishSettings,
     name := "mauth-signer-akka-http",
     libraryDependencies ++=
-      Dependencies.provided(akkaHttp).map(withExclusions) ++
+      Dependencies.provided(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.compile(scalaLogging, zipkinBrave).map(withExclusions) ++
         Dependencies.test(scalaMock, wiremock).map(withExclusions)
   )
@@ -108,7 +108,7 @@ lazy val `mauth-authenticator-akka-http` = (project in file("modules/mauth-authe
     publishSettings,
     name := "mauth-authenticator-akka-http",
     libraryDependencies ++=
-      Dependencies.provided(akkaHttp) ++
+      Dependencies.provided(akkaHttp, akkaStream) ++
         Dependencies.compile(jacksonDataBind, scalaCache).map(withExclusions) ++
         Dependencies.test(akkaHttpTestKit, hamcrestAll, scalaMock, wiremock).map(withExclusions)
   )

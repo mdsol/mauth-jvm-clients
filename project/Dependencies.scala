@@ -13,11 +13,12 @@ object Dependencies {
   def container(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "container")
 
   private object Version {
-    val akkaHttp = "10.0.10"
+    val akkaHttp = "10.1.1"
     val logback = "1.2.3"
   }
 
   val akkaHttp: ModuleID = "com.typesafe.akka" %% "akka-http" % Version.akkaHttp
+  val akkaStream: ModuleID = "com.typesafe.akka" %% "akka-stream" % "2.5.11"
   val apacheHttpClient: ModuleID = "org.apache.httpcomponents" % "httpclient" % "4.5.5"
   val bouncyCastlePkix: ModuleID = "org.bouncycastle" % "bcpkix-jdk15on" % "1.59"
   val commonsCodec: ModuleID = "commons-codec" % "commons-codec" % "1.11"
