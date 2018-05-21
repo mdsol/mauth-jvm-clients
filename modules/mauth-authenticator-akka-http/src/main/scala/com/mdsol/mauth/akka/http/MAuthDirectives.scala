@@ -20,12 +20,13 @@ import scala.language.postfixOps
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
+case class AuthHeaderDetail(appId: UUID, hash: String)
+
+case object MdsolAuthFailedRejection
+    extends AuthorizationFailedRejection
+    with Rejection
+
 trait MAuthDirectives extends StrictLogging {
-
-  case class AuthHeaderDetail(appId: UUID, hash: String)
-
-  case object MdsolAuthFailedRejection
-    extends AuthorizationFailedRejection with Rejection
 
   /**
     * Directive to wrap all routes that require MAuth authentication check.
