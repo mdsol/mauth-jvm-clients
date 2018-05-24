@@ -8,7 +8,6 @@ import sbtassembly.MergeStrategy
 import sbtrelease.ReleasePlugin.autoImport._
 import sbtrelease.ReleaseStateTransformations._
 
-
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
 
@@ -74,7 +73,6 @@ object BuildSettings {
       pushChanges
     )
   )
-
 
   lazy val assemblySettings = Seq(
     test in assembly := {},
