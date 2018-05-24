@@ -10,7 +10,7 @@ import akka.http.scaladsl.server.directives.BasicDirectives._
 import akka.http.scaladsl.server.directives.FutureDirectives.onComplete
 import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import com.mdsol.mauth.MAuthRequest
-import com.mdsol.mauth.http.{HttpVerbOps, X_MWS_Authentication, X_MWS_Time}
+import com.mdsol.mauth.http.{HttpVerbOps, `X-MWS-Authentication`, `X-MWS-Time`}
 import com.mdsol.mauth.scaladsl.Authenticator
 import com.typesafe.scalalogging.StrictLogging
 
@@ -63,28 +63,28 @@ trait MAuthDirectives extends StrictLogging {
     }
   }
 
-  val extractMwsAuthenticationHeader: Directive1[String] = headerValueByName(X_MWS_Authentication.name)
+  val extractMwsAuthenticationHeader: Directive1[String] = headerValueByName(`X-MWS-Authentication`.name)
 
   val extractMAuthHeader: Directive1[AuthHeaderDetail] =
-    headerValueByType[X_MWS_Authentication]((): Unit).flatMap { hdr =>
+    headerValueByType[`X-MWS-Authentication`]((): Unit).flatMap { hdr =>
       extractAuthHeaderDetail(hdr.value) match {
         case Some(ahd: AuthHeaderDetail) => provide(ahd)
         case None =>
-          val msg = s"${X_MWS_Authentication.name} header supplied with bad format: [${hdr.value}]"
+          val msg = s"${`X-MWS-Authentication`.name} header supplied with bad format: [${hdr.value}]"
           logger.error(msg)
-          reject(MalformedHeaderRejection(headerName = X_MWS_Authentication.name, errorMsg = msg, None))
+          reject(MalformedHeaderRejection(headerName = `X-MWS-Authentication`.name, errorMsg = msg, None))
 
       }
     }
 
   val extractMwsTimeHeader: Directive1[Long] =
-    headerValueByType[X_MWS_Time]((): Unit).flatMap { time =>
+    headerValueByType[`X-MWS-Time`]((): Unit).flatMap { time =>
       Try(time.value.toLong).toOption match {
         case Some(t: Long) => provide(t)
         case None =>
-          val msg = s"${X_MWS_Time.name} header supplied with bad format: [${time.value}]"
+          val msg = s"${`X-MWS-Time`.name} header supplied with bad format: [${time.value}]"
           logger.error(msg)
-          reject(MalformedHeaderRejection(headerName = X_MWS_Time.name, errorMsg = msg, None))
+          reject(MalformedHeaderRejection(headerName = `X-MWS-Time`.name, errorMsg = msg, None))
       }
     }
 
