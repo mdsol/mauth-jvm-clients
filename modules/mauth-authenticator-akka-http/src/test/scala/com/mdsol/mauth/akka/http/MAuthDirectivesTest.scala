@@ -8,7 +8,7 @@ import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.mdsol.mauth.MAuthRequest
-import com.mdsol.mauth.http.{X_MWS_Authentication, X_MWS_Time}
+import com.mdsol.mauth.http.{`X-MWS-Authentication`, `X-MWS-Time`}
 import com.mdsol.mauth.scaladsl.RequestAuthenticator
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
 import com.mdsol.mauth.test.utils.FixturesLoader
@@ -84,7 +84,7 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString)) ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual X_MWS_Authentication.name
+          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Authentication`.name
         }
       }
     }
@@ -94,7 +94,7 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual X_MWS_Time.name
+          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Time`.name
         }
       }
     }
@@ -121,7 +121,7 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
     "reject with a MissingHeaderRejection if header is missing" in {
       Get() ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual X_MWS_Time.name
+          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Time`.name
         }
       }
     }
@@ -174,7 +174,7 @@ class MAuthDirectivesTest extends WordSpec with Matchers with ScalatestRouteTest
     "reject with a MissingHeaderRejection if header is missing" in {
       Get() ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual X_MWS_Authentication.name
+          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Authentication`.name
         }
       }
     }

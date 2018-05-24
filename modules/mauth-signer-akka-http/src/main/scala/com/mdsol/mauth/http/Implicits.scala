@@ -17,8 +17,8 @@ object Implicits {
 
     HttpRequest(sr.req.httpMethod, uri = Uri(sr.req.uri.toString), entity = entityBody)
       .withHeaders(mapToHeaderSequence(sr.req.headers) ++: scala.collection.immutable.Seq(
-        X_MWS_Authentication(sr.authHeader),
-        X_MWS_Time(sr.timeHeader)))
+        `X-MWS-Authentication`(sr.authHeader),
+        `X-MWS-Time`(sr.timeHeader)))
   }
 
   implicit def fromMaybeSignedRequestToMaybeHttpRequest(maybeSignedRequest: Option[SignedRequest]): Option[HttpRequest] =
