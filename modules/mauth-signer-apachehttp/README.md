@@ -4,7 +4,7 @@ This is an implementation of Medidata Authentication Client Signer to sign the H
 
 ## Usage
 
-1. Configuration
+#####1. Configuration
   * MAuth uses [Typesafe Config](https://github.com/typesafehub/config).
   Create `application.conf` on your classpath with following content.
 
@@ -24,7 +24,7 @@ This is an implementation of Medidata Authentication Client Signer to sign the H
 
         SignerConfiguration configuration = new SignerConfiguration(ConfigFactory.load());
 
-1. Sign requests using Apache HttpClient interceptors
+#####2. Sign requests using Apache HttpClient interceptors
         
         final HttpClientRequestSigner httpClientRequestSigner = new HttpClientRequestSigner(configuration);
         final SignerHttpRequestInterceptor signerHttpRequestInterceptor = new SignerHttpRequestInterceptor(httpClientRequestSigner);
@@ -39,3 +39,5 @@ and then use `httpClient` as normal
         final HttpClientRequestSigner httpClientRequestSigner = new HttpClientRequestSigner(configuration);
         HttpGet request = new HttpGet("http://example.com/resources/1");
         httpClientRequestSigner.signRequest(request);
+
+ * Have a look at the example in here com.mdsol.mauth.example.MauthSignerExample

@@ -36,6 +36,14 @@ public class MauthSignerExample {
         }
     }
 
+    /**
+     * Example how to use Medidata Authentication Client Signer to sign the Http requests
+     * Set up the following environment variables:
+     * APP_MAUTH_UUID - app uuid
+     * APP_MAUTH_PRIVATE_KEY - the application private key itself, not the path
+     *
+     * @param args - no args expected
+     */
     public static void main(String[] args) {
         new MauthSignerExample().executeMe();
     }
