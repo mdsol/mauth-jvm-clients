@@ -1,5 +1,6 @@
 import BuildSettings._
 import Dependencies._
+import ExampleSettings._
 import com.amazonaws.regions.{Region, Regions}
 
 conflictManager := ConflictManager.strict
@@ -55,8 +56,10 @@ lazy val `mauth-signer` = (project in file("modules/mauth-signer"))
 
 lazy val `mauth-signer-apachehttp` = (project in file("modules/mauth-signer-apachehttp"))
   .dependsOn(`mauth-signer`, `mauth-test-utils` % "test")
+  .configs(ExampleResource)
   .settings(
     basicSettings,
+    exampleSettings,
     publishSettings,
     crossPaths := false,
     name := "mauth-signer-apachehttp",
