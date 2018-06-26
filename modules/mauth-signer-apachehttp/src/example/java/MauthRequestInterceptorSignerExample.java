@@ -1,5 +1,3 @@
-package example.java;
-
 import com.mdsol.mauth.SignerConfiguration;
 import com.mdsol.mauth.apache.HttpClientRequestSigner;
 import com.mdsol.mauth.apache.SignerHttpRequestInterceptor;
