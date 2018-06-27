@@ -1,6 +1,6 @@
 import BuildSettings._
 import Dependencies._
-import ExampleSettings._
+import ExampleTesting._
 import com.amazonaws.regions.{Region, Regions}
 
 conflictManager := ConflictManager.strict
@@ -56,7 +56,7 @@ lazy val `mauth-signer` = (project in file("modules/mauth-signer"))
 
 lazy val `mauth-signer-apachehttp` = (project in file("modules/mauth-signer-apachehttp"))
   .dependsOn(`mauth-signer`, `mauth-test-utils` % "test")
-  .configs(ExampleResource)
+  .configs(ExampleTests)
   .settings(
     basicSettings,
     exampleSettings,
@@ -65,12 +65,12 @@ lazy val `mauth-signer-apachehttp` = (project in file("modules/mauth-signer-apac
     name := "mauth-signer-apachehttp",
     libraryDependencies ++=
       Dependencies.test(commonsIO, junit, jUnitInterface, mockito).map(withExclusions) ++
-      Dependencies.compile(apacheHttpClient).map(withExclusions)
+        Dependencies.compile(apacheHttpClient).map(withExclusions)
   )
 
 lazy val `mauth-signer-akka-http` = (project in file("modules/mauth-signer-akka-http"))
   .dependsOn(`mauth-signer`, `mauth-test-utils` % "test")
-  .configs(ExampleResource)
+  .configs(ExampleTests)
   .settings(
     basicSettings,
     exampleSettings,
@@ -78,8 +78,9 @@ lazy val `mauth-signer-akka-http` = (project in file("modules/mauth-signer-akka-
     name := "mauth-signer-akka-http",
     libraryDependencies ++=
       Dependencies.provided(akkaHttp).map(withExclusions) ++
-      Dependencies.compile(scalaLogging, zipkinBrave).map(withExclusions) ++
-      Dependencies.test(scalaMock, wiremock).map(withExclusions)
+        Dependencies.compile(scalaLogging, zipkinBrave).map(withExclusions) ++
+        Dependencies.example(akkaHttp).map(withExclusions) ++
+        Dependencies.test(scalaMock, wiremock).map(withExclusions)
   )
 
 lazy val `mauth-authenticator` = (project in file("modules/mauth-authenticator"))

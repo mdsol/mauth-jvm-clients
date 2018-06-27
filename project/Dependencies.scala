@@ -1,14 +1,6 @@
 import sbt._
 
-object Dependencies {
-
-  def compile(deps: ModuleID*): Seq[ModuleID] = deps map (_ % Compile)
-
-  def provided(deps: ModuleID*): Seq[ModuleID] = deps map (_ % Provided)
-
-  def test(deps: ModuleID*): Seq[ModuleID] = deps map (_ % Test)
-
-  def runtime(deps: ModuleID*): Seq[ModuleID] = deps map (_ % Runtime)
+object Dependencies extends DependencyUtils {
 
   private object Version {
     val akkaHttp = "10.0.10"
@@ -16,9 +8,6 @@ object Dependencies {
   }
 
   val akkaHttp: ModuleID = "com.typesafe.akka" %% "akka-http" % Version.akkaHttp
-  val akkaActor: ModuleID = "com.typesafe.akka" %% "akka-actor" % "2.4.19"
-  val akkaStream: ModuleID = "com.typesafe.akka" %% "akka-stream" % "2.4.19"
-  val akkaHttpCore: ModuleID = "com.typesafe.akka" %% "akka-http-core" % Version.akkaHttp
   val apacheHttpClient: ModuleID = "org.apache.httpcomponents" % "httpclient" % "4.5.5"
   val bouncyCastlePkix: ModuleID = "org.bouncycastle" % "bcpkix-jdk15on" % "1.59"
   val commonsCodec: ModuleID = "commons-codec" % "commons-codec" % "1.11"

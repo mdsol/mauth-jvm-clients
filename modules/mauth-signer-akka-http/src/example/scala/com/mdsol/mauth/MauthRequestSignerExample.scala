@@ -5,6 +5,7 @@ import java.net.URI
 import com.mdsol.mauth.http.HttpClient
 import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -16,7 +17,7 @@ object MauthRequestSignerExample extends App {
 
   val configuration: SignerConfiguration = new SignerConfiguration(ConfigFactory.load())
   val httpMethod = "GET"
-  val uri = URI.create("https://references-sandbox.imedidata.net/v1/countries") //todo: change to production url!
+  val uri = URI.create("https://api.mdsol.com/v1/countries")
 
   MAuthRequestSigner(configuration).signRequest(UnsignedRequest(httpMethod, uri)) match {
     case Left(e) => Future.failed(e)
