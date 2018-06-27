@@ -4,34 +4,28 @@ This is an implementation of Medidata Authentication Client Signer to sign the H
 
 ## Usage
 
-1. Configuration
-  * MAuth uses [Typesafe Config](https://github.com/typesafehub/config).
-  Create `application.conf` on your classpath with following content.
+1. Configuration  
+    * MAuth uses [Typesafe Config](https://github.com/typesafehub/config).
+      Create `application.conf` on your classpath with following content.
+    
+            app {
+                uuid: "aaaa-bbbbb-ccccc-ddddd-eeeee"
+                private_key: "avasdfasdfadf"
+            }
+      
+        **Defaults:**
+        If any of the settings are omitted then following default values will be used.
+    
+            app {
+                uuid: ${?APP_MAUTH_UUID}
+                private_key: ${?APP_MAUTH_PRIVATE_KEY}
+            }
+                            
+2. Sign requests using Akka HttpClient
 
-        app {
-            uuid: "aaaa-bbbbb-ccccc-ddddd-eeeee"
-            private_key: "avasdfasdfadf"
-        }
-  
-    **Defaults:**
-    If any of the settings are omitted then following default values will be used.
+    * Please see example [com.mdsol.mauth.MauthRequestSignerExample](src/example/scala/com/mdsol/mauth/MauthRequestSignerExample.scala)
 
-        app {
-            uuid: ${?APP_MAUTH_UUID}
-            private_key: ${?APP_MAUTH_PRIVATE_KEY}
-        }
-  * Load Configuration
-
-        SignerConfiguration configuration = new SignerConfiguration(ConfigFactory.load());
-
-1. Sign requests using Akka HttpClient
-
-            MAuthRequestSigner(configuration).signRequest(UnsignedRequest(httpMethod, URI.create("http://server"), body, headers)) match {
-              case Left(e) => Future.failed(e)
-          case Right(signedRequest) => HttpClient.call(signedRequest)
-        }
-
-1. Sign requests using Akka HttpClient with distributed tracing
+3. Sign requests using Akka HttpClient with distributed tracing
 
         public class ExampleClass extends TraceHttpClient {
         

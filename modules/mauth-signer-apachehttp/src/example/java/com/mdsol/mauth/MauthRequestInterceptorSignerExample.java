@@ -1,5 +1,7 @@
-import com.mdsol.mauth.SignerConfiguration;
+package com.mdsol.mauth;
+
 import com.mdsol.mauth.apache.HttpClientRequestSigner;
+import com.mdsol.mauth.apache.SignerHttpRequestInterceptor;
 import com.typesafe.config.ConfigFactory;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -9,15 +11,18 @@ import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
 
-public class ManualSignerExample {
+public class MauthRequestInterceptorSignerExample {
 
-    public void executeMe() {
+    private void executeMe() {
         SignerConfiguration configuration = new SignerConfiguration(ConfigFactory.load());
         final HttpClientRequestSigner httpClientRequestSigner = new HttpClientRequestSigner(configuration);
-        HttpGet request = new HttpGet("https://api.mdsol.com/v1/countries");
-        httpClientRequestSigner.signRequest(request);
+        final SignerHttpRequestInterceptor signerHttpRequestInterceptor = new SignerHttpRequestInterceptor(httpClientRequestSigner);
+        CloseableHttpClient httpClient = HttpClients
+                .custom()
+                .addInterceptorFirst(signerHttpRequestInterceptor)
+                .build();
 
-        CloseableHttpClient httpClient = HttpClients.custom().build();
+        HttpGet request = new HttpGet("https://api.mdsol.com/v1/countries");
 
         try(CloseableHttpResponse response = httpClient.execute(request)) {
             StatusLine status = response.getStatusLine();
@@ -29,7 +34,7 @@ public class ManualSignerExample {
     }
 
     /**
-     * Example how to sign requests manually
+     * Example: How to use Medidata authentication client to sign HTTP requests
      * Set up the following environment variables:
      * APP_MAUTH_UUID - app uuid
      * APP_MAUTH_PRIVATE_KEY - the application private key itself, not the path
@@ -37,6 +42,6 @@ public class ManualSignerExample {
      * @param args - no args expected
      */
     public static void main(String[] args) {
-        new ManualSignerExample().executeMe();
+        new MauthRequestInterceptorSignerExample().executeMe();
     }
 }

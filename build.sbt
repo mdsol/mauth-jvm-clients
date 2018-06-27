@@ -65,19 +65,21 @@ lazy val `mauth-signer-apachehttp` = (project in file("modules/mauth-signer-apac
     name := "mauth-signer-apachehttp",
     libraryDependencies ++=
       Dependencies.test(commonsIO, junit, jUnitInterface, mockito).map(withExclusions) ++
-        Dependencies.compile(apacheHttpClient).map(withExclusions)
+      Dependencies.compile(apacheHttpClient).map(withExclusions)
   )
 
 lazy val `mauth-signer-akka-http` = (project in file("modules/mauth-signer-akka-http"))
   .dependsOn(`mauth-signer`, `mauth-test-utils` % "test")
+  .configs(ExampleResource)
   .settings(
     basicSettings,
+    exampleSettings,
     publishSettings,
     name := "mauth-signer-akka-http",
     libraryDependencies ++=
       Dependencies.provided(akkaHttp).map(withExclusions) ++
-        Dependencies.compile(scalaLogging, zipkinBrave).map(withExclusions) ++
-        Dependencies.test(scalaMock, wiremock).map(withExclusions)
+      Dependencies.compile(scalaLogging, zipkinBrave).map(withExclusions) ++
+      Dependencies.test(scalaMock, wiremock).map(withExclusions)
   )
 
 lazy val `mauth-authenticator` = (project in file("modules/mauth-authenticator"))
