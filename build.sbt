@@ -79,7 +79,7 @@ lazy val `mauth-signer-akka-http` = (project in file("modules/mauth-signer-akka-
     libraryDependencies ++=
       Dependencies.provided(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.compile(scalaLogging, zipkinBrave).map(withExclusions) ++
-        Dependencies.example(akkaHttp).map(withExclusions) ++
+        Dependencies.example(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.test(scalaMock, wiremock).map(withExclusions)
   )
 

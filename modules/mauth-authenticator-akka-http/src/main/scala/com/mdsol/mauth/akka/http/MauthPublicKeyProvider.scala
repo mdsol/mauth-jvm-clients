@@ -15,7 +15,6 @@ import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
 import com.mdsol.mauth.util.MAuthKeysHelper
 import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequestSigner, UnsignedRequest}
 import com.typesafe.scalalogging.StrictLogging
-import scalacache._
 import scalacache.guava._
 import scalacache.memoization._
 import scalacache.modes.scalaFuture._
@@ -29,7 +28,7 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
                             (implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer)
   extends ClientPublicKeyProvider with StrictLogging {
 
-  implicit val scalaCache: Cache[Option[PublicKey]] = GuavaCache[Option[PublicKey]]
+  implicit val guavaCache: GuavaCache[Option[PublicKey]] = GuavaCache[Option[PublicKey]]
   protected val mapper = new ObjectMapper
 
   /**
