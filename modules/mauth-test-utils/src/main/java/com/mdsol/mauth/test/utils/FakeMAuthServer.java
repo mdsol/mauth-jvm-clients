@@ -6,7 +6,6 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.util.UUID;
 
 public class FakeMAuthServer {
