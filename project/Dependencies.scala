@@ -22,7 +22,7 @@ object Dependencies extends DependencyUtils {
   val typeSafeConfig: ModuleID = "com.typesafe" % "config" % "1.3.3"
   val scalaCache: ModuleID = "com.github.cb372" %% "scalacache-guava" % "0.24.2"
   val scalaLogging: ModuleID = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
-  val zipkinBrave = "io.zipkin.brave" % "brave" % "5.1.2"
+  val zipkinBrave = "io.zipkin.brave" % "brave" % "4.18.2"
 
   // TEST DEPENDENCIES
   val akkaHttpTestKit: ModuleID = "com.typesafe.akka" %% "akka-http-testkit" % Version.akkaHttp
