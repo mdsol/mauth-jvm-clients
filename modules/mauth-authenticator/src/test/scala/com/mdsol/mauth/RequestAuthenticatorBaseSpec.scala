@@ -39,7 +39,7 @@ trait RequestAuthenticatorBaseSpec extends FlatSpec with BeforeAndAfterAll with 
   val CLIENT_UNICODE_REQUEST_AUTHENTICATION_HEADER: String = "MWS " + EXISTING_CLIENT_APP_UUID.toString + ":" + CLIENT_UNICODE_REQUEST_SIGNATURE
   val CLIENT_UNICODE_REQUEST_METHOD: String = HttpPost.METHOD_NAME
   val CLIENT_UNICODE_REQUEST_PATH = "/resource/path"
-  val CLIENT_UNICODE_REQUEST_BODY = "Message with some Unicode characters inside: ș吉ń艾ęتあù"
+  val CLIENT_UNICODE_REQUEST_BODY = "Message with some Unicode characters inside: È™å�‰Å„è‰¾Ä™Øªã�‚Ã¹"
   val CLIENT_NO_BODY_REQUEST_SIGNATURE: String =
     """NddGBdXnB3/ne3oCmYJQ20mASPHifsI0sG3mt034jjRfjlTafOYJ/kt3RJYk
       |OMLT104GtzTgFfQBeTSJpOrBK/+EK9T0V+JNmjrU6Y9FpcH4p3hB2liooKjH
@@ -62,7 +62,7 @@ trait RequestAuthenticatorBaseSpec extends FlatSpec with BeforeAndAfterAll with 
       .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
       .withTimeHeaderValue(CLIENT_X_MWS_TIME_HEADER_VALUE)
       .withHttpMethod(CLIENT_REQUEST_METHOD)
-      .withMessagePayload(CLIENT_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))
+      .withMessagePayload(CLIENT_REQUEST_BODY.getBytes(StandardCharsets.ISO_8859_1))
       .withResourcePath(CLIENT_REQUEST_PATH)
       .build
   }
@@ -73,7 +73,7 @@ trait RequestAuthenticatorBaseSpec extends FlatSpec with BeforeAndAfterAll with 
       .withTimeHeaderValue(CLIENT_X_MWS_TIME_HEADER_VALUE)
       .withHttpMethod(CLIENT_REQUEST_METHOD)
       .withMessagePayload((CLIENT_REQUEST_BODY + " this makes this request invalid.")
-        .getBytes(StandardCharsets.UTF_8))
+        .getBytes(StandardCharsets.ISO_8859_1))
       .withResourcePath(CLIENT_REQUEST_PATH)
       .build
   }
@@ -83,7 +83,7 @@ trait RequestAuthenticatorBaseSpec extends FlatSpec with BeforeAndAfterAll with 
       .withAuthenticationHeaderValue(CLIENT_UNICODE_REQUEST_AUTHENTICATION_HEADER)
       .withTimeHeaderValue(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE)
       .withHttpMethod(CLIENT_UNICODE_REQUEST_METHOD)
-      .withMessagePayload(CLIENT_UNICODE_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))
+      .withMessagePayload(CLIENT_UNICODE_REQUEST_BODY.getBytes(StandardCharsets.ISO_8859_1))
       .withResourcePath(CLIENT_UNICODE_REQUEST_PATH)
       .build
   }
