@@ -70,11 +70,11 @@ public class RequestAuthenticator implements Authenticator {
     String unencryptedRequestString =
         MAuthSignatureHelper.generateUnencryptedSignature(
             mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(), mAuthRequest.getResourcePath(),
-            new String(mAuthRequest.getMessagePayload(), StandardCharsets.UTF_8),
+            new String(mAuthRequest.getMessagePayload(), StandardCharsets.ISO_8859_1),
             String.valueOf(mAuthRequest.getRequestTime())
         );
     byte[] messageDigest_bytes = MAuthSignatureHelper
-        .getHexEncodedDigestedString(unencryptedRequestString).getBytes(StandardCharsets.UTF_8);
+        .getHexEncodedDigestedString(unencryptedRequestString).getBytes(StandardCharsets.ISO_8859_1);
 
     // Compare the decrypted signature and the recreated signature hashes.
     // If both match, the request was signed by the requesting application and is valid.
