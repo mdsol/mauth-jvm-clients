@@ -10,7 +10,7 @@ object Dependencies extends DependencyUtils {
   val akkaHttp: ModuleID = "com.typesafe.akka" %% "akka-http" % Version.akkaHttp
   val akkaStream: ModuleID = "com.typesafe.akka" %% "akka-stream" % "2.5.13"
   val apacheHttpClient: ModuleID = "org.apache.httpcomponents" % "httpclient" % "4.5.5"
-  val bouncyCastlePkix: ModuleID = "org.bouncycastle" % "bcpkix-jdk15on" % "1.59"
+  val bouncyCastlePkix: ModuleID = "org.bouncycastle" % "bcpkix-jdk15on" % "1.60"
   val commonsCodec: ModuleID = "commons-codec" % "commons-codec" % "1.11"
   val commonsLang3: ModuleID = "org.apache.commons" % "commons-lang3" % "3.7"
   val guava: ModuleID = "com.google.guava" % "guava" % "23.0"
