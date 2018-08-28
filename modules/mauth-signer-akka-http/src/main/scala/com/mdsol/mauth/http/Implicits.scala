@@ -1,7 +1,7 @@
 package com.mdsol.mauth.http
 
 import akka.http.scaladsl.model.headers.RawHeader
-import akka.http.scaladsl.model.{HttpHeader, HttpRequest, Uri}
+import akka.http.scaladsl.model._
 import com.mdsol.mauth.SignedRequest
 import com.mdsol.mauth.http.HttpVerbOps._
 
@@ -15,10 +15,10 @@ object Implicits {
       case Some(s: String) => s
     }
 
-    HttpRequest(sr.req.httpMethod, uri = Uri(sr.req.uri.toString), entity = entityBody)
+    HttpRequest(sr.req.httpMethod, uri = Uri(sr.req.uri.toString), entity = HttpEntity(ContentTypes.`application/json`, entityBody))
       .withHeaders(mapToHeaderSequence(sr.req.headers) ++: scala.collection.immutable.Seq(
-        X_MWS_Authentication(sr.authHeader),
-        X_MWS_Time(sr.timeHeader)))
+        `X-MWS-Authentication`(sr.authHeader),
+        `X-MWS-Time`(sr.timeHeader)))
   }
 
   implicit def fromMaybeSignedRequestToMaybeHttpRequest(maybeSignedRequest: Option[SignedRequest]): Option[HttpRequest] =

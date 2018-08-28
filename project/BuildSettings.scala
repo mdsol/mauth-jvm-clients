@@ -8,7 +8,6 @@ import sbtassembly.MergeStrategy
 import sbtrelease.ReleasePlugin.autoImport._
 import sbtrelease.ReleaseStateTransformations._
 
-
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
 
@@ -17,7 +16,8 @@ object BuildSettings {
     organization := "com.mdsol",
     organizationHomepage := Some(new URL("http://mdsol.com")),
     description := "MAuth clients",
-    scalaVersion := "2.11.8",
+    scalaVersion := "2.12.6",
+    crossScalaVersions := Seq("2.11.11", "2.12.6"),
     resolvers += Resolver.mavenLocal,
     resolvers += Resolver.sonatypeRepo("releases"),
     javacOptions ++= Seq("-encoding", "UTF-8"),
@@ -56,6 +56,7 @@ object BuildSettings {
     developers := List(
       Developer(id = "austek", name = "Ali Ustek", email = "austek@mdsol.com", url = url("https://github.com/austek"))
     ),
+    releaseCommitMessage := s"Setting version to ${(version in ThisBuild).value} [ci skip]",
     releasePublishArtifactsAction := PgpKeys.publishSigned.value,
     releaseVersionBump := sbtrelease.Version.Bump.Bugfix,
     releaseProcess := Seq[ReleaseStep](
@@ -65,14 +66,13 @@ object BuildSettings {
       setReleaseVersion,
       commitReleaseVersion,
       tagRelease,
-      releaseStepCommand("publishSigned"),
+      releaseStepCommand("+publishSigned"),
       setNextVersion,
       commitNextVersion,
       releaseStepCommand("sonatypeReleaseAll"),
       pushChanges
     )
   )
-
 
   lazy val assemblySettings = Seq(
     test in assembly := {},

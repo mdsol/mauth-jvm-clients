@@ -1,5 +1,6 @@
 import BuildSettings._
 import Dependencies._
+import ExampleTesting._
 import com.amazonaws.regions.{Region, Regions}
 
 conflictManager := ConflictManager.strict
@@ -29,7 +30,7 @@ lazy val `mauth-common` = (project in file("modules/mauth-common"))
     name := "mauth-common",
     libraryDependencies ++=
       Dependencies.compile(commonsCodec, commonsLang3, bouncyCastlePkix, slf4jApi, typeSafeConfig).map(withExclusions) ++
-        Dependencies.test(hamcrestAll, junit, jUnitInterface).map(withExclusions)
+        Dependencies.test(scalaMock).map(withExclusions)
   )
 
 lazy val `mauth-test-utils` = (project in file("modules/mauth-test-utils"))
@@ -39,7 +40,7 @@ lazy val `mauth-test-utils` = (project in file("modules/mauth-test-utils"))
     crossPaths := false,
     name := "mauth-test-utils",
     libraryDependencies ++=
-      Dependencies.compile(commonsIO, wiremock).map(withExclusions)
+      Dependencies.compile(commonsIO, logbackClassic, wiremock).map(withExclusions)
   )
 
 lazy val `mauth-signer` = (project in file("modules/mauth-signer"))
@@ -50,30 +51,35 @@ lazy val `mauth-signer` = (project in file("modules/mauth-signer"))
     crossPaths := false,
     name := "mauth-signer",
     libraryDependencies ++=
-      Dependencies.test(commonsIO, hamcrestAll, junit, jUnitInterface, mockito).map(withExclusions)
+      Dependencies.test(scalaMock).map(withExclusions)
   )
 
 lazy val `mauth-signer-apachehttp` = (project in file("modules/mauth-signer-apachehttp"))
   .dependsOn(`mauth-signer`, `mauth-test-utils` % "test")
+  .configs(ExampleTests)
   .settings(
     basicSettings,
+    exampleSettings,
     publishSettings,
     crossPaths := false,
     name := "mauth-signer-apachehttp",
     libraryDependencies ++=
-      Dependencies.test(commonsIO, junit, jUnitInterface, mockito).map(withExclusions) ++
-        Dependencies.compile(apacheHttpClient).map(withExclusions)
+      Dependencies.compile(apacheHttpClient).map(withExclusions) ++
+      Dependencies.test(scalaMock).map(withExclusions)
   )
 
 lazy val `mauth-signer-akka-http` = (project in file("modules/mauth-signer-akka-http"))
   .dependsOn(`mauth-signer`, `mauth-test-utils` % "test")
+  .configs(ExampleTests)
   .settings(
     basicSettings,
+    exampleSettings,
     publishSettings,
     name := "mauth-signer-akka-http",
     libraryDependencies ++=
-      Dependencies.provided(akkaHttp).map(withExclusions) ++
+      Dependencies.provided(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.compile(scalaLogging, zipkinBrave).map(withExclusions) ++
+        Dependencies.example(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.test(scalaMock, wiremock).map(withExclusions)
   )
 
@@ -85,8 +91,7 @@ lazy val `mauth-authenticator` = (project in file("modules/mauth-authenticator")
     crossPaths := false,
     name := "mauth-authenticator",
     libraryDependencies ++=
-      Dependencies.compile().map(withExclusions) ++
-        Dependencies.test(hamcrestAll, junit, jUnitInterface, mockito, scalaMock).map(withExclusions)
+      Dependencies.test(logbackClassic, scalaMock).map(withExclusions)
   )
 
 lazy val `mauth-authenticator-apachehttp` = (project in file("modules/mauth-authenticator-apachehttp"))
@@ -98,7 +103,7 @@ lazy val `mauth-authenticator-apachehttp` = (project in file("modules/mauth-auth
     name := "mauth-authenticator-apachehttp",
     libraryDependencies ++=
       Dependencies.compile(jacksonDataBind, guava, slf4jApi).map(withExclusions) ++
-        Dependencies.test(hamcrestAll, junit, jUnitInterface, mockito, wiremock).map(withExclusions)
+        Dependencies.test(scalaMock, wiremock).map(withExclusions)
   )
 
 lazy val `mauth-authenticator-akka-http` = (project in file("modules/mauth-authenticator-akka-http"))
@@ -108,9 +113,9 @@ lazy val `mauth-authenticator-akka-http` = (project in file("modules/mauth-authe
     publishSettings,
     name := "mauth-authenticator-akka-http",
     libraryDependencies ++=
-      Dependencies.provided(akkaHttp) ++
+      Dependencies.provided(akkaHttp, akkaStream) ++
         Dependencies.compile(jacksonDataBind, scalaCache).map(withExclusions) ++
-        Dependencies.test(akkaHttpTestKit, hamcrestAll, scalaMock, wiremock).map(withExclusions)
+        Dependencies.test(akkaHttpTestKit, scalaMock, wiremock).map(withExclusions)
   )
 
 lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
@@ -125,7 +130,7 @@ lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
     name := "mauth-proxy",
     libraryDependencies ++=
       Dependencies.compile(jacksonDataBind, littleProxy, logbackClassic, logbackCore).map(withExclusions) ++
-        Dependencies.test(hamcrestAll, junit, jUnitInterface, wiremock).map(withExclusions),
+        Dependencies.test(scalaMock, wiremock).map(withExclusions),
     dockerfile in docker := {
       val artifact: File = assembly.value
       val artifactTargetPath = s"/app/${artifact.name}"
