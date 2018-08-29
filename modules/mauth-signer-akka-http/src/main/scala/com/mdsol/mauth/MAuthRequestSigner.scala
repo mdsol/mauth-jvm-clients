@@ -15,7 +15,7 @@ import scala.util.{Failure, Success, Try}
   * @param uri        The URI of the API call , (host name and port not included)
   * @param body       The body of the request in string form
   */
-case class UnsignedRequest(httpMethod: String = "GET", uri: URI, body: Option[String] = None, headers: Map[String, String] = Map.empty)
+case class UnsignedRequest(httpMethod: String = "GET", uri: URI, body: Option[String] = None, headers: Map[String, String] = Map.empty, contentType: Option[String] = None)
 
 /**
   * Library agnostic representation of a signed request, including header data
