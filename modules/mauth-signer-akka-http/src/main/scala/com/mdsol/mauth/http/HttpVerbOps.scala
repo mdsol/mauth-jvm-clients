@@ -19,6 +19,6 @@ object HttpVerbOps {
     * @param method The String value of the HTTP verb
     * @return Akka HttpMethod
     */
-  implicit def httpVerb(method: String): HttpMethod = HttpMethods.getForKey(method).getOrElse(HttpMethods.GET)
+  implicit def httpVerb(method: String): HttpMethod = HttpMethods.getForKey(method.toUpperCase).getOrElse(HttpMethods.GET)
 
 }
