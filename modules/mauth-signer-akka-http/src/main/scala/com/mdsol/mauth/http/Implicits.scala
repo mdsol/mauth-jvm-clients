@@ -16,12 +16,14 @@ object Implicits {
       case None => ""
       case Some(s: String) => s
     }
+    val contentType: Option[String] = extractContentTypeFromHeaders(sr.req.headers)
+    val headersWithoutContentType: Map[String, String] = removeContentTypeFromHeaders(sr.req.headers)
 
     HttpRequest(
       method = sr.req.httpMethod,
       uri = Uri(sr.req.uri.toString),
-      entity = getHttpEntity(sr.req.contentType, entityBody))
-      .withHeaders(mapToHeaderSequence(sr.req.headers) ++: scala.collection.immutable.Seq(
+      entity = getHttpEntity(contentType, entityBody))
+      .withHeaders(mapToHeaderSequence(headersWithoutContentType) ++: scala.collection.immutable.Seq(
         `X-MWS-Authentication`(sr.authHeader),
         `X-MWS-Time`(sr.timeHeader)))
   }
@@ -31,6 +33,15 @@ object Implicits {
 
   private def mapToHeaderSequence(headers: Map[String, String]): Seq[HttpHeader] =
     headers.map { case (k, v) => RawHeader(k, v) }.toSeq
+
+  private def extractContentTypeFromHeaders(requestHeaders: Map[String, String]): Option[String] = {
+    requestHeaders.keySet.filter(_ == headers.`Content-Type`.name).
+      map(contentType => requestHeaders(contentType)).headOption
+  }
+
+  private def removeContentTypeFromHeaders(requestHeaders: Map[String, String]): Map[String, String] = {
+    requestHeaders.filterKeys(_ != headers.`Content-Type`.name)
+  }
 
   private def getHttpEntity(contentTypeOptional: Option[String], entityBody: String) = {
     contentTypeOptional match {
