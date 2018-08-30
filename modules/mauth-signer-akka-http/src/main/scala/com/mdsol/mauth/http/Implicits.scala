@@ -35,8 +35,7 @@ object Implicits {
     headers.map { case (k, v) => RawHeader(k, v) }.toSeq
 
   private def extractContentTypeFromHeaders(requestHeaders: Map[String, String]): Option[String] = {
-    requestHeaders.keySet.filter(_ == headers.`Content-Type`.name).
-      map(contentType => requestHeaders(contentType)).headOption
+    requestHeaders.get(headers.`Content-Type`.name)
   }
 
   private def removeContentTypeFromHeaders(requestHeaders: Map[String, String]): Map[String, String] = {
