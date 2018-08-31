@@ -170,5 +170,6 @@ lazy val `mauth-java-client` = (project in file("."))
   )
   .settings(
     basicSettings,
+    publishSettings,
     publishArtifact := false
   )
