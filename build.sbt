@@ -22,11 +22,17 @@ val mainBranch = Def.setting {
   }
 }
 
+// To fix java modules being published twice
+val nonCrossPublishSettings = Seq(
+  crossPaths := false,
+  skip in publish := (scalaVersion.value != scala212)
+)
+
 lazy val `mauth-common` = (project in file("modules/mauth-common"))
   .settings(
     basicSettings,
     publishSettings,
-    crossPaths := false,
+    nonCrossPublishSettings,
     name := "mauth-common",
     libraryDependencies ++=
       Dependencies.compile(commonsCodec, commonsLang3, bouncyCastlePkix, slf4jApi, typeSafeConfig).map(withExclusions) ++
@@ -37,7 +43,7 @@ lazy val `mauth-test-utils` = (project in file("modules/mauth-test-utils"))
   .settings(
     basicSettings,
     publishSettings,
-    crossPaths := false,
+    nonCrossPublishSettings,
     name := "mauth-test-utils",
     libraryDependencies ++=
       Dependencies.compile(commonsIO, logbackClassic, wiremock).map(withExclusions)
@@ -48,7 +54,7 @@ lazy val `mauth-signer` = (project in file("modules/mauth-signer"))
   .settings(
     basicSettings,
     publishSettings,
-    crossPaths := false,
+    nonCrossPublishSettings,
     name := "mauth-signer",
     libraryDependencies ++=
       Dependencies.test(scalaMock).map(withExclusions)
@@ -61,7 +67,7 @@ lazy val `mauth-signer-apachehttp` = (project in file("modules/mauth-signer-apac
     basicSettings,
     exampleSettings,
     publishSettings,
-    crossPaths := false,
+    nonCrossPublishSettings,
     name := "mauth-signer-apachehttp",
     libraryDependencies ++=
       Dependencies.compile(apacheHttpClient).map(withExclusions) ++
@@ -88,7 +94,7 @@ lazy val `mauth-authenticator` = (project in file("modules/mauth-authenticator")
   .settings(
     basicSettings,
     publishSettings,
-    crossPaths := false,
+    nonCrossPublishSettings,
     name := "mauth-authenticator",
     libraryDependencies ++=
       Dependencies.test(logbackClassic, scalaMock).map(withExclusions)
@@ -99,7 +105,7 @@ lazy val `mauth-authenticator-apachehttp` = (project in file("modules/mauth-auth
   .settings(
     basicSettings,
     publishSettings,
-    crossPaths := false,
+    nonCrossPublishSettings,
     name := "mauth-authenticator-apachehttp",
     libraryDependencies ++=
       Dependencies.compile(jacksonDataBind, guava, slf4jApi).map(withExclusions) ++
@@ -126,7 +132,7 @@ lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
     basicSettings,
     publishSettings,
     assemblySettings,
-    crossPaths := false,
+    nonCrossPublishSettings,
     name := "mauth-proxy",
     libraryDependencies ++=
       Dependencies.compile(jacksonDataBind, littleProxy, logbackClassic, logbackCore).map(withExclusions) ++
