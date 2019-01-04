@@ -36,14 +36,14 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
   private val authHeader: String = s"$authPrefix $appUuid:$signature"
   private val timeHeader: Long = 1509041057L
 
-  private implicit val timeout: FiniteDuration = 10 seconds
+  private implicit val timeout: FiniteDuration = 30 seconds
   private implicit val requestValidationTimeout: Duration = 10 seconds
   private val client = mock[ClientPublicKeyProvider]
   private val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
   private implicit val authenticator: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
   "authenticate" should {
-    lazy val route: Route = authenticate.apply(complete(HttpResponse()))
+    lazy val route: Route = authenticate(executor, authenticator, timeout, requestValidationTimeout).apply(complete(HttpResponse()))
     val publicKey = MAuthKeysHelper.getPublicKeyFromString(FixturesLoader.getPublicKey)
 
     "pass successfully authenticated request" in {
