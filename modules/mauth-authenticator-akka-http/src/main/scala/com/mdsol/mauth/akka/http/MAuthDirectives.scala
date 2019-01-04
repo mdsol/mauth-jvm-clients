@@ -48,7 +48,7 @@ trait MAuthDirectives extends StrictLogging {
                 case entity: HttpEntity.Strict =>
                   onComplete(authenticator.authenticate(
                     new MAuthRequest(mAuthHeader, entity.data.toArray[Byte], HttpVerbOps.httpVerb(req.method), time.toString, req.uri.path.toString)
-                  )).flatMap[Unit] {
+                  )(ec, requestValidationTimeout)).flatMap[Unit] {
                     case Success(true) => pass
                     case _ => reject(MdsolAuthFailedRejection)
                   }
