@@ -30,6 +30,8 @@ public class ProxyServer {
     void serve() {
         httpProxyServer =
                 DefaultHttpProxyServer.bootstrap()
+                        .withMaxInitialLineLength(16384)
+                        .withMaxHeaderSize(65536)
                         .withManInTheMiddle(new SelfSignedMitmManager())
                         .withPort(proxyConfig.getProxyPort())
                         .withAddress(new InetSocketAddress("0.0.0.0", proxyConfig.getProxyPort()))
