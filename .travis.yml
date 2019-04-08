@@ -18,7 +18,6 @@ before_cache:
 before_install:
 - export APP_MAUTH_PRIVATE_KEY=$(cat travis/fake_private_key_for_testing)
 - echo -e "machine github.com\n  login $GITHUB_AUTH_TOKEN" >> ~/.netrc
-- export SBT_OPTS="-Xms2048m -Xmx2048m -XX:ReservedCodeCacheSize=256m -XX:MaxMetaspaceSize=512m"
 script: sbt ++$TRAVIS_SCALA_VERSION test
 deploy:
 - provider: script
