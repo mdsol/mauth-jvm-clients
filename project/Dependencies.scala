@@ -20,7 +20,7 @@ object Dependencies extends DependencyUtils {
   val logbackCore: ModuleID = "ch.qos.logback" % "logback-core" % Version.logback
   val slf4jApi: ModuleID = "org.slf4j" % "slf4j-api" % "1.7.25"
   val typeSafeConfig: ModuleID = "com.typesafe" % "config" % "1.3.3"
-  val scalaCache: ModuleID = "com.github.cb372" %% "scalacache-guava" % "0.24.2"
+  val scalaCache: ModuleID = "com.github.cb372" %% "scalacache-guava" % "0.27.0"
   val scalaLogging: ModuleID = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
   val zipkinBrave = "io.zipkin.brave" % "brave" % "4.18.2"
 
