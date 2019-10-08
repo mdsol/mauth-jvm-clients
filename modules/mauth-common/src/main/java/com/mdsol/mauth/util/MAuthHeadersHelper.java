@@ -1,11 +1,19 @@
 package com.mdsol.mauth.util;
 
+import com.mdsol.mauth.MAuthVersion;
+
 import java.util.UUID;
 
 public class MAuthHeadersHelper {
 
+  public static final String DAFAULT_MAUTH_VERSION = MAuthVersion.MWS.getValue();
+
   public static String createAuthenticationHeaderValue(UUID appUUID, String encryptedSignature) {
-    return "MWS " + appUUID.toString() + ":" + encryptedSignature;
+    return createAuthenticationHeaderValue(appUUID, encryptedSignature, DAFAULT_MAUTH_VERSION);
+  }
+
+  public static String createAuthenticationHeaderValue(UUID appUUID, String encryptedSignature, String mauthVersion) {
+    return mauthVersion + " " + appUUID.toString() + ":" + encryptedSignature;
   }
 
   public static String createTimeHeaderValue(long epochTime) {
@@ -17,7 +25,8 @@ public class MAuthHeadersHelper {
   }
 
   public static UUID getAppUUIDFromAuthenticationHeader(String authenticationHeaderValue) {
-    String appUUIDAsString = authenticationHeaderValue.split(":")[0].substring(4);
+    String mauthVersion = getMauthVersion(authenticationHeaderValue).concat(" ");
+    String appUUIDAsString = authenticationHeaderValue.split(":")[0].substring(mauthVersion.length());
     return UUID.fromString(appUUIDAsString);
   }
 
@@ -25,4 +34,8 @@ public class MAuthHeadersHelper {
     return Long.parseLong(timeHeaderValue);
   }
 
+  public static String getMauthVersion(String authenticationHeaderValue) {
+    return authenticationHeaderValue.startsWith(MAuthVersion.MWSV2.getValue() + " ") ?
+        MAuthVersion.MWSV2.getValue() : MAuthVersion.MWS.getValue();
+  }
 }

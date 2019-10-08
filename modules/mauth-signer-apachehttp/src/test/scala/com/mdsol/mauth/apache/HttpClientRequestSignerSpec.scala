@@ -17,9 +17,12 @@ class HttpClientRequestSignerSpec extends FlatSpec with Matchers with MockFactor
 
   private val TEST_EPOCH_TIME = 1424700000L
   private val testUUID = UUID.fromString("2a6790ab-f6c6-45be-86fc-9e9be76ec12a")
+  private val AUTHENTICATION_HEADER_PATTERN_V2 = "MWSV2 $testUUID:[^;]*;"
+  private val TEST_REQUEST_BODY = "Request Body"
   private var privateKeyString = FixturesLoader.getPrivateKey
   private val mockEpochTimeProvider = mock[EpochTimeProvider]
   private val mAuthRequestSigner = new HttpClientRequestSigner(testUUID, privateKeyString, mockEpochTimeProvider)
+  private val mAuthRequestSignerV2 = new HttpClientRequestSigner(testUUID, privateKeyString, mockEpochTimeProvider,true)
 
   behavior of "#signRequest"
 
@@ -51,7 +54,6 @@ class HttpClientRequestSignerSpec extends FlatSpec with Matchers with MockFactor
     //noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val post = new HttpPost("http://mauth.imedidata.com/")
-    val TEST_REQUEST_BODY = "Request Body"
     val EXPECTED_POST_AUTHENTICATION_HEADER =
       s"""MWS $testUUID:aDItoM9IOknNhPKH9a
          |qMguASxjBErA2KzCfiZKjCQx0LyMuNZAQ/6tZWfLZ6tI+XMTV51sxc4qiSp
@@ -64,4 +66,30 @@ class HttpClientRequestSignerSpec extends FlatSpec with Matchers with MockFactor
     mAuthRequestSigner.signRequest(post)
     post.getFirstHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME).getValue shouldBe EXPECTED_POST_AUTHENTICATION_HEADER
   }
+
+  it should "adds expected time header for V2" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
+    val get = new HttpGet("http://mauth.imedidata.com/")
+    mAuthRequestSignerV2.signRequest(get)
+    get.getFirstHeader(MAuthRequest.MCC_TIME_HEADER_NAME).getValue shouldBe String.valueOf(TEST_EPOCH_TIME)
+  }
+
+  it should "sign requests with parameters adds expected authentication header for V2" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
+    val get = new HttpGet("http://mauth.imedidata.com/query?k1=v1&k2=v2")
+    mAuthRequestSignerV2.signRequest(get)
+    get.getFirstHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME).getValue matches AUTHENTICATION_HEADER_PATTERN_V2
+  }
+
+  it should "sign requests with body adds expected authentication header for V2" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
+    val post = new HttpPost("http://mauth.imedidata.com/")
+    post.setEntity(new StringEntity(TEST_REQUEST_BODY))
+    mAuthRequestSignerV2.signRequest(post)
+    post.getFirstHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME).getValue matches AUTHENTICATION_HEADER_PATTERN_V2
+  }
+
 }

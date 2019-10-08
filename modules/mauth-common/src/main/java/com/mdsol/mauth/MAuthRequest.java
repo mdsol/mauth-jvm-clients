@@ -1,6 +1,7 @@
 package com.mdsol.mauth;
 
 import com.mdsol.mauth.util.MAuthHeadersHelper;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
@@ -13,7 +14,10 @@ public class MAuthRequest {
 
   public static final String X_MWS_TIME_HEADER_NAME = "x-mws-time";
   public static final String X_MWS_AUTHENTICATION_HEADER_NAME = "x-mws-authentication";
+  public static final String MCC_TIME_HEADER_NAME = "mcc-time";
+  public static final String MCC_AUTHENTICATION_HEADER_NAME = "mcc-authentication";
 
+  public static final String VALIDATION_MISSING_MCC_AUTHENTICATION = "The service requires mAuth v2 authentication header.";
   private static final String VALIDATION_EXCEPTION_MESSAGE_TEMPLATE = "%s cannot be null or empty.";
 
   private final UUID appUUID;
@@ -22,15 +26,27 @@ public class MAuthRequest {
   private final String httpMethod;
   private final long requestTime;
   private final String resourcePath;
+  private final String queryParameters;
+  private final boolean diableV1;
+  private final String mauthVersion;
 
   public MAuthRequest(String authenticationHeaderValue, byte[] messagePayload, String httpMethod,
-      String timeHeaderValue, String resourcePath) {
+       String timeHeaderValue, String resourcePath) {
+    this(authenticationHeaderValue, messagePayload, httpMethod, timeHeaderValue, resourcePath, "",false);
+  }
+
+  public MAuthRequest(String authenticationHeaderValue, byte[] messagePayload, String httpMethod,
+      String timeHeaderValue, String resourcePath, String queryParameters, boolean diableV1) {
     validateNotBlank(authenticationHeaderValue, "Authentication header value");
+    validateNotBlank(timeHeaderValue, "Time header value");
+
+    String mauthVersion = MAuthHeadersHelper.getMauthVersion(authenticationHeaderValue);
+    validateMauthVersion(diableV1, mauthVersion);
+
     UUID appUUID = MAuthHeadersHelper.getAppUUIDFromAuthenticationHeader(authenticationHeaderValue);
     String requestSignature =
         MAuthHeadersHelper.getSignatureFromAuthenticationHeader(authenticationHeaderValue);
 
-    validateNotBlank(timeHeaderValue, "Time header value");
     long requestTime = MAuthHeadersHelper.getRequestTimeFromTimeHeader(timeHeaderValue);
 
     validateNotBlank(httpMethod, "Http method");
@@ -46,6 +62,9 @@ public class MAuthRequest {
     this.httpMethod = httpMethod;
     this.requestTime = requestTime;
     this.resourcePath = resourcePath;
+    this.queryParameters = queryParameters;
+    this.mauthVersion = mauthVersion;
+    this.diableV1 = diableV1;
   }
 
   public UUID getAppUUID() {
@@ -72,6 +91,14 @@ public class MAuthRequest {
     return resourcePath;
   }
 
+  public String getQueryParameters() {
+    return queryParameters;
+  }
+
+  public String getMauthVersion() {
+    return mauthVersion;
+  }
+
   private void validateNotBlank(String field, String fieldNameInExceptionMessage) {
     if (StringUtils.isBlank(field)) {
       throw new IllegalArgumentException(
@@ -85,6 +112,12 @@ public class MAuthRequest {
     }
   }
 
+  private void validateMauthVersion(boolean diableV1, String mauthVersion) {
+    if (diableV1 && mauthVersion.equalsIgnoreCase(MAuthVersion.MWS.getValue())) {
+      throw new IllegalArgumentException(VALIDATION_MISSING_MCC_AUTHENTICATION);
+    }
+  }
+
   public static final class Builder {
 
     private String authenticationHeaderValue;
@@ -92,6 +125,8 @@ public class MAuthRequest {
     private String httpMethod;
     private String timeHeaderValue;
     private String resourcePath;
+    private String queryParameters;
+    private boolean disableV1;
 
     public static Builder get() {
       return new Builder();
@@ -122,9 +157,19 @@ public class MAuthRequest {
       return this;
     }
 
+    public Builder withQueryParameters(String queryParameters) {
+      this.queryParameters = queryParameters;
+      return this;
+    }
+
+    public Builder withDisableV1(boolean disableV1) {
+      this.disableV1 = disableV1;
+      return this;
+    }
+
     public MAuthRequest build() {
       return new MAuthRequest(authenticationHeaderValue, messagePayload, httpMethod,
-          timeHeaderValue, resourcePath);
+          timeHeaderValue, resourcePath, queryParameters, disableV1);
     }
   }
 }

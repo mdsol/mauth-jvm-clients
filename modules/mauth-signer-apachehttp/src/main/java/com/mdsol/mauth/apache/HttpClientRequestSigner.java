@@ -1,20 +1,25 @@
 package com.mdsol.mauth.apache;
 
+import static com.mdsol.mauth.util.MAuthKeysHelper.getPrivateKeyFromString;
+
 import com.mdsol.mauth.DefaultSigner;
 import com.mdsol.mauth.SignerConfiguration;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import com.mdsol.mauth.util.CurrentEpochTimeProvider;
 import com.mdsol.mauth.util.EpochTimeProvider;
 import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.security.PrivateKey;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -40,6 +45,14 @@ public class HttpClientRequestSigner extends DefaultSigner {
     super(appUUID, privateKey, epochTimeProvider);
   }
 
+  public HttpClientRequestSigner(UUID appUUID, String privateKey, EpochTimeProvider epochTimeProvider, boolean disableV1) {
+    super(appUUID, privateKey, epochTimeProvider, disableV1);
+  }
+
+  public HttpClientRequestSigner(UUID appUUID, String privateKey, EpochTimeProvider epochTimeProvider, boolean disableV1, String mauthVersion) {
+    super(appUUID, privateKey, epochTimeProvider, disableV1, mauthVersion);
+  }
+
   /**
    * Convenience method for clients using Apache {@link HttpClient}. Generates mAuth headers and
    * includes them into the provided {@link HttpUriRequest}.
@@ -62,7 +75,19 @@ public class HttpClientRequestSigner extends DefaultSigner {
       }
     }
 
-    Map<String, String> mauthHeaders = generateRequestHeaders(httpVerb, request.getURI().getPath(), body);
+    URIBuilder newBuilder = new URIBuilder(request.getURI());
+    List<NameValuePair> params = newBuilder.getQueryParams();
+
+    StringBuilder queryParams = new StringBuilder();
+    for (NameValuePair param : params)
+    {
+      if(queryParams.length() > 0){
+        queryParams.append('&');
+      }
+      queryParams.append(param.getName()).append('=').append(param.getValue());
+    }
+
+    Map<String, String> mauthHeaders = generateRequestHeadersV2(httpVerb, request.getURI().getPath(), body, queryParams.toString());
     for (String key : mauthHeaders.keySet()) {
       request.addHeader(key, mauthHeaders.get(key));
     }

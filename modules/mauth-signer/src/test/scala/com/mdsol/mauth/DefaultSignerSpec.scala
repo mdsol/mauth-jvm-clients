@@ -15,8 +15,13 @@ import scala.collection.JavaConverters._
 class DefaultSignerSpec extends FlatSpec with Matchers with MockFactory {
   private val TEST_EPOCH_TIME = 1424700000L
   private val testUUID = UUID.fromString("2a6790ab-f6c6-45be-86fc-9e9be76ec12a")
+  private val TEST_REQUEST_BODY: String = "Request Body"
+  private val TEST_REQUEST_PARAMS: String = "key2=data2&key1=data1"
+  private val AUTHENTICATION_HEADER_PATTERN_V2 = "MWSV2 $testUUID:[^;]*;"
+
   private val mockEpochTimeProvider = mock[EpochTimeProvider]
   private val mAuthRequestSigner = new DefaultSigner(testUUID, FixturesLoader.getPrivateKey, mockEpochTimeProvider)
+  private val mAuthRequestSignerV2 = new DefaultSigner(testUUID, FixturesLoader.getPrivateKey, mockEpochTimeProvider, false, MAuthVersion.MWSV2.getValue)
 
   Security.addProvider(new BouncyCastleProvider)
 
@@ -55,7 +60,6 @@ class DefaultSignerSpec extends FlatSpec with Matchers with MockFactory {
     //noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
 
-    val TEST_REQUEST_BODY: String = "Request Body"
     val headers: Map[String, String] = mAuthRequestSigner.generateRequestHeaders("POST", "/", TEST_REQUEST_BODY).asScala.toMap
     val EXPECTED_POST_AUTHENTICATION_HEADER: String =
       s"""MWS $testUUID:aDItoM9IOknNhPKH9a
@@ -67,4 +71,28 @@ class DefaultSignerSpec extends FlatSpec with Matchers with MockFactory {
         |4W0Oc1sXH67xKrKidr3JxuBXjv5gg==""".stripMargin.replaceAll("\n", "")
     headers(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_POST_AUTHENTICATION_HEADER
   }
+
+  it should "generated headers includes time header with correct time for V2" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
+    val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeadersV2("GET", "/", "", "").asScala.toMap
+    headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe String.valueOf(TEST_EPOCH_TIME)
+  }
+
+  it should "generated headers with body includes expected authentication header for V2" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
+    val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeadersV2("POST", "/", TEST_REQUEST_BODY, "").asScala.toMap
+    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) should not be empty
+    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches(AUTHENTICATION_HEADER_PATTERN_V2)
+  }
+
+  it should "generated headers with parameters includes expected authentication header for V2" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
+    val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeadersV2("GET", "/", "", TEST_REQUEST_PARAMS).asScala.toMap
+    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) should not be empty
+    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches(AUTHENTICATION_HEADER_PATTERN_V2)
+  }
+
 }
