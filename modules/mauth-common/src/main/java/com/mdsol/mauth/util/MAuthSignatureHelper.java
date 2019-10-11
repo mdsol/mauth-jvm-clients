@@ -24,6 +24,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
 public class MAuthSignatureHelper {
 
   private static final Logger logger = LoggerFactory.getLogger(MAuthSignatureHelper.class);
@@ -46,7 +51,7 @@ public class MAuthSignatureHelper {
 
   /**
    * Generate string_to_sign for Mauth V2
-   * @param appUUID: app uuid
+   * @param appUUID: application uuid
    * @param httpMethod: Http_Verb
    * @param resourceUrl: resource_url_path (no host, port or query string; first "/" is included)
    * @param queryParameters: request parameters string
@@ -70,7 +75,8 @@ public class MAuthSignatureHelper {
       logger.error("Error generating Unencrypted Signature", e);
       throw new MAuthSigningException(e);
     }
-    return httpMethod + "\n" + resourceUrl + "\n" + bodyDigest + "\n" + appUUID.toString() + "\n" + epochTime + "\n" + encryptedQueryParams;
+    return httpMethod.toUpperCase() + "\n" + resourceUrl + "\n" + bodyDigest + "\n"
+        + appUUID.toString() + "\n" + epochTime + "\n" + encryptedQueryParams;
   }
 
   /**
@@ -103,7 +109,7 @@ public class MAuthSignatureHelper {
 
     PKCS1Encoding encryptEngine = new PKCS1Encoding(new RSAEngine());
     encryptEngine.init(true, PrivateKeyFactory.createKey(privateKey.getEncoded()));
-    byte[] encryptedStringBytes = encryptEngine.processBlock(hexEncodedString.getBytes(), 0,hexEncodedString.getBytes().length);
+    byte[] encryptedStringBytes = encryptEngine.processBlock(hexEncodedString.getBytes(), 0, hexEncodedString.getBytes().length);
 
     return new String(Base64.encodeBase64(encryptedStringBytes), "UTF-8");
   }
@@ -153,12 +159,15 @@ public class MAuthSignatureHelper {
     Map<String, String> map = new HashMap<String, String>();
     for (String param : params)
     {
-      String name = param.split("=")[0];
-      String value = param.split("=")[1];
-      if(encryptedQueryParams.length() > 0){
-        encryptedQueryParams.append('&');
+      String [] keyPair = param.split("=");
+      if (keyPair.length > 0) {
+        String name = param.split("=")[0];
+        String value = keyPair.length > 1 ? param.split("=")[1] : "";
+        if (encryptedQueryParams.length() > 0) {
+          encryptedQueryParams.append('&');
+        }
+        encryptedQueryParams.append(urlEncodeValue(name)).append('=').append(urlEncodeValue(value));
       }
-      encryptedQueryParams.append(urlEncodeValue(name)).append('=').append(urlEncodeValue(value));
     }
 
     return encryptedQueryParams.toString();
@@ -172,11 +181,51 @@ public class MAuthSignatureHelper {
    * See https://stackoverflow.com/questions/10786042/java-url-encoding-of-query-string-parameters
    */
   private static String urlEncodeValue(String value) {
+    if (value == null ||  value.isEmpty())
+      return value;
+
     try {
-      return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+      String encodedValue = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+      encodedValue = encodedValue.replace("+", "%20");
+      encodedValue = encodedValue.replace("%7E", "~");
+      encodedValue = encodedValue.replace("*", "%2A");
+      return encodedValue;
     } catch (UnsupportedEncodingException ex) {
       throw new RuntimeException(ex.getCause());
     }
+  }
+
+  /**
+   * Generate base64 encoded signature using SHA516 with RSA
+   * @param privateKey the private key of the identity whose signature is going to be generated.
+   * @param unencryptedString the string be signed
+   * @return String of Base64 decode the digital signature
+   * @throws InvalidKeyException
+   * @throws NoSuchAlgorithmException
+   * @throws SignatureException
+   */
+  public static String encryptSignatureRSA(PrivateKey privateKey, String unencryptedString)
+      throws InvalidKeyException, NoSuchAlgorithmException, SignatureException {
+    Signature signature = Signature.getInstance("SHA512WithRSA");
+    signature.initSign(privateKey);
+    signature.update(unencryptedString.getBytes(StandardCharsets.UTF_8));
+    return new String(Base64.encodeBase64(signature.sign()), StandardCharsets.UTF_8);
+  }
+
+  /**
+   * Verify SHA512-RSA signature
+   * @param plainText the string be verified
+   * @param signature the signature to be verified.
+   * @param publicKey he public key of the identity whose signature is going to be verified.
+   * @return boolean
+   * @throws Exception
+   */
+  public static boolean verifyRSA(String plainText, String signature, PublicKey publicKey) throws Exception {
+    Signature publicSignature = Signature.getInstance("SHA512withRSA");
+    publicSignature.initVerify(publicKey);
+    publicSignature.update(plainText.getBytes(StandardCharsets.UTF_8));
+    byte[] signatureBytes = Base64.decodeBase64(signature.getBytes());
+    return publicSignature.verify(signatureBytes);
   }
 
 }

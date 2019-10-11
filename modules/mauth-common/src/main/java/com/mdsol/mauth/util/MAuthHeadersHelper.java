@@ -6,14 +6,17 @@ import java.util.UUID;
 
 public class MAuthHeadersHelper {
 
-  public static final String DAFAULT_MAUTH_VERSION = MAuthVersion.MWS.getValue();
+  public static final String AUTH_HEADER_DELIMITER = ";";
 
   public static String createAuthenticationHeaderValue(UUID appUUID, String encryptedSignature) {
-    return createAuthenticationHeaderValue(appUUID, encryptedSignature, DAFAULT_MAUTH_VERSION);
+    return createAuthenticationHeaderValue(appUUID, encryptedSignature, MAuthVersion.MWS.getValue());
   }
 
   public static String createAuthenticationHeaderValue(UUID appUUID, String encryptedSignature, String mauthVersion) {
-    return mauthVersion + " " + appUUID.toString() + ":" + encryptedSignature;
+    String authValue = mauthVersion + " " + appUUID.toString() + ":" + encryptedSignature;
+    if (mauthVersion.equalsIgnoreCase(MAuthVersion.MWSV2.toString()))
+      authValue += AUTH_HEADER_DELIMITER;
+    return authValue;
   }
 
   public static String createTimeHeaderValue(long epochTime) {
@@ -21,7 +24,11 @@ public class MAuthHeadersHelper {
   }
 
   public static String getSignatureFromAuthenticationHeader(String authenticationHeaderValue) {
-    return authenticationHeaderValue.split(":")[1];
+    String signature = authenticationHeaderValue.split(":")[1];
+    if (getMauthVersion(authenticationHeaderValue).equals(MAuthVersion.MWSV2.getValue())) {
+      signature = signature.substring(0, signature.lastIndexOf(AUTH_HEADER_DELIMITER));
+    }
+    return signature;
   }
 
   public static UUID getAppUUIDFromAuthenticationHeader(String authenticationHeaderValue) {

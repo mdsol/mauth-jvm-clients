@@ -1,7 +1,5 @@
 package com.mdsol.mauth.apache;
 
-import static com.mdsol.mauth.util.MAuthKeysHelper.getPrivateKeyFromString;
-
 import com.mdsol.mauth.DefaultSigner;
 import com.mdsol.mauth.SignerConfiguration;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
@@ -47,10 +45,6 @@ public class HttpClientRequestSigner extends DefaultSigner {
 
   public HttpClientRequestSigner(UUID appUUID, String privateKey, EpochTimeProvider epochTimeProvider, boolean disableV1) {
     super(appUUID, privateKey, epochTimeProvider, disableV1);
-  }
-
-  public HttpClientRequestSigner(UUID appUUID, String privateKey, EpochTimeProvider epochTimeProvider, boolean disableV1, String mauthVersion) {
-    super(appUUID, privateKey, epochTimeProvider, disableV1, mauthVersion);
   }
 
   /**
