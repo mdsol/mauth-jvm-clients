@@ -33,7 +33,8 @@ trait RequestSigner {
 }
 
 class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider)
-  extends DefaultSigner(appUUID, privateKey, epochTimeProvider) with RequestSigner {
+    extends DefaultSigner(appUUID, privateKey, epochTimeProvider)
+    with RequestSigner {
 
   def this(appUUID: UUID, privateKey: PrivateKey) = this(appUUID, privateKey, new CurrentEpochTimeProvider)
 
@@ -57,8 +58,8 @@ class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvide
     }
 
     Try(generateRequestHeaders(request.httpMethod, request.uri.getPath, body)) match {
-      case Success(mauthHeaders) => Right(
-        SignedRequest(request, mauthHeaders.get(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME), mauthHeaders.get(MAuthRequest.X_MWS_TIME_HEADER_NAME)))
+      case Success(mauthHeaders) =>
+        Right(SignedRequest(request, mauthHeaders.get(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME), mauthHeaders.get(MAuthRequest.X_MWS_TIME_HEADER_NAME)))
       case Failure(e) => Left(e)
     }
   }

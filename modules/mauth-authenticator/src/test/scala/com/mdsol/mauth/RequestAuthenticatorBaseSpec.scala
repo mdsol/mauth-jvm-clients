@@ -72,8 +72,10 @@ trait RequestAuthenticatorBaseSpec extends FlatSpec with BeforeAndAfterAll with 
       .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
       .withTimeHeaderValue(CLIENT_X_MWS_TIME_HEADER_VALUE)
       .withHttpMethod(CLIENT_REQUEST_METHOD)
-      .withMessagePayload((CLIENT_REQUEST_BODY + " this makes this request invalid.")
-        .getBytes(StandardCharsets.UTF_8))
+      .withMessagePayload(
+        (CLIENT_REQUEST_BODY + " this makes this request invalid.")
+          .getBytes(StandardCharsets.UTF_8)
+      )
       .withResourcePath(CLIENT_REQUEST_PATH)
       .build
   }

@@ -30,8 +30,11 @@ trait TraceHttpClient extends HttpClient {
     * @tparam T The type of the returned Future, based on the Stream Flow impl
     * @return The desired object
     */
-  def traceCall[T](request: HttpRequest, flow: Flow[ByteString, T, NotUsed], traceName: String, parentSpan: Span)
-                      (implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer): Future[T] = {
+  def traceCall[T](request: HttpRequest, flow: Flow[ByteString, T, NotUsed], traceName: String, parentSpan: Span)(
+    implicit ec: ExecutionContext,
+    system: ActorSystem,
+    materializer: ActorMaterializer
+  ): Future[T] = {
     val childSpan = tracer.newChild(parentSpan.context()).name(traceName).kind(Span.Kind.CLIENT)
     childSpan.start()
 
@@ -59,8 +62,11 @@ trait TraceHttpClient extends HttpClient {
     * @tparam T The type of the returned Future, based on the Stream Flow impl
     * @return The desired object
     */
-  def traceCall[T](request: SignedRequest, flow: Flow[ByteString, T, NotUsed], traceName: String, parentSpan: Span)
-                      (implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer): Future[T] =
+  def traceCall[T](request: SignedRequest, flow: Flow[ByteString, T, NotUsed], traceName: String, parentSpan: Span)(
+    implicit ec: ExecutionContext,
+    system: ActorSystem,
+    materializer: ActorMaterializer
+  ): Future[T] =
     traceCall[T](fromSignedRequestToHttpRequest(request), flow, traceName, parentSpan)
 
   /**
@@ -72,8 +78,11 @@ trait TraceHttpClient extends HttpClient {
     * @param materializer The ActorMaterialise used for this call
     * @return The Response
     */
-  def traceCall(request: HttpRequest, traceName: String, parentSpan: Span)
-                   (implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer): Future[HttpResponse] = {
+  def traceCall(
+    request: HttpRequest,
+    traceName: String,
+    parentSpan: Span
+  )(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer): Future[HttpResponse] = {
     val childSpan = tracer.newChild(parentSpan.context()).name(traceName).kind(Span.Kind.CLIENT)
     childSpan.start()
 
@@ -99,10 +108,12 @@ trait TraceHttpClient extends HttpClient {
     * @param materializer The ActorMaterialise used for this call
     * @return The Response
     */
-  def traceCall(request: SignedRequest, traceName: String, parentSpan: Span)
-                   (implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer): Future[HttpResponse] =
+  def traceCall(
+    request: SignedRequest,
+    traceName: String,
+    parentSpan: Span
+  )(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer): Future[HttpResponse] =
     traceCall(fromSignedRequestToHttpRequest(request), traceName, parentSpan)
-
 
   private def withTraceHeaders(request: HttpRequest, childSpan: Span): HttpRequest = {
     val traceHeaders: Seq[HttpHeader] = Map(

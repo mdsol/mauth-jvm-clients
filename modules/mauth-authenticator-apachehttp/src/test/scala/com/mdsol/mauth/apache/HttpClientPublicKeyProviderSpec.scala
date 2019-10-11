@@ -36,7 +36,6 @@ class HttpClientPublicKeyProviderSpec extends FlatSpec with Matchers with MockFa
     FakeMAuthServer.stop()
   }
 
-
   private def getClientWithMockedSigner: HttpClientPublicKeyProvider = {
     val configuration: AuthenticatorConfiguration = getMAuthConfiguration
     val mockedSigner: Signer = mock[Signer]

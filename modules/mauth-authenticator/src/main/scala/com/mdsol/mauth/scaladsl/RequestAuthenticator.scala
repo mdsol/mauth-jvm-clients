@@ -62,7 +62,6 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
   }
 
   // Check epoch time is not older than specified interval.
-  protected def validateTime(requestTime: Long)(requestValidationTimeout: Duration): Boolean = {
+  protected def validateTime(requestTime: Long)(requestValidationTimeout: Duration): Boolean =
     (epochTimeProvider.inSeconds - requestTime) < requestValidationTimeout.toSeconds
-  }
 }

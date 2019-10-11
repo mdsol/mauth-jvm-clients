@@ -19,13 +19,10 @@ object Implicits {
     val contentType: Option[String] = extractContentTypeFromHeaders(sr.req.headers)
     val headersWithoutContentType: Map[String, String] = removeContentTypeFromHeaders(sr.req.headers)
 
-    HttpRequest(
-      method = sr.req.httpMethod,
-      uri = Uri(sr.req.uri.toString),
-      entity = getHttpEntity(contentType, entityBody))
-      .withHeaders(mapToHeaderSequence(headersWithoutContentType) ++: scala.collection.immutable.Seq(
-        `X-MWS-Authentication`(sr.authHeader),
-        `X-MWS-Time`(sr.timeHeader)))
+    HttpRequest(method = sr.req.httpMethod, uri = Uri(sr.req.uri.toString), entity = getHttpEntity(contentType, entityBody))
+      .withHeaders(
+        mapToHeaderSequence(headersWithoutContentType) ++: scala.collection.immutable.Seq(`X-MWS-Authentication`(sr.authHeader), `X-MWS-Time`(sr.timeHeader))
+      )
   }
 
   implicit def fromMaybeSignedRequestToMaybeHttpRequest(maybeSignedRequest: Option[SignedRequest]): Option[HttpRequest] =
@@ -34,23 +31,23 @@ object Implicits {
   private def mapToHeaderSequence(headers: Map[String, String]): Seq[HttpHeader] =
     headers.map { case (k, v) => RawHeader(k, v) }.toSeq
 
-  private def extractContentTypeFromHeaders(requestHeaders: Map[String, String]): Option[String] = {
+  private def extractContentTypeFromHeaders(requestHeaders: Map[String, String]): Option[String] =
     requestHeaders.get(headers.`Content-Type`.name)
-  }
 
-  private def removeContentTypeFromHeaders(requestHeaders: Map[String, String]): Map[String, String] = {
+  private def removeContentTypeFromHeaders(requestHeaders: Map[String, String]): Map[String, String] =
     requestHeaders.filterKeys(_ != headers.`Content-Type`.name)
-  }
 
   private def getHttpEntity(contentTypeOptional: Option[String], entityBody: String) = {
     contentTypeOptional match {
-      case Some(contentType) => ContentType.parse(contentType) match {
-        case Right(parsedContentType) => parsedContentType match {
-          case nonBinary: ContentType.NonBinary => HttpEntity(nonBinary, entityBody)
-          case binary => HttpEntity(binary, entityBody.getBytes)
+      case Some(contentType) =>
+        ContentType.parse(contentType) match {
+          case Right(parsedContentType) =>
+            parsedContentType match {
+              case nonBinary: ContentType.NonBinary => HttpEntity(nonBinary, entityBody)
+              case binary => HttpEntity(binary, entityBody.getBytes)
+            }
+          case _ => HttpEntity(DEFAULT_CONTENT_TYPE, entityBody)
         }
-        case _ => HttpEntity(DEFAULT_CONTENT_TYPE, entityBody)
-      }
       case None => HttpEntity(DEFAULT_CONTENT_TYPE, entityBody)
     }
   }

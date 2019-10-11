@@ -10,7 +10,7 @@ import akka.http.scaladsl.server.directives.BasicDirectives._
 import akka.http.scaladsl.server.directives.FutureDirectives.onComplete
 import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import com.mdsol.mauth.MAuthRequest
-import com.mdsol.mauth.http.{HttpVerbOps, `X-MWS-Authentication`, `X-MWS-Time`}
+import com.mdsol.mauth.http.{`X-MWS-Authentication`, `X-MWS-Time`, HttpVerbOps}
 import com.mdsol.mauth.scaladsl.Authenticator
 import com.typesafe.scalalogging.StrictLogging
 
@@ -22,9 +22,7 @@ import scala.util.{Success, Try}
 
 case class AuthHeaderDetail(appId: UUID, hash: String)
 
-case object MdsolAuthFailedRejection
-    extends AuthorizationFailedRejection
-    with Rejection
+case object MdsolAuthFailedRejection extends AuthorizationFailedRejection with Rejection
 
 trait MAuthDirectives extends StrictLogging {
 
@@ -46,9 +44,11 @@ trait MAuthDirectives extends StrictLogging {
             extractRequest.flatMap { req =>
               val isAuthed: Directive[Unit] = req.entity match {
                 case entity: HttpEntity.Strict =>
-                  onComplete(authenticator.authenticate(
-                    new MAuthRequest(mAuthHeader, entity.data.toArray[Byte], HttpVerbOps.httpVerb(req.method), time.toString, req.uri.path.toString)
-                  )(ec, requestValidationTimeout)).flatMap[Unit] {
+                  onComplete(
+                    authenticator.authenticate(
+                      new MAuthRequest(mAuthHeader, entity.data.toArray[Byte], HttpVerbOps.httpVerb(req.method), time.toString, req.uri.path.toString)
+                    )(ec, requestValidationTimeout)
+                  ).flatMap[Unit] {
                     case Success(true) => pass
                     case _ => reject(MdsolAuthFailedRejection)
                   }

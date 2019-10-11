@@ -43,7 +43,7 @@ class HttpClientRequestSignerSpec extends FlatSpec with Matchers with MockFactor
          |Fl9GtBq4xe9xQPPF/U0cOFm4R/0OMQCYamf4/mc2PZ6t8ZOCd2gGvR70l1n
          |9PoTTSZaULcul/oR7HFK25FPjsIQ9FkYVjJ+iwKPhrIgcZwUznNL71d+V8b
          |Q2Jr3RK+1c115rlHEy9SgLh1nW8SHP+uzZMApWEFASaLyTePbuvVUDtJbzi
-         |WYjVvr4m20PM2aLhMmVYcKU5T288w==""".stripMargin.replaceAll("\n","")
+         |WYjVvr4m20PM2aLhMmVYcKU5T288w==""".stripMargin.replaceAll("\n", "")
     get.getFirstHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME).getValue shouldBe EXPECTED_GET_AUTHENTICATION_HEADER
   }
 
@@ -59,7 +59,7 @@ class HttpClientRequestSignerSpec extends FlatSpec with Matchers with MockFactor
          |3I7VHwXCdV5ptY3WEL9u1iF3whLqUKGyYxf7WFgJmBbX/V7VIRGOW8BJjfW
          |J9pDVypVBN/VOYWLlKv9o3TTZuuEBtutuBSd6cU4oTMDnQmGkWs9fDAfdkF
          |2l/ZdmD7LFryk9vuyPJ5ur82ksJIZO61fzsEh0Klg/Qcr1E9M0dj0DtxBzw
-         |4W0Oc1sXH67xKrKidr3JxuBXjv5gg==""".stripMargin.replaceAll("\n","")
+         |4W0Oc1sXH67xKrKidr3JxuBXjv5gg==""".stripMargin.replaceAll("\n", "")
     post.setEntity(new StringEntity(TEST_REQUEST_BODY))
     mAuthRequestSigner.signRequest(post)
     post.getFirstHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME).getValue shouldBe EXPECTED_POST_AUTHENTICATION_HEADER

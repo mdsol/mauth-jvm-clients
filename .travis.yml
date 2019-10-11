@@ -18,7 +18,7 @@ before_cache:
 before_install:
 - export APP_MAUTH_PRIVATE_KEY=$(cat travis/fake_private_key_for_testing)
 - echo -e "machine github.com\n  login $GITHUB_AUTH_TOKEN" >> ~/.netrc
-script: sbt ++$TRAVIS_SCALA_VERSION test
+script: sbt ++$TRAVIS_SCALA_VERSION scalafmtSbtCheck scalafmtCheckAll test
 deploy:
 - provider: script
   script: travis/deploy.sh
