@@ -74,8 +74,7 @@ class RequestAuthenticatorSpec extends FlatSpec with RequestAuthenticatorBaseSpe
 
   private def clientContext(test: (ClientPublicKeyProvider) => Any): Unit = {
     val client: ClientPublicKeyProvider = mock[ClientPublicKeyProvider]
-    (client.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(
-      Future(Some(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))))
+    (client.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(Future(Some(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))))
     test(client)
   }
 }

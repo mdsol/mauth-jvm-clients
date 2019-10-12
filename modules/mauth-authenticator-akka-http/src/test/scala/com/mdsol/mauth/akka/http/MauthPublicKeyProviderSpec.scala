@@ -15,8 +15,14 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Right
 
-class MauthPublicKeyProviderSpec extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach with ScalaFutures
-  with IntegrationPatience with Matchers with MockFactory {
+class MauthPublicKeyProviderSpec
+    extends FlatSpec
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach
+    with ScalaFutures
+    with IntegrationPatience
+    with Matchers
+    with MockFactory {
 
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: ActorMaterializer = ActorMaterializer()

@@ -30,9 +30,11 @@ class TraceHttpClientSpec extends FlatSpec with TraceHttpClient with BeforeAndAf
   private implicit val materializer: ActorMaterializer = ActorMaterializer()
   private implicit val dispatcher: ExecutionContext = actorSystem.dispatcher
 
-  override implicit val tracer: Tracer = Tracing.newBuilder()
+  override implicit val tracer: Tracer = Tracing
+    .newBuilder()
     .endpoint(Endpoint.newBuilder().serviceName("my-service").build())
-    .build().tracer()
+    .build()
+    .tracer()
 
   override def beforeAll() {
     wiremock.start()

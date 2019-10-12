@@ -22,11 +22,11 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
   private val CLIENT_REQUEST_PATH = "/resource/path"
   private val CLIENT_REQUEST_PAYLOAD = "message here".getBytes(StandardCharsets.UTF_8)
 
-
   behavior of "MAuthRequest"
 
   it should "correctly create MAuthRequest" in {
-    val request = MAuthRequest.Builder.get()
+    val request = MAuthRequest.Builder
+      .get()
       .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
       .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER)
       .withHttpMethod(CLIENT_REQUEST_METHOD)
@@ -42,7 +42,8 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
   }
 
   it should "correctly create MAuthRequest without message payload" in {
-    val request = MAuthRequest.Builder.get()
+    val request = MAuthRequest.Builder
+      .get()
       .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
       .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER)
       .withHttpMethod(CLIENT_REQUEST_METHOD)
@@ -58,7 +59,8 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
 
   it should "not allow to create request without request authentication header" in {
     val expectedException = intercept[IllegalArgumentException] {
-      MAuthRequest.Builder.get()
+      MAuthRequest.Builder
+        .get()
         .withHttpMethod(CLIENT_REQUEST_METHOD)
         .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
         .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER)
@@ -70,7 +72,8 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
 
   it should "not allow to create request without http method" in {
     val expectedException = intercept[IllegalArgumentException] {
-      MAuthRequest.Builder.get()
+      MAuthRequest.Builder
+        .get()
         .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
         .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER)
         .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
@@ -82,7 +85,8 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
 
   it should "not allow to create request without request time header" in {
     val expectedException = intercept[IllegalArgumentException] {
-      MAuthRequest.Builder.get()
+      MAuthRequest.Builder
+        .get()
         .withHttpMethod(CLIENT_REQUEST_METHOD)
         .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
         .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
@@ -94,7 +98,8 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
 
   it should "not allow to create request with negative request time header" in {
     val expectedException = intercept[IllegalArgumentException] {
-      MAuthRequest.Builder.get()
+      MAuthRequest.Builder
+        .get()
         .withHttpMethod(CLIENT_REQUEST_METHOD)
         .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
         .withTimeHeaderValue("-1")
@@ -107,7 +112,8 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
 
   it should "not allow to create request without request path" in {
     val expectedException = intercept[IllegalArgumentException] {
-      MAuthRequest.Builder.get()
+      MAuthRequest.Builder
+        .get()
         .withHttpMethod(CLIENT_REQUEST_METHOD)
         .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
         .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER)

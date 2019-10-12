@@ -21,8 +21,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest with MAuthDirectives with Directives
-  with Inside with MockFactory {
+class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest with MAuthDirectives with Directives with Inside with MockFactory {
 
   Security.addProvider(new BouncyCastleProvider)
 
@@ -51,8 +50,10 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
       //noinspection ConvertibleToMethodValue
       (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
-      Get("/").withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
-        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
+      ) ~> route ~> check {
         status shouldEqual StatusCodes.OK
       }
     }
@@ -62,8 +63,10 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
       //noinspection ConvertibleToMethodValue
       (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
-      Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, (timeHeader - requestValidationTimeout.toSeconds - 10).toString),
-        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
+      Get().withHeaders(
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, (timeHeader - requestValidationTimeout.toSeconds - 10).toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
+      ) ~> route ~> check {
         inside(rejection) { case MdsolAuthFailedRejection ⇒ }
       }
     }
@@ -73,8 +76,10 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
       //noinspection ConvertibleToMethodValue
       (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
-      Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
-        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
+      Get().withHeaders(
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
+      ) ~> route ~> check {
         inside(rejection) { case MdsolAuthFailedRejection ⇒ }
       }
     }

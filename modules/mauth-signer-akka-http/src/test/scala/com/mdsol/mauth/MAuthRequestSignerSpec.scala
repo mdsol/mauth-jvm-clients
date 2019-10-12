@@ -14,10 +14,13 @@ class MAuthRequestSignerSpec extends FlatSpec with Matchers {
 
   Security.addProvider(new BouncyCastleProvider)
 
-  val signer = MAuthRequestSigner(UUID.fromString("2a6790ab-f6c6-45be-86fc-9e9be76ec12a"), FixturesLoader.getPrivateKey,
+  val signer = MAuthRequestSigner(
+    UUID.fromString("2a6790ab-f6c6-45be-86fc-9e9be76ec12a"),
+    FixturesLoader.getPrivateKey,
     new EpochTimeProvider() {
-    override def inSeconds(): Long = TIME_CONSTANT
-  })
+      override def inSeconds(): Long = TIME_CONSTANT
+    }
+  )
 
   "MAuthRequestSigner" should "add time header to a request" in {
     signer.signRequest(UnsignedRequest(uri = new URI("/"))).right.get.timeHeader shouldBe "1509041057"

@@ -24,9 +24,12 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
-class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner)
-                            (implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer)
-  extends ClientPublicKeyProvider with StrictLogging {
+class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner)(
+  implicit ec: ExecutionContext,
+  system: ActorSystem,
+  materializer: ActorMaterializer
+) extends ClientPublicKeyProvider
+    with StrictLogging {
 
   implicit val guavaCache: GuavaCache[Option[PublicKey]] = GuavaCache[Option[PublicKey]]
   protected val mapper = new ObjectMapper
@@ -48,28 +51,34 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
 
   protected def retrievePublicKey()(mauthPublicKeyFetcher: => Future[HttpResponse]): Future[Option[PublicKey]] = {
     val promise = Promise[Option[PublicKey]]()
-    mauthPublicKeyFetcher.flatMap { response =>
-      Unmarshal(response.entity).to[String].map { body =>
-        if (response.status == StatusCodes.OK) {
-          Try(MAuthKeysHelper.getPublicKeyFromString(mapper.readTree(body).findValue("public_key_str").asText)) match {
-            case Success(publicKey) => promise.success(Some(publicKey))
-            case Failure(error) =>
-              logger.error("Converting string to Public Key failed", error)
+    mauthPublicKeyFetcher
+      .flatMap { response =>
+        Unmarshal(response.entity)
+          .to[String]
+          .map { body =>
+            if (response.status == StatusCodes.OK) {
+              Try(MAuthKeysHelper.getPublicKeyFromString(mapper.readTree(body).findValue("public_key_str").asText)) match {
+                case Success(publicKey) => promise.success(Some(publicKey))
+                case Failure(error) =>
+                  logger.error("Converting string to Public Key failed", error)
+                  promise.success(None)
+              }
+            } else {
+              logger.error(s"Unexpected response returned by server -- status: ${response.status} response: $body")
+              promise.success(None)
+            }
+          }
+          .recover {
+            case error =>
+              logger.error("Request to get MAuth public key couldn't be signed", error)
               promise.success(None)
           }
-        } else {
-          logger.error(s"Unexpected response returned by server -- status: ${response.status} response: $body")
-          promise.success(None)
-        }
-      }.recover {
+      }
+      .recover {
         case error =>
-          logger.error("Request to get MAuth public key couldn't be signed", error)
+          logger.error("Request to get MAuth public key couldn't be completed", error)
           promise.success(None)
       }
-    }.recover {
-      case error => logger.error("Request to get MAuth public key couldn't be completed", error)
-        promise.success(None)
-    }
     promise.future
   }
 
@@ -77,9 +86,11 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
     configuration.getRequestUrlPath + String.format(configuration.getSecurityTokensUrlPath, appUUID.toString)
 }
 
-class TraceMauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, traceHttpClient: TraceHttpClient)
-                                 (implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer)
-  extends MauthPublicKeyProvider(configuration, signer) {
+class TraceMauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, traceHttpClient: TraceHttpClient)(
+  implicit ec: ExecutionContext,
+  system: ActorSystem,
+  materializer: ActorMaterializer
+) extends MauthPublicKeyProvider(configuration, signer) {
 
   /**
     * Returns the associated public key for a given application UUID.

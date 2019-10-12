@@ -17,7 +17,7 @@ val currentBranch = Def.setting {
 }
 val mainBranch = Def.setting {
   currentBranch.value match {
-    case _@("develop" | "master") => true
+    case _ @("develop" | "master") => true
     case _ => false
   }
 }
@@ -71,7 +71,7 @@ lazy val `mauth-signer-apachehttp` = (project in file("modules/mauth-signer-apac
     name := "mauth-signer-apachehttp",
     libraryDependencies ++=
       Dependencies.compile(apacheHttpClient).map(withExclusions) ++
-      Dependencies.test(scalaMock).map(withExclusions)
+        Dependencies.test(scalaMock).map(withExclusions)
   )
 
 lazy val `mauth-signer-akka-http` = (project in file("modules/mauth-signer-akka-http"))
@@ -158,7 +158,7 @@ lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
         Seq(currentBranch.value)
       }
     },
-    push in Ecr := ((push in Ecr) dependsOn(createRepository in Ecr, login in Ecr, DockerKeys.docker)).value,
+    push in Ecr := ((push in Ecr) dependsOn (createRepository in Ecr, login in Ecr, DockerKeys.docker)).value,
     buildOptions in docker := BuildOptions(cache = false)
   )
 

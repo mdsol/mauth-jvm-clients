@@ -82,7 +82,6 @@ private[mauth] object MAuthSignatureEngine extends StrictLogging {
     }
   }
 
-
   /**
     * Convert a plaintext request signature into a hex encoded digest String
     *
@@ -100,9 +99,8 @@ private[mauth] object MAuthSignatureEngine extends StrictLogging {
     * @param array bytes to be converted to hex
     * @return
     */
-  def asHex(array: Array[Byte]): String = {
+  def asHex(array: Array[Byte]): String =
     Hex.encodeHexString(array)
-  }
 
   /**
     * Convenience method
@@ -110,7 +108,6 @@ private[mauth] object MAuthSignatureEngine extends StrictLogging {
     * @param array characters to be converted to bytes
     * @return
     */
-  def fromHex(array: Array[Char]): Array[Byte] = {
+  def fromHex(array: Array[Char]): Array[Byte] =
     Hex.decodeHex(array)
-  }
 }

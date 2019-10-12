@@ -12,7 +12,7 @@ object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
   val scala211 = "2.11.11"
   val scala212 = "2.12.6"
-  
+
   lazy val basicSettings = Seq(
     homepage := Some(new URL("https://github.com/mdsol/mauth-java-client")),
     organization := "com.mdsol",
@@ -38,8 +38,7 @@ object BuildSettings {
     publishTo := Some(
       if (isSnapshot.value) {
         Opts.resolver.sonatypeSnapshots
-      }
-      else {
+      } else {
         Opts.resolver.sonatypeStaging
       }
     )
@@ -48,7 +47,9 @@ object BuildSettings {
   lazy val publishSettings = Seq(
     publishMavenStyle := true,
     licenses := Seq("MDSOL" -> url("https://github.com/mdsol/mauth-java-client/blob/master/LICENSE.txt")),
-    pomIncludeRepository := { _ => false },
+    pomIncludeRepository := { _ =>
+      false
+    },
     scmInfo := Some(
       ScmInfo(
         url("https://github.com/mdsol/mauth-java-client"),
@@ -82,7 +83,8 @@ object BuildSettings {
     assemblyJarName in assembly := s"mauth-proxy-${version.value}.jar",
     assemblyMergeStrategy in assembly := {
       case "logback.xml" => MergeStrategy.first
-      case x => val oldStrategy = (assemblyMergeStrategy in assembly).value
+      case x =>
+        val oldStrategy = (assemblyMergeStrategy in assembly).value
         oldStrategy(x)
     }
   )
