@@ -89,9 +89,9 @@ class DefaultSignerSpec extends FlatSpec with Matchers with MockFactory {
          |zBQ/EKFc56GnQ2cJzx0/MGX4OelIqn2P08g8mBPKS96IL4WbKuBWeoaXgAM
          |HMWfnq2CMF1Lx4sspwHL3Vux27n3iHyLfxm2ZxchHPGX61awtAV7ZPHLlhx
          |tKVsZ29Qu3ZktDThdUeQnD4qt6LoGVkzru/ynJddeLinQB0m0ixjYRFiTr3
-         |YOGg==;""".stripMargin.replaceAll("\n","")
+         |YOGg==;""".stripMargin.replaceAll("\n", "")
     val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeadersV2("POST", "/", TEST_REQUEST_BODY, "").asScala.toMap
-    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches(AUTHENTICATION_HEADER_PATTERN_V2)
+    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches (AUTHENTICATION_HEADER_PATTERN_V2)
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_POST_AUTHENTICATION_HEADER
   }
 
@@ -105,9 +105,9 @@ class DefaultSignerSpec extends FlatSpec with Matchers with MockFactory {
          |twCIdrUtqTTirWgL2Src9VQATAfdCjeCVZ2/TyEcNZ5NX3ep0i/vcBYIfB9
          |593PmtO7a530axpf/ogiIWLUICG2lSVVz5Y23SxnSNC0QL5sEHvby8RETES
          |Hqu5G+5/6DiTt4W2iTEkC9BUV/OObdNNbr72hN1Z5qHo/X8qZ7NMSRPyZPA
-         |xe6A==;""".stripMargin.replaceAll("\n","")
+         |xe6A==;""".stripMargin.replaceAll("\n", "")
     val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeadersV2("GET", "/", "", TEST_REQUEST_PARAMS).asScala.toMap
-    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches(AUTHENTICATION_HEADER_PATTERN_V2)
+    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches (AUTHENTICATION_HEADER_PATTERN_V2)
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_GET_AUTHENTICATION_HEADER
   }
 
@@ -122,7 +122,7 @@ class DefaultSignerSpec extends FlatSpec with Matchers with MockFactory {
          |3I7VHwXCdV5ptY3WEL9u1iF3whLqUKGyYxf7WFgJmBbX/V7VIRGOW8BJjfW
          |J9pDVypVBN/VOYWLlKv9o3TTZuuEBtutuBSd6cU4oTMDnQmGkWs9fDAfdkF
          |2l/ZdmD7LFryk9vuyPJ5ur82ksJIZO61fzsEh0Klg/Qcr1E9M0dj0DtxBzw
-         |4W0Oc1sXH67xKrKidr3JxuBXjv5gg==""".stripMargin.replaceAll("\n","")
+         |4W0Oc1sXH67xKrKidr3JxuBXjv5gg==""".stripMargin.replaceAll("\n", "")
     val EXPECTED_POST_AUTHENTICATION_HEADER_V2: String =
       s"""MWSV2 $testUUID:2+fhdgr8qtZ3hrY1q8x6cLCpWs4Zry1DWfu+CFKlMKE
          |lo3B6VBn/1sJ4WThTbhYzybCW/cMWRjI24iJcUDUzI4Xd6hAN6TIOcET79b
@@ -130,7 +130,7 @@ class DefaultSignerSpec extends FlatSpec with Matchers with MockFactory {
          |zBQ/EKFc56GnQ2cJzx0/MGX4OelIqn2P08g8mBPKS96IL4WbKuBWeoaXgAM
          |HMWfnq2CMF1Lx4sspwHL3Vux27n3iHyLfxm2ZxchHPGX61awtAV7ZPHLlhx
          |tKVsZ29Qu3ZktDThdUeQnD4qt6LoGVkzru/ynJddeLinQB0m0ixjYRFiTr3
-         |YOGg==;""".stripMargin.replaceAll("\n","")
+         |YOGg==;""".stripMargin.replaceAll("\n", "")
     val headers: Map[String, String] = mAuthSigner.generateRequestHeadersV2("POST", "/", TEST_REQUEST_BODY, "").asScala.toMap
     headers(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_POST_AUTHENTICATION_HEADER_V1
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_POST_AUTHENTICATION_HEADER_V2

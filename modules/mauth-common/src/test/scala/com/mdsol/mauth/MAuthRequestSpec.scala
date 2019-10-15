@@ -126,7 +126,8 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
   }
 
   it should "correctly create MAuthRequest for V2" in {
-    val request = MAuthRequest.Builder.get()
+    val request = MAuthRequest.Builder
+      .get()
       .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
       .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER)
       .withHttpMethod(CLIENT_REQUEST_METHOD)
@@ -144,7 +145,8 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
   }
 
   it should "correctly create MAuthRequest for V2 if disabled V1" in {
-    val request = MAuthRequest.Builder.get()
+    val request = MAuthRequest.Builder
+      .get()
       .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
       .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER)
       .withHttpMethod(CLIENT_REQUEST_METHOD)
@@ -165,7 +167,8 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
 
   it should "not allow to create request with msw-authentication header if disabled V1" in {
     val expectedException = intercept[IllegalArgumentException] {
-      MAuthRequest.Builder.get()
+      MAuthRequest.Builder
+        .get()
         .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
         .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER)
         .withHttpMethod(CLIENT_REQUEST_METHOD)
