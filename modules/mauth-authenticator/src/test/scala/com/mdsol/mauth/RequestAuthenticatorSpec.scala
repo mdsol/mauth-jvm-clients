@@ -56,4 +56,12 @@ class RequestAuthenticatorSpec extends FlatSpec with RequestAuthenticatorBaseSpe
 
     authenticator.authenticate(getSimpleRequestWithWrongSignature) shouldBe false
   }
+
+  it should "validate a valid request for V2" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_MCC_TIME_HEADER_VALUE.toLong + 3)
+    (mockClientPublicKeyProvider.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))
+
+    authenticator.authenticate(getSimpleRequestV2) shouldBe true
+  }
 }

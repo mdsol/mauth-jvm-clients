@@ -62,6 +62,23 @@ public class RequestAuthenticator implements Authenticator {
     }
 
     PublicKey clientPublicKey = clientPublicKeyProvider.getPublicKey(mAuthRequest.getAppUUID());
+    if (mAuthRequest.getMauthVersion().equals(MAuthVersion.MWSV2.toString())) {
+      return validateSignatureV2(mAuthRequest, clientPublicKey);
+    }
+    else {
+      return validateSignatureV1(mAuthRequest, clientPublicKey);
+    }
+
+  }
+
+  // Check epoch time is not older than specified interval.
+  private boolean validateTime(long requestTime) {
+    long currentTime = epochTimeProvider.inSeconds();
+    return (currentTime - requestTime) < requestValidationTimeoutSeconds;
+  }
+
+  // check signature for V1
+  private boolean validateSignatureV1 (MAuthRequest mAuthRequest, PublicKey clientPublicKey ) {
 
     // Decrypt the signature with public key from requesting application.
     byte[] decryptedSignature = MAuthSignatureHelper.decryptSignature(clientPublicKey, mAuthRequest.getRequestSignature());
@@ -81,9 +98,26 @@ public class RequestAuthenticator implements Authenticator {
     return Arrays.equals(messageDigest_bytes, decryptedSignature);
   }
 
-  // Check epoch time is not older than specified interval.
-  private boolean validateTime(long requestTime) {
-    long currentTime = epochTimeProvider.inSeconds();
-    return (currentTime - requestTime) < requestValidationTimeoutSeconds;
+  // check signature for V2
+  private boolean validateSignatureV2 (MAuthRequest mAuthRequest, PublicKey clientPublicKey ) {
+
+    // Recreate the plain text signature, based on the incoming request parameters, and hash it.
+    String unencryptedRequestString =
+        MAuthSignatureHelper.generateStringToSignV2(
+            mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(), mAuthRequest.getResourcePath(),
+            mAuthRequest.getQueryParameters(),
+            new String(mAuthRequest.getMessagePayload(), StandardCharsets.UTF_8),
+            String.valueOf(mAuthRequest.getRequestTime())
+        );
+
+    // Compare the decrypted signature and the recreated signature hashes.
+    try {
+      return MAuthSignatureHelper.verifyRSA(unencryptedRequestString, mAuthRequest.getRequestSignature(), clientPublicKey);
+    } catch (Exception ex) {
+      final String message = "MAuth request validation failed because of " + ex.getMessage();
+      logger.error(message);
+      throw new MAuthValidationException(message);
+    }
   }
+
 }

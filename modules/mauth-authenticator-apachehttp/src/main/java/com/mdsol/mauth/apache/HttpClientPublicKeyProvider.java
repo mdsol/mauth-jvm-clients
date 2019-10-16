@@ -61,7 +61,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
 
   private PublicKey getPublicKeyFromEureka(UUID appUUID) {
     String requestUrlPath = getRequestUrlPath(appUUID);
-    Map<String, String> headers = signer.generateRequestHeaders("GET", requestUrlPath, "");
+    Map<String, String> headers = signer.generateRequestHeadersV2("GET", requestUrlPath, "", "");
     String requestUrl = configuration.getBaseUrl() + requestUrlPath;
     String publicKeyAsString = get(requestUrl, headers, publicKeyResponseHandler);
     return MAuthKeysHelper.getPublicKeyFromString(publicKeyAsString);

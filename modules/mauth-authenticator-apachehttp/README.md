@@ -6,7 +6,7 @@ This is an implementation of Medidata Authentication Client Authenticator to val
 
 1. Configuration
   * MAuth uses [Typesafe Config](https://github.com/typesafehub/config).
-  Create `application.conf` on your classpath with following content.
+  Create `application.conf` on your classpath with following content. The disable_v1 flag can be set to authenticate incoming requests with Mauth protocol V2 only, default to false.
 
         app {
             uuid: "aaaa-bbbbb-ccccc-ddddd-eeeee"
@@ -15,6 +15,7 @@ This is an implementation of Medidata Authentication Client Authenticator to val
                 
         mauth {
             base_url: "http://localhost"
+            disable_v1: false
         }
 
     **Defaults:**
@@ -32,6 +33,7 @@ This is an implementation of Medidata Authentication Client Authenticator to val
             cache {
                 time_to_live_seconds: 90
             }
+            disable_v1: false
         }
 
   * Load Configuration
@@ -49,14 +51,15 @@ This is an implementation of Medidata Authentication Client Authenticator to val
         @Override
         public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
             HttpServletRequest request = (HttpServletRequest) req;
-            MAuthRequest request = new MAuthRequest(
-                            request.getHeader(MAuthRequest.MAUTH_AUTHENTICATION_HEADER_NAME),
-                            retrieveRequestBody(request),
-                            request.getMethod(),
-                            request.getHeader(MAuthRequest.MAUTH_TIME_HEADER_NAME),
-                            request.getServletPath()
-                          )
-            if (authenticator.validate(request)) {
+            MAuthVersion mVersion = getMauthVersion(request);
+            MAuthRequest mRequest = MAuthRequest.Builder.get()
+                .withAuthenticationHeaderValue(request.getHeader(getAuthHeaderName(mVersion)))
+                .withTimeHeaderValue(request.getHeader(getTimeHeaderName(mVersion)))
+                .withHttpMethod(request.getMethod()).withResourcePath(request.getRequestURI())
+                .withQueryParameters(request.getQueryString())
+                .withMessagePayload(retrieveRequestBody(request))
+                .build();
+            if (authenticator.validate(mRequest)) {
                 // validation succeeded, proceed...
             } else {
                 // validation failed, respond with 401...
@@ -67,3 +70,20 @@ This is an implementation of Medidata Authentication Client Authenticator to val
             // get request body from the request...
         }
 
+        private MAuthVersion getMauthVersion(HttpServletRequest request) {
+          // get the newest mauth version from the request header...
+          if (request.getHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) != null) {
+            return MAuthVersion.MWSV2;
+          }
+          return MAuthVersion.MWS;
+        }
+
+        private String getAuthHeaderName(MAuthVersion version) {
+          return version.equals(MAuthVersion.MWSV2) ?
+              MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME : MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME;
+        }
+
+        private String getTimeHeaderName(MAuthVersion version) {
+          return version.equals(MAuthVersion.MWSV2) ?
+              MAuthRequest.MCC_TIME_HEADER_NAME : MAuthRequest.X_MWS_TIME_HEADER_NAME;
+       }
