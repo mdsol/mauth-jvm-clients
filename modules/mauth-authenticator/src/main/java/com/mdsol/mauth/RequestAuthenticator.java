@@ -55,6 +55,9 @@ public class RequestAuthenticator implements Authenticator {
 
   @Override
   public boolean authenticate(MAuthRequest mAuthRequest) {
+    final String msgFormat = "Mauth-client attempting to authenticate request from app with mauth app uuid %s using version %s.";
+    logger.info(String.format(msgFormat, mAuthRequest.getAppUUID(), mAuthRequest.getMauthVersion()));
+
     if (!(validateTime(mAuthRequest.getRequestTime()))) {
       final String message = "MAuth request validation failed because of timeout " + requestValidationTimeoutSeconds + "s";
       logger.error(message);
@@ -68,7 +71,6 @@ public class RequestAuthenticator implements Authenticator {
     else {
       return validateSignatureV1(mAuthRequest, clientPublicKey);
     }
-
   }
 
   // Check epoch time is not older than specified interval.

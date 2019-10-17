@@ -51,11 +51,9 @@ This is an implementation of Medidata Authentication Client Authenticator to val
         @Override
         public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
             HttpServletRequest request = (HttpServletRequest) req;
-            MAuthVersion mVersion = getMauthVersion(request);
             MAuthRequest mRequest = MAuthRequest.Builder.get()
-                .withAuthenticationHeaderValue(request.getHeader(getAuthHeaderName(mVersion)))
-                .withTimeHeaderValue(request.getHeader(getTimeHeaderName(mVersion)))
                 .withHttpMethod(request.getMethod()).withResourcePath(request.getRequestURI())
+                .withRequestHeaders(getRequestHeaders(request))
                 .withQueryParameters(request.getQueryString())
                 .withMessagePayload(retrieveRequestBody(request))
                 .build();
@@ -70,20 +68,6 @@ This is an implementation of Medidata Authentication Client Authenticator to val
             // get request body from the request...
         }
 
-        private MAuthVersion getMauthVersion(HttpServletRequest request) {
-          // get the newest mauth version from the request header...
-          if (request.getHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) != null) {
-            return MAuthVersion.MWSV2;
-          }
-          return MAuthVersion.MWS;
+        private Map<String, String> getRequestHeaders(HttpServletRequest request) {
+          // get request headers from the request...
         }
-
-        private String getAuthHeaderName(MAuthVersion version) {
-          return version.equals(MAuthVersion.MWSV2) ?
-              MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME : MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME;
-        }
-
-        private String getTimeHeaderName(MAuthVersion version) {
-          return version.equals(MAuthVersion.MWSV2) ?
-              MAuthRequest.MCC_TIME_HEADER_NAME : MAuthRequest.X_MWS_TIME_HEADER_NAME;
-       }

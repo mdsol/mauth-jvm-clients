@@ -63,6 +63,12 @@ trait RequestAuthenticatorBaseSpec extends FlatSpec with BeforeAndAfterAll with 
 
   val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
 
+  private val CLIENT_REQUEST_HEADERS = new java.util.HashMap[String, String]()
+  CLIENT_REQUEST_HEADERS.put(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, CLIENT_REQUEST_AUTHENTICATION_HEADER)
+  CLIENT_REQUEST_HEADERS.put(MAuthRequest.X_MWS_TIME_HEADER_NAME, CLIENT_X_MWS_TIME_HEADER_VALUE)
+  CLIENT_REQUEST_HEADERS.put(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
+  CLIENT_REQUEST_HEADERS.put(MAuthRequest.MCC_TIME_HEADER_NAME, CLIENT_MCC_TIME_HEADER_VALUE)
+
   override protected def beforeAll() {
     Security.addProvider(new BouncyCastleProvider)
   }
@@ -118,6 +124,17 @@ trait RequestAuthenticatorBaseSpec extends FlatSpec with BeforeAndAfterAll with 
       .withResourcePath(CLIENT_REQUEST_PATH)
       .withQueryParameters("")
       .withDisableV1(true)
+      .build
+  }
+
+  def getRequestWithAllHeaders: MAuthRequest = {
+    MAuthRequest.Builder.get
+      .withHttpMethod(CLIENT_REQUEST_METHOD)
+      .withRequestHeaders(CLIENT_REQUEST_HEADERS)
+      .withMessagePayload(CLIENT_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))
+      .withResourcePath(CLIENT_REQUEST_PATH)
+      .withQueryParameters("")
+      .withDisableV1(false)
       .build
   }
 

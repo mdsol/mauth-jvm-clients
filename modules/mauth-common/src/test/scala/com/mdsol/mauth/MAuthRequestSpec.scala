@@ -2,6 +2,7 @@ package com.mdsol.mauth
 
 import java.nio.charset.StandardCharsets
 import java.util.UUID
+import java.util.Map
 
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -17,12 +18,25 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
       |2hd5ocZDzQS73MOfUqPLfvv7aLRvBS078cqs2uAip84n8bM4
       |qG60gMfoC9kUluza7i9poyFqqIdsCnS5RQuyNcsixneX2X3CNt3yOw==""".stripMargin
   private val CLIENT_REQUEST_AUTHENTICATION_HEADER = "MWS " + CLIENT_APP_UUID + ":" + CLIENT_REQUEST_SIGNATURE
-  private val CLIENT_REQUEST_AUTHENTICATION_HEADER_V2 = "MWSV2 " + CLIENT_APP_UUID + ":" + CLIENT_REQUEST_SIGNATURE + ";"
   private val CLIENT_REQUEST_TIME_HEADER = "1444672122"
+  private val CLIENT_REQUEST_AUTHENTICATION_HEADER_V2 = "MWSV2 " + CLIENT_APP_UUID + ":" + CLIENT_REQUEST_SIGNATURE + ";"
+  private val CLIENT_REQUEST_TIME_HEADER_V2 = "1444672222"
   private val CLIENT_REQUEST_METHOD = "POST"
   private val CLIENT_REQUEST_PATH = "/resource/path"
   private val CLIENT_REQUEST_PAYLOAD = "message here".getBytes(StandardCharsets.UTF_8)
   private val CLIENT_REQUEST_QUERY_PARAMETERS = "param1=value1&param2=value2";
+
+  private val CLIENT_REQUEST_HEADERS_V1 = new java.util.HashMap[String, String]()
+  CLIENT_REQUEST_HEADERS_V1.put(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, CLIENT_REQUEST_AUTHENTICATION_HEADER)
+  CLIENT_REQUEST_HEADERS_V1.put(MAuthRequest.X_MWS_TIME_HEADER_NAME, CLIENT_REQUEST_TIME_HEADER)
+
+  private val CLIENT_REQUEST_HEADERS_V2 = new java.util.HashMap[String, String]()
+  CLIENT_REQUEST_HEADERS_V2.put(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
+  CLIENT_REQUEST_HEADERS_V2.put(MAuthRequest.MCC_TIME_HEADER_NAME, CLIENT_REQUEST_TIME_HEADER_V2)
+
+  private val CLIENT_REQUEST_HEADERS = new java.util.HashMap[String, String]()
+  CLIENT_REQUEST_HEADERS.putAll(CLIENT_REQUEST_HEADERS_V1)
+  CLIENT_REQUEST_HEADERS.putAll(CLIENT_REQUEST_HEADERS_V2)
 
   behavior of "MAuthRequest"
 
@@ -129,7 +143,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
     val request = MAuthRequest.Builder
       .get()
       .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
-      .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER)
+      .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER_V2)
       .withHttpMethod(CLIENT_REQUEST_METHOD)
       .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
       .withResourcePath(CLIENT_REQUEST_PATH)
@@ -139,7 +153,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
     request.getAppUUID shouldBe UUID.fromString(CLIENT_APP_UUID)
     request.getHttpMethod shouldBe CLIENT_REQUEST_METHOD
     request.getResourcePath shouldBe CLIENT_REQUEST_PATH
-    request.getRequestTime shouldBe CLIENT_REQUEST_TIME_HEADER.toLong
+    request.getRequestTime shouldBe CLIENT_REQUEST_TIME_HEADER_V2.toLong
     request.getMessagePayload shouldBe CLIENT_REQUEST_PAYLOAD
     request.getQueryParameters shouldBe CLIENT_REQUEST_QUERY_PARAMETERS
   }
@@ -148,7 +162,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
     val request = MAuthRequest.Builder
       .get()
       .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
-      .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER)
+      .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER_V2)
       .withHttpMethod(CLIENT_REQUEST_METHOD)
       .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
       .withResourcePath(CLIENT_REQUEST_PATH)
@@ -159,7 +173,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
     request.getAppUUID shouldBe UUID.fromString(CLIENT_APP_UUID)
     request.getHttpMethod shouldBe CLIENT_REQUEST_METHOD
     request.getResourcePath shouldBe CLIENT_REQUEST_PATH
-    request.getRequestTime shouldBe CLIENT_REQUEST_TIME_HEADER.toLong
+    request.getRequestTime shouldBe CLIENT_REQUEST_TIME_HEADER_V2.toLong
     request.getMessagePayload shouldBe CLIENT_REQUEST_PAYLOAD
     request.getQueryParameters shouldBe CLIENT_REQUEST_QUERY_PARAMETERS
     request.getMauthVersion shouldBe MAuthVersion.MWSV2.getValue
@@ -179,6 +193,63 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
         .build()
     }
     expectedException.getMessage shouldBe MAuthRequest.VALIDATION_MISSING_MCC_AUTHENTICATION
+  }
+
+  it should "correctly create MAuthRequest for V1 if the headers include V1 only" in {
+    val request = MAuthRequest.Builder
+      .get()
+      .withHttpMethod(CLIENT_REQUEST_METHOD)
+      .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
+      .withResourcePath(CLIENT_REQUEST_PATH)
+      .withQueryParameters(CLIENT_REQUEST_QUERY_PARAMETERS)
+      .withRequestHeaders(CLIENT_REQUEST_HEADERS_V1)
+      .build()
+
+    request.getAppUUID shouldBe UUID.fromString(CLIENT_APP_UUID)
+    request.getHttpMethod shouldBe CLIENT_REQUEST_METHOD
+    request.getResourcePath shouldBe CLIENT_REQUEST_PATH
+    request.getRequestTime shouldBe CLIENT_REQUEST_TIME_HEADER.toLong
+    request.getMessagePayload shouldBe CLIENT_REQUEST_PAYLOAD
+    request.getQueryParameters shouldBe CLIENT_REQUEST_QUERY_PARAMETERS
+    request.getMauthVersion shouldBe MAuthVersion.MWS.getValue
+  }
+
+  it should "correctly create MAuthRequest for V2 if the headers include V2 only" in {
+    val request = MAuthRequest.Builder
+      .get()
+      .withHttpMethod(CLIENT_REQUEST_METHOD)
+      .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
+      .withResourcePath(CLIENT_REQUEST_PATH)
+      .withQueryParameters(CLIENT_REQUEST_QUERY_PARAMETERS)
+      .withRequestHeaders(CLIENT_REQUEST_HEADERS_V2)
+      .build()
+
+    request.getAppUUID shouldBe UUID.fromString(CLIENT_APP_UUID)
+    request.getHttpMethod shouldBe CLIENT_REQUEST_METHOD
+    request.getResourcePath shouldBe CLIENT_REQUEST_PATH
+    request.getRequestTime shouldBe CLIENT_REQUEST_TIME_HEADER_V2.toLong
+    request.getMessagePayload shouldBe CLIENT_REQUEST_PAYLOAD
+    request.getQueryParameters shouldBe CLIENT_REQUEST_QUERY_PARAMETERS
+    request.getMauthVersion shouldBe MAuthVersion.MWSV2.getValue
+  }
+
+  it should "correctly create MAuthRequest for V2 if the headers include V1 and V2" in {
+    val request = MAuthRequest.Builder
+      .get()
+      .withHttpMethod(CLIENT_REQUEST_METHOD)
+      .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
+      .withResourcePath(CLIENT_REQUEST_PATH)
+      .withQueryParameters(CLIENT_REQUEST_QUERY_PARAMETERS)
+      .withRequestHeaders(CLIENT_REQUEST_HEADERS)
+      .build()
+
+    request.getAppUUID shouldBe UUID.fromString(CLIENT_APP_UUID)
+    request.getHttpMethod shouldBe CLIENT_REQUEST_METHOD
+    request.getResourcePath shouldBe CLIENT_REQUEST_PATH
+    request.getRequestTime shouldBe CLIENT_REQUEST_TIME_HEADER_V2.toLong
+    request.getMessagePayload shouldBe CLIENT_REQUEST_PAYLOAD
+    request.getQueryParameters shouldBe CLIENT_REQUEST_QUERY_PARAMETERS
+    request.getMauthVersion shouldBe MAuthVersion.MWSV2.getValue
   }
 
 }

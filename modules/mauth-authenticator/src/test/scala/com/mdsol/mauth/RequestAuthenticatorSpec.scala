@@ -64,4 +64,13 @@ class RequestAuthenticatorSpec extends FlatSpec with RequestAuthenticatorBaseSpe
 
     authenticator.authenticate(getSimpleRequestV2) shouldBe true
   }
+
+  it should "validate a valid request with the headers of V1 and V2" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_MCC_TIME_HEADER_VALUE.toLong + 3)
+    (mockClientPublicKeyProvider.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))
+
+    authenticator.authenticate(getRequestWithAllHeaders) shouldBe true
+  }
+
 }

@@ -5,6 +5,7 @@ import com.mdsol.mauth.util.MAuthHeadersHelper;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -127,6 +128,7 @@ public class MAuthRequest {
     private String resourcePath;
     private String queryParameters;
     private boolean disableV1;
+    private Map<String, String> headers;
 
     public static Builder get() {
       return new Builder();
@@ -167,7 +169,22 @@ public class MAuthRequest {
       return this;
     }
 
+    public Builder withRequestHeaders(Map<String, String> headers) {
+      this.headers = headers;
+      return this;
+    }
+
     public MAuthRequest build() {
+      // get the newest mauth version from the request headers...
+      if (headers != null && !headers.isEmpty()) {
+        if (headers.get(MCC_AUTHENTICATION_HEADER_NAME) != null) {
+          authenticationHeaderValue = headers.get(MCC_AUTHENTICATION_HEADER_NAME);
+          timeHeaderValue = headers.get(MCC_TIME_HEADER_NAME);
+        } else {
+          authenticationHeaderValue = headers.get(X_MWS_AUTHENTICATION_HEADER_NAME);
+          timeHeaderValue = headers.get(X_MWS_TIME_HEADER_NAME);
+        }
+      }
       return new MAuthRequest(authenticationHeaderValue, messagePayload, httpMethod,
           timeHeaderValue, resourcePath, queryParameters, disableV1);
     }
