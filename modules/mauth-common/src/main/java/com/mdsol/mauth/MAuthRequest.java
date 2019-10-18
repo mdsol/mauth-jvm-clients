@@ -28,8 +28,8 @@ public class MAuthRequest {
   private final long requestTime;
   private final String resourcePath;
   private final String queryParameters;
-  private final boolean diableV1;
-  private final String mauthVersion;
+  private final boolean disableV1;
+  private final MAuthVersion mauthVersion;
 
   public MAuthRequest(String authenticationHeaderValue, byte[] messagePayload, String httpMethod,
        String timeHeaderValue, String resourcePath) {
@@ -37,12 +37,12 @@ public class MAuthRequest {
   }
 
   public MAuthRequest(String authenticationHeaderValue, byte[] messagePayload, String httpMethod,
-      String timeHeaderValue, String resourcePath, String queryParameters, boolean diableV1) {
+      String timeHeaderValue, String resourcePath, String queryParameters, boolean disableV1) {
     validateNotBlank(authenticationHeaderValue, "Authentication header value");
     validateNotBlank(timeHeaderValue, "Time header value");
 
-    String mauthVersion = MAuthHeadersHelper.getMauthVersion(authenticationHeaderValue);
-    validateMauthVersion(diableV1, mauthVersion);
+    MAuthVersion mauthVersion = MAuthHeadersHelper.getMauthVersion(authenticationHeaderValue);
+    validateMauthVersion(disableV1, mauthVersion);
 
     UUID appUUID = MAuthHeadersHelper.getAppUUIDFromAuthenticationHeader(authenticationHeaderValue);
     String requestSignature =
@@ -65,7 +65,7 @@ public class MAuthRequest {
     this.resourcePath = resourcePath;
     this.queryParameters = queryParameters;
     this.mauthVersion = mauthVersion;
-    this.diableV1 = diableV1;
+    this.disableV1 = disableV1;
   }
 
   public UUID getAppUUID() {
@@ -96,7 +96,7 @@ public class MAuthRequest {
     return queryParameters;
   }
 
-  public String getMauthVersion() {
+  public MAuthVersion getMauthVersion() {
     return mauthVersion;
   }
 
@@ -113,8 +113,8 @@ public class MAuthRequest {
     }
   }
 
-  private void validateMauthVersion(boolean diableV1, String mauthVersion) {
-    if (diableV1 && mauthVersion.equalsIgnoreCase(MAuthVersion.MWS.getValue())) {
+  private void validateMauthVersion(boolean disableV1, MAuthVersion mauthVersion) {
+    if (disableV1 && mauthVersion.equals(MAuthVersion.MWS)) {
       throw new IllegalArgumentException(VALIDATION_MISSING_MCC_AUTHENTICATION);
     }
   }

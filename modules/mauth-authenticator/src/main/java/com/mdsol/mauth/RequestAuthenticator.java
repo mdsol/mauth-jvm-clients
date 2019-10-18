@@ -56,7 +56,7 @@ public class RequestAuthenticator implements Authenticator {
   @Override
   public boolean authenticate(MAuthRequest mAuthRequest) {
     final String msgFormat = "Mauth-client attempting to authenticate request from app with mauth app uuid %s using version %s.";
-    logger.info(String.format(msgFormat, mAuthRequest.getAppUUID(), mAuthRequest.getMauthVersion()));
+    logger.info(String.format(msgFormat, mAuthRequest.getAppUUID(), mAuthRequest.getMauthVersion().getValue()));
 
     if (!(validateTime(mAuthRequest.getRequestTime()))) {
       final String message = "MAuth request validation failed because of timeout " + requestValidationTimeoutSeconds + "s";
@@ -65,7 +65,7 @@ public class RequestAuthenticator implements Authenticator {
     }
 
     PublicKey clientPublicKey = clientPublicKeyProvider.getPublicKey(mAuthRequest.getAppUUID());
-    if (mAuthRequest.getMauthVersion().equals(MAuthVersion.MWSV2.toString())) {
+    if (mAuthRequest.getMauthVersion().equals(MAuthVersion.MWSV2)) {
       return validateSignatureV2(mAuthRequest, clientPublicKey);
     }
     else {
@@ -105,11 +105,12 @@ public class RequestAuthenticator implements Authenticator {
 
     // Recreate the plain text signature, based on the incoming request parameters, and hash it.
     String unencryptedRequestString =
-        MAuthSignatureHelper.generateStringToSignV2(
+        MAuthSignatureHelper.generateStringToSign(
             mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(), mAuthRequest.getResourcePath(),
             mAuthRequest.getQueryParameters(),
             new String(mAuthRequest.getMessagePayload(), StandardCharsets.UTF_8),
-            String.valueOf(mAuthRequest.getRequestTime())
+            String.valueOf(mAuthRequest.getRequestTime()),
+            MAuthVersion.MWSV2
         );
 
     // Compare the decrypted signature and the recreated signature hashes.

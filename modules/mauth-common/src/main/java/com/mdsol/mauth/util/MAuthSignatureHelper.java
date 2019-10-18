@@ -93,9 +93,9 @@ public class MAuthSignatureHelper {
    * @throws MAuthSigningException
    */
   public static String generateStringToSign(UUID appUUID, String httpMethod, String resourceUrl,
-      String queryParameters, String requestBody, String epochTime, String mauthVersion) throws MAuthSigningException{
+      String queryParameters, String requestBody, String epochTime, MAuthVersion mauthVersion) throws MAuthSigningException{
     String strTosign;
-    if (mauthVersion.equalsIgnoreCase(MAuthVersion.MWS.getValue())) {
+    if (mauthVersion.equals(MAuthVersion.MWS)) {
       strTosign = generateUnencryptedSignature(appUUID, httpMethod, resourceUrl, requestBody, epochTime);
     }
     else {

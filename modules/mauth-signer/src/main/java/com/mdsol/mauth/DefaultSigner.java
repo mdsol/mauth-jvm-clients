@@ -63,10 +63,6 @@ public class DefaultSigner implements Signer {
     this.disableV1 = disableV1;
   }
 
-  public void disableV1(boolean disableV1) {
-    this.disableV1 = disableV1;
-  }
-
   @Override
   public Map<String, String> generateRequestHeaders(String httpVerb,
       String requestPath, String requestPayload) throws MAuthSigningException {
@@ -100,7 +96,7 @@ public class DefaultSigner implements Signer {
       headers.putAll(headersV1);
     }
 
-    String mauthVersion = MAuthVersion.MWSV2.getValue();
+    MAuthVersion mauthVersion = MAuthVersion.MWSV2;
 
     String stringTosign = MAuthSignatureHelper.generateStringToSign(
         appUUID, httpVerb, requestPath, queryParameters, requestPayload, String.valueOf(currentTime), mauthVersion);
@@ -115,7 +111,7 @@ public class DefaultSigner implements Signer {
 
     headers.put(
         MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME,
-        MAuthHeadersHelper.createAuthenticationHeaderValue(appUUID, encryptedSignature, mauthVersion)
+        MAuthHeadersHelper.createAuthenticationHeaderValue(appUUID, encryptedSignature, mauthVersion.getValue())
     );
     headers.put(MAuthRequest.MCC_TIME_HEADER_NAME, MAuthHeadersHelper.createTimeHeaderValue(currentTime));
 

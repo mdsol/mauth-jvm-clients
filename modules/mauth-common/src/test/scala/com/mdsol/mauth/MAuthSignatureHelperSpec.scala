@@ -54,7 +54,7 @@ class MAuthSignatureHelperSpec extends FlatSpec with Matchers {
       CLIENT_REQUEST_QUERY_PARAMETERS,
       CLIENT_REQUEST_PAYLOAD,
       String.valueOf(TEST_EPOCH_TIME),
-      MAuthVersion.MWSV2.getValue
+      MAuthVersion.MWSV2
     ) shouldBe expectedString
   }
 

@@ -176,7 +176,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
     request.getRequestTime shouldBe CLIENT_REQUEST_TIME_HEADER_V2.toLong
     request.getMessagePayload shouldBe CLIENT_REQUEST_PAYLOAD
     request.getQueryParameters shouldBe CLIENT_REQUEST_QUERY_PARAMETERS
-    request.getMauthVersion shouldBe MAuthVersion.MWSV2.getValue
+    request.getMauthVersion shouldBe MAuthVersion.MWSV2
   }
 
   it should "not allow to create request with msw-authentication header if disabled V1" in {
@@ -211,7 +211,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
     request.getRequestTime shouldBe CLIENT_REQUEST_TIME_HEADER.toLong
     request.getMessagePayload shouldBe CLIENT_REQUEST_PAYLOAD
     request.getQueryParameters shouldBe CLIENT_REQUEST_QUERY_PARAMETERS
-    request.getMauthVersion shouldBe MAuthVersion.MWS.getValue
+    request.getMauthVersion shouldBe MAuthVersion.MWS
   }
 
   it should "correctly create MAuthRequest for V2 if the headers include V2 only" in {
@@ -230,7 +230,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
     request.getRequestTime shouldBe CLIENT_REQUEST_TIME_HEADER_V2.toLong
     request.getMessagePayload shouldBe CLIENT_REQUEST_PAYLOAD
     request.getQueryParameters shouldBe CLIENT_REQUEST_QUERY_PARAMETERS
-    request.getMauthVersion shouldBe MAuthVersion.MWSV2.getValue
+    request.getMauthVersion shouldBe MAuthVersion.MWSV2
   }
 
   it should "correctly create MAuthRequest for V2 if the headers include V1 and V2" in {
@@ -249,7 +249,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
     request.getRequestTime shouldBe CLIENT_REQUEST_TIME_HEADER_V2.toLong
     request.getMessagePayload shouldBe CLIENT_REQUEST_PAYLOAD
     request.getQueryParameters shouldBe CLIENT_REQUEST_QUERY_PARAMETERS
-    request.getMauthVersion shouldBe MAuthVersion.MWSV2.getValue
+    request.getMauthVersion shouldBe MAuthVersion.MWSV2
   }
 
 }

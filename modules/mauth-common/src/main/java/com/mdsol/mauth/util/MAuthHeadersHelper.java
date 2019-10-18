@@ -32,7 +32,7 @@ public class MAuthHeadersHelper {
   }
 
   public static UUID getAppUUIDFromAuthenticationHeader(String authenticationHeaderValue) {
-    String mauthVersion = getMauthVersion(authenticationHeaderValue).concat(" ");
+    String mauthVersion = getMauthVersion(authenticationHeaderValue).getValue().concat(" ");
     String appUUIDAsString = authenticationHeaderValue.split(":")[0].substring(mauthVersion.length());
     return UUID.fromString(appUUIDAsString);
   }
@@ -41,8 +41,8 @@ public class MAuthHeadersHelper {
     return Long.parseLong(timeHeaderValue);
   }
 
-  public static String getMauthVersion(String authenticationHeaderValue) {
+  public static MAuthVersion getMauthVersion(String authenticationHeaderValue) {
     return authenticationHeaderValue.startsWith(MAuthVersion.MWSV2.getValue() + " ") ?
-        MAuthVersion.MWSV2.getValue() : MAuthVersion.MWS.getValue();
+        MAuthVersion.MWSV2 : MAuthVersion.MWS;
   }
 }

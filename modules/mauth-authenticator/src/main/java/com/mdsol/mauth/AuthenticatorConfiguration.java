@@ -22,7 +22,7 @@ public class AuthenticatorConfiguration implements MAuthConfiguration{
         config.getString(REQUEST_URL_PATH),
         config.getString(TOKEN_URL_PATH),
         config.getLong(TIME_TO_LIVE_SECONDS),
-        config.hasPath(DISABLE_MAUTH_V1) || config.isEmpty() ? config.getBoolean(DISABLE_MAUTH_V1) : false
+        config.getBoolean(DISABLE_MAUTH_V1)
     );
   }
 
