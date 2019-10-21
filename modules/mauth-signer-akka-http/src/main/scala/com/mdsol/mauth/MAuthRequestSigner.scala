@@ -57,7 +57,7 @@ class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvide
       case None => ""
     }
 
-    Try(generateRequestHeaders(request.httpMethod, request.uri.getPath, body)) match {
+    Try(generateRequestHeadersV1(request.httpMethod, request.uri.getPath, body)) match {
       case Success(mauthHeaders) =>
         Right(SignedRequest(request, mauthHeaders.get(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME), mauthHeaders.get(MAuthRequest.X_MWS_TIME_HEADER_NAME)))
       case Failure(e) => Left(e)

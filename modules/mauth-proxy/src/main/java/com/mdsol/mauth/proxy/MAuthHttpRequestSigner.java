@@ -40,7 +40,7 @@ class MAuthHttpRequestSigner {
 
     logger.debug("Generating request headers for Verb: '" + verb + "' URI: '" + uriString +
         "' Payload: " + requestPayload + "' Query parameters: " + queryString);
-    Map<String, String> mAuthHeaders = httpClientRequestSigner.generateRequestHeadersV2(verb, uriString, requestPayload, queryString);
+    Map<String, String> mAuthHeaders = httpClientRequestSigner.generateRequestHeaders(verb, uriString, requestPayload, queryString);
     mAuthHeaders.forEach((key, value) -> request.headers().add(key, value));
   }
 }

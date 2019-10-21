@@ -18,11 +18,11 @@ public interface Signer {
    * @return MAuth headers which should be appended to the request before sending.
    * @throws MAuthSigningException when request cannot be signed
    */
-  Map<String, String> generateRequestHeaders(String httpVerb,
+  Map<String, String> generateRequestHeadersV1(String httpVerb,
       String requestPath, String requestPayload) throws MAuthSigningException;
 
   /**
-   * Generates the mAuth headers from the provided HTTP request data for Mauth V2.
+   * Generates the mAuth headers from the provided HTTP request data for Mauth V2(and V1)
    *
    * NOTE: mAuth headers are time sensitive. The headers must be verified by the receiving service
    * within 5 minutes of being generated otherwise the request will fail.
@@ -34,7 +34,7 @@ public interface Signer {
    * @return MAuth headers which should be appended to the request before sending.
    * @throws MAuthSigningException when request cannot be signed
    */
-  Map<String, String> generateRequestHeadersV2(String httpVerb,
+  Map<String, String> generateRequestHeaders(String httpVerb,
       String requestPath, String queryParameters, String requestPayload) throws MAuthSigningException;
 
 }
