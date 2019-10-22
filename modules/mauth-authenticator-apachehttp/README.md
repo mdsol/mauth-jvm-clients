@@ -39,14 +39,14 @@ This is an implementation of Medidata Authentication Client Authenticator to val
   * Load Configuration
 
         final Config typeSafeConfig = ConfigFactory.load();
-        SignerConfiguration singerConfiguration = new SignerConfiguration(typeSafeConfig);
+        SignerConfiguration signerConfiguration = new SignerConfiguration(typeSafeConfig);
         AuthenticatorConfiguration authConfiguration = new AuthenticatorConfiguration(typeSafeConfig);
 
 1. To validate (authenticate) incoming requests, e.g. (using Servlet Filter):
 
         HttpClientRequestSigner signer = new HttpClientRequestSigner(signerConfiguration);
         HttpClientPublicKeyProvider provider = new HttpClientPublicKeyProvider(authConfiguration, signer);
-        RequestAuthenticator authenticator = new RequestAuthenticator(authenticator);
+        RequestAuthenticator authenticator = new RequestAuthenticator(provider, authConfiguration.isDisableV1());
         
         @Override
         public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
@@ -57,7 +57,7 @@ This is an implementation of Medidata Authentication Client Authenticator to val
                 .withQueryParameters(request.getQueryString())
                 .withMessagePayload(retrieveRequestBody(request))
                 .build();
-            if (authenticator.validate(mRequest)) {
+            if (authenticator.authenticate(mRequest)) {
                 // validation succeeded, proceed...
             } else {
                 // validation failed, respond with 401...

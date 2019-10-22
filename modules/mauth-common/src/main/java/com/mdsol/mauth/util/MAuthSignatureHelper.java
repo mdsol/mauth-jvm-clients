@@ -24,11 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-
 public class MAuthSignatureHelper {
 
   private static final Logger logger = LoggerFactory.getLogger(MAuthSignatureHelper.class);

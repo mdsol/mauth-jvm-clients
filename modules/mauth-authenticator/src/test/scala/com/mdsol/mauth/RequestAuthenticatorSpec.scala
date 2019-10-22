@@ -11,6 +11,8 @@ class RequestAuthenticatorSpec extends FlatSpec with RequestAuthenticatorBaseSpe
 
   val mockClientPublicKeyProvider: ClientPublicKeyProvider = mock[ClientPublicKeyProvider]
   val authenticator: RequestAuthenticator = new RequestAuthenticator(mockClientPublicKeyProvider, REQUEST_VALIDATION_TIMEOUT_SECONDS, mockEpochTimeProvider)
+  val authenticatorV2: RequestAuthenticator =
+    new RequestAuthenticator(mockClientPublicKeyProvider, REQUEST_VALIDATION_TIMEOUT_SECONDS, mockEpochTimeProvider, true)
 
   behavior of "RequestAuthenticator"
 
@@ -62,7 +64,7 @@ class RequestAuthenticatorSpec extends FlatSpec with RequestAuthenticatorBaseSpe
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_MCC_TIME_HEADER_VALUE.toLong + 3)
     (mockClientPublicKeyProvider.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))
 
-    authenticator.authenticate(getSimpleRequestV2) shouldBe true
+    authenticatorV2.authenticate(getSimpleRequestV2) shouldBe true
   }
 
   it should "validate a valid request with the headers of V1 and V2" in {
@@ -71,6 +73,17 @@ class RequestAuthenticatorSpec extends FlatSpec with RequestAuthenticatorBaseSpe
     (mockClientPublicKeyProvider.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))
 
     authenticator.authenticate(getRequestWithAllHeaders) shouldBe true
+  }
+
+  it should "fail validating request if disasbled V1, but V2 headers missed" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+
+    val expectedException = intercept[MAuthValidationException] {
+      authenticatorV2.authenticate(getSimpleRequest)
+    }
+
+    expectedException.getMessage shouldBe "The service requires mAuth v2 authentication headers."
   }
 
 }

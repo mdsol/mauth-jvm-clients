@@ -123,7 +123,6 @@ trait RequestAuthenticatorBaseSpec extends FlatSpec with BeforeAndAfterAll with 
       .withMessagePayload(CLIENT_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))
       .withResourcePath(CLIENT_REQUEST_PATH)
       .withQueryParameters("")
-      .withDisableV1(true)
       .build
   }
 
@@ -134,7 +133,6 @@ trait RequestAuthenticatorBaseSpec extends FlatSpec with BeforeAndAfterAll with 
       .withMessagePayload(CLIENT_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))
       .withResourcePath(CLIENT_REQUEST_PATH)
       .withQueryParameters("")
-      .withDisableV1(false)
       .build
   }
 

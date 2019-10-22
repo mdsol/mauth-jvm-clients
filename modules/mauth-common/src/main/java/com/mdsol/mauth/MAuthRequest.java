@@ -18,7 +18,6 @@ public class MAuthRequest {
   public static final String MCC_TIME_HEADER_NAME = "mcc-time";
   public static final String MCC_AUTHENTICATION_HEADER_NAME = "mcc-authentication";
 
-  public static final String VALIDATION_MISSING_MCC_AUTHENTICATION = "The service requires mAuth v2 authentication header.";
   private static final String VALIDATION_EXCEPTION_MESSAGE_TEMPLATE = "%s cannot be null or empty.";
 
   private final UUID appUUID;
@@ -28,21 +27,17 @@ public class MAuthRequest {
   private final long requestTime;
   private final String resourcePath;
   private final String queryParameters;
-  private final boolean disableV1;
   private final MAuthVersion mauthVersion;
 
   public MAuthRequest(String authenticationHeaderValue, byte[] messagePayload, String httpMethod,
        String timeHeaderValue, String resourcePath) {
-    this(authenticationHeaderValue, messagePayload, httpMethod, timeHeaderValue, resourcePath, "",false);
+    this(authenticationHeaderValue, messagePayload, httpMethod, timeHeaderValue, resourcePath, "");
   }
 
   public MAuthRequest(String authenticationHeaderValue, byte[] messagePayload, String httpMethod,
-      String timeHeaderValue, String resourcePath, String queryParameters, boolean disableV1) {
+      String timeHeaderValue, String resourcePath, String queryParameters) {
     validateNotBlank(authenticationHeaderValue, "Authentication header value");
     validateNotBlank(timeHeaderValue, "Time header value");
-
-    MAuthVersion mauthVersion = MAuthHeadersHelper.getMauthVersion(authenticationHeaderValue);
-    validateMauthVersion(disableV1, mauthVersion);
 
     UUID appUUID = MAuthHeadersHelper.getAppUUIDFromAuthenticationHeader(authenticationHeaderValue);
     String requestSignature =
@@ -64,8 +59,7 @@ public class MAuthRequest {
     this.requestTime = requestTime;
     this.resourcePath = resourcePath;
     this.queryParameters = queryParameters;
-    this.mauthVersion = mauthVersion;
-    this.disableV1 = disableV1;
+    this.mauthVersion = MAuthHeadersHelper.getMauthVersion(authenticationHeaderValue);
   }
 
   public UUID getAppUUID() {
@@ -113,12 +107,6 @@ public class MAuthRequest {
     }
   }
 
-  private void validateMauthVersion(boolean disableV1, MAuthVersion mauthVersion) {
-    if (disableV1 && mauthVersion.equals(MAuthVersion.MWS)) {
-      throw new IllegalArgumentException(VALIDATION_MISSING_MCC_AUTHENTICATION);
-    }
-  }
-
   public static final class Builder {
 
     private String authenticationHeaderValue;
@@ -127,7 +115,6 @@ public class MAuthRequest {
     private String timeHeaderValue;
     private String resourcePath;
     private String queryParameters;
-    private boolean disableV1;
     private Map<String, String> headers;
 
     public static Builder get() {
@@ -164,11 +151,6 @@ public class MAuthRequest {
       return this;
     }
 
-    public Builder withDisableV1(boolean disableV1) {
-      this.disableV1 = disableV1;
-      return this;
-    }
-
     public Builder withRequestHeaders(Map<String, String> headers) {
       this.headers = headers;
       return this;
@@ -186,7 +168,7 @@ public class MAuthRequest {
         }
       }
       return new MAuthRequest(authenticationHeaderValue, messagePayload, httpMethod,
-          timeHeaderValue, resourcePath, queryParameters, disableV1);
+          timeHeaderValue, resourcePath, queryParameters);
     }
   }
 }

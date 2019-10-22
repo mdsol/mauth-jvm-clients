@@ -18,9 +18,12 @@ public class RequestAuthenticator implements Authenticator {
 
   private static final Logger logger = LoggerFactory.getLogger(RequestAuthenticator.class);
 
+  private static final boolean DEFAULT_DISABLE_V1 = false;
+
   private final ClientPublicKeyProvider clientPublicKeyProvider;
   private final long requestValidationTimeoutSeconds;
   private final EpochTimeProvider epochTimeProvider;
+  private final boolean disableV1;
 
   static {
     Security.addProvider(new BouncyCastleProvider());
@@ -38,6 +41,18 @@ public class RequestAuthenticator implements Authenticator {
   }
 
   /**
+   * Uses
+   * 10L as default value for request validation timeout
+   * {@link com.mdsol.mauth.utils.ClientPublicKeyProvider} as the EpochTimeProvider
+   *
+   * @param clientPublicKeyProvider PublicKey provider
+   * @param disableV1
+   */
+  public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider, boolean disableV1) {
+    this(clientPublicKeyProvider, 10L, disableV1);
+  }
+
+  /**
    * Uses {@link com.mdsol.mauth.utils.ClientPublicKeyProvider} as the EpochTimeProvider
    *
    * @param clientPublicKeyProvider  PublicKey provider
@@ -47,10 +62,30 @@ public class RequestAuthenticator implements Authenticator {
     this(clientPublicKeyProvider, requestValidationTimeoutSeconds, new CurrentEpochTimeProvider());
   }
 
-  public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider, long requestValidationTimeoutSeconds, EpochTimeProvider epochTimeProvider) {
+  /**
+   * Uses {@link com.mdsol.mauth.utils.ClientPublicKeyProvider} as the EpochTimeProvider
+   *
+   * @param clientPublicKeyProvider  PublicKey provider
+   * @param requestValidationTimeoutSeconds timeout
+   * @param disableV1
+   */
+  public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider,
+      long requestValidationTimeoutSeconds, boolean disableV1) {
+    this(clientPublicKeyProvider, requestValidationTimeoutSeconds, new CurrentEpochTimeProvider(), disableV1);
+  }
+
+
+  public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider,
+      long requestValidationTimeoutSeconds, EpochTimeProvider epochTimeProvider) {
+    this(clientPublicKeyProvider, requestValidationTimeoutSeconds, epochTimeProvider, DEFAULT_DISABLE_V1);
+  }
+
+  public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider,
+      long requestValidationTimeoutSeconds, EpochTimeProvider epochTimeProvider, boolean disableV1) {
     this.clientPublicKeyProvider = clientPublicKeyProvider;
     this.requestValidationTimeoutSeconds = requestValidationTimeoutSeconds;
     this.epochTimeProvider = epochTimeProvider;
+    this.disableV1 = disableV1;
   }
 
   @Override
@@ -60,6 +95,12 @@ public class RequestAuthenticator implements Authenticator {
 
     if (!(validateTime(mAuthRequest.getRequestTime()))) {
       final String message = "MAuth request validation failed because of timeout " + requestValidationTimeoutSeconds + "s";
+      logger.error(message);
+      throw new MAuthValidationException(message);
+    }
+
+    if (disableV1 && !mAuthRequest.getMauthVersion().equals(MAuthVersion.MWSV2)) {
+      final  String message  = "The service requires mAuth v2 authentication headers.";
       logger.error(message);
       throw new MAuthValidationException(message);
     }

@@ -167,7 +167,6 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
       .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
       .withResourcePath(CLIENT_REQUEST_PATH)
       .withQueryParameters(CLIENT_REQUEST_QUERY_PARAMETERS)
-      .withDisableV1(true)
       .build()
 
     request.getAppUUID shouldBe UUID.fromString(CLIENT_APP_UUID)
@@ -177,22 +176,6 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
     request.getMessagePayload shouldBe CLIENT_REQUEST_PAYLOAD
     request.getQueryParameters shouldBe CLIENT_REQUEST_QUERY_PARAMETERS
     request.getMauthVersion shouldBe MAuthVersion.MWSV2
-  }
-
-  it should "not allow to create request with msw-authentication header if disabled V1" in {
-    val expectedException = intercept[IllegalArgumentException] {
-      MAuthRequest.Builder
-        .get()
-        .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
-        .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER)
-        .withHttpMethod(CLIENT_REQUEST_METHOD)
-        .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
-        .withResourcePath(CLIENT_REQUEST_PATH)
-        .withQueryParameters(CLIENT_REQUEST_QUERY_PARAMETERS)
-        .withDisableV1(true)
-        .build()
-    }
-    expectedException.getMessage shouldBe MAuthRequest.VALIDATION_MISSING_MCC_AUTHENTICATION
   }
 
   it should "correctly create MAuthRequest for V1 if the headers include V1 only" in {
