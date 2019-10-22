@@ -13,11 +13,20 @@ import java.util.UUID;
  */
 public class MAuthRequest {
 
+  /* @deprecated
+   * This is the header name for Mauth V1 protocol, replaced by MCC_TIME_HEADER_NAME for Mauth V2 protocol
+   */
+  @Deprecated
   public static final String X_MWS_TIME_HEADER_NAME = "x-mws-time";
+
+  /* @deprecated
+   * This is the header name for Mauth V1 protocol, replaced by MCC_AUTHENTICATION_HEADER_NAME for Mauth V2 protocol
+   */
+  @Deprecated
   public static final String X_MWS_AUTHENTICATION_HEADER_NAME = "x-mws-authentication";
+
   public static final String MCC_TIME_HEADER_NAME = "mcc-time";
   public static final String MCC_AUTHENTICATION_HEADER_NAME = "mcc-authentication";
-
   private static final String VALIDATION_EXCEPTION_MESSAGE_TEMPLATE = "%s cannot be null or empty.";
 
   private final UUID appUUID;

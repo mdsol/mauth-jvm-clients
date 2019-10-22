@@ -13,6 +13,7 @@ import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.annotation.meta.param;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -29,7 +30,38 @@ public class MAuthSignatureHelper {
   private static final Logger logger = LoggerFactory.getLogger(MAuthSignatureHelper.class);
 
   /**
-   * Generate string_to_sign for Mauth V1
+   * Generate string_to_sign for Mauth
+   * @param appUUID: app uuid
+   * @param httpMethod: Http_Verb
+   * @param resourceUrl: resource_url_path (no host, port or query string; first "/" is included)
+   * @param queryParameters: request parameters string
+   * @param requestBody: request body string
+   * @param epochTime: current seconds since Epoch
+   * @param mauthVersion: Mauth version (MSW or MSWV2)
+   * @return String
+   *
+   * @throws MAuthSigningException
+   */
+  public static String generateStringToSign(UUID appUUID, String httpMethod, String resourceUrl, String queryParameters,
+      String requestBody, String epochTime, MAuthVersion mauthVersion) throws MAuthSigningException {
+    String strTosign;
+    if (mauthVersion.equals(MAuthVersion.MWS)) {
+      strTosign = generateUnencryptedSignature(appUUID, httpMethod, resourceUrl, requestBody, epochTime);
+    }
+    else {
+      strTosign = generateStringToSignV2(appUUID, httpMethod, resourceUrl, queryParameters, requestBody, epochTime);
+    }
+    return strTosign;
+  }
+
+  /**
+   * Generate string_to_sign for Mauth V1 protocol
+   *
+   * @deprecated
+   *   This is used for Mauth V1 protocol,
+   *   replaced by {@link #generateStringToSign(UUID appUUID, String httpMethod, String resourceUrl,
+   *       String queryParameters, String requestBody, String epochTime, MAuthVersion mauthVersion)} for Mauth V2 protocol
+   *
    * @param appUUID: app uuid
    * @param httpMethod: Http_Verb
    * @param resourceUrl: resource_url_path (no host, port or query string; first "/" is included)
@@ -39,13 +71,14 @@ public class MAuthSignatureHelper {
    *   httpMethod + "\n" + resourceUrl + "\n" + requestBody + "\n" + app_uuid + "\n" + epochTime
    *
    */
+  @Deprecated
   public static String generateUnencryptedSignature(UUID appUUID, String httpMethod, String resourceUrl, String requestBody, String epochTime) {
     logger.debug("Generating String to sign for V1");
     return httpMethod + "\n" + resourceUrl + "\n" + requestBody + "\n" + appUUID.toString() + "\n" + epochTime;
   }
 
   /**
-   * Generate string_to_sign for Mauth V2
+   * Generate string_to_sign for Mauth V2 protocol
    * @param appUUID: application uuid
    * @param httpMethod: Http_Verb
    * @param resourceUrl: resource_url_path (no host, port or query string; first "/" is included)
@@ -57,7 +90,7 @@ public class MAuthSignatureHelper {
    *
    * @throws MAuthSigningException
    */
-  public static String generateStringToSignV2(UUID appUUID, String httpMethod, String resourceUrl,
+  private static String generateStringToSignV2(UUID appUUID, String httpMethod, String resourceUrl,
       String queryParameters, String requestBody, String epochTime) throws MAuthSigningException{
     logger.debug("Generating String to sign for V2");
 
@@ -75,30 +108,19 @@ public class MAuthSignatureHelper {
   }
 
   /**
-   * Generate string_to_sign for Mauth
-   * @param appUUID: app uuid
-   * @param httpMethod: Http_Verb
-   * @param resourceUrl: resource_url_path (no host, port or query string; first "/" is included)
-   * @param queryParameters: request parameters string
-   * @param requestBody: request body string
-   * @param epochTime: current seconds since Epoch
-   * @param mauthVersion: Mauth version (MSW or MSWV2)
-   * @return String
+   * Generate base64 encoded signature for Mauth V1 protocol
    *
-   * @throws MAuthSigningException
+   * @deprecated
+   *   This is used for Mauth V1 protocol,
+   *   replaced by {@link #encryptSignatureRSA(PrivateKey privateKey, String unencryptedString)} for Mauth V2 protocol
+   *
+   * @param privateKey the private key of the identity whose signature is going to be generated.
+   * @param unencryptedString the string be signed
+   * @return String of Base64 decode the digital signature
+   * @throws IOException
+   * @throws CryptoException
    */
-  public static String generateStringToSign(UUID appUUID, String httpMethod, String resourceUrl,
-      String queryParameters, String requestBody, String epochTime, MAuthVersion mauthVersion) throws MAuthSigningException{
-    String strTosign;
-    if (mauthVersion.equals(MAuthVersion.MWS)) {
-      strTosign = generateUnencryptedSignature(appUUID, httpMethod, resourceUrl, requestBody, epochTime);
-    }
-    else {
-      strTosign = generateStringToSignV2(appUUID, httpMethod, resourceUrl, queryParameters, requestBody, epochTime);
-    }
-    return strTosign;
-  }
-
+  @Deprecated
   public static String encryptSignature(PrivateKey privateKey, String unencryptedString) throws IOException, CryptoException {
     String hexEncodedString = getHexEncodedDigestedString(unencryptedString);
 
@@ -109,6 +131,19 @@ public class MAuthSignatureHelper {
     return new String(Base64.encodeBase64(encryptedStringBytes), "UTF-8");
   }
 
+  /**
+   * Decrypt the encrypted signature for Mauth V1 protocol
+   *
+   * @deprecated
+   *   This is used for Mauth V1 protocol,
+   *   replaced by {@link #verifyRSA(String plainText, String signature, PublicKey publicKey)} for Mauth V2 protocol
+   *
+   * @param publicKey he public key of the identity whose signature is going to be verified.
+   * @param encryptedSignature the signature to be decrypted.
+   * @return byte[] decrypted signature
+   * @throws MAuthSigningException
+   */
+  @Deprecated
   public static byte[] decryptSignature(PublicKey publicKey, String encryptedSignature) {
     try {
       // Decode the signature from its base 64 form
