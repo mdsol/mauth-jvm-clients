@@ -46,7 +46,9 @@ public class RequestAuthenticator implements Authenticator {
    * {@link com.mdsol.mauth.utils.ClientPublicKeyProvider} as the EpochTimeProvider
    *
    * @param clientPublicKeyProvider PublicKey provider
-   * @param disableV1
+   * @param disableV1 the flag to identify authenticate with protocol V1 or not,
+   *                  if true, clients will authenticate with protocol V2,
+   *                  if false, clients will authenticate with only the highest protocol version (V2 or V1)
    */
   public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider, boolean disableV1) {
     this(clientPublicKeyProvider, 10L, disableV1);
@@ -67,13 +69,14 @@ public class RequestAuthenticator implements Authenticator {
    *
    * @param clientPublicKeyProvider  PublicKey provider
    * @param requestValidationTimeoutSeconds timeout
-   * @param disableV1
+   * @param disableV1 the flag to identify authenticate with protocol V1 or not,
+   *                  if true, clients will authenticate with protocol V2,
+   *                  if false, clients will authenticate with only the highest protocol version (V2 or V1)
    */
   public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider,
       long requestValidationTimeoutSeconds, boolean disableV1) {
     this(clientPublicKeyProvider, requestValidationTimeoutSeconds, new CurrentEpochTimeProvider(), disableV1);
   }
-
 
   public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider,
       long requestValidationTimeoutSeconds, EpochTimeProvider epochTimeProvider) {

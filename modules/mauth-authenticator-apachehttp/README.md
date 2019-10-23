@@ -15,7 +15,6 @@ This is an implementation of Medidata Authentication Client Authenticator to val
                 
         mauth {
             base_url: "http://localhost"
-            disable_v1: false
         }
 
     **Defaults:**
