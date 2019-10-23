@@ -51,7 +51,23 @@ trait RequestAuthenticatorBaseSpec extends FlatSpec with BeforeAndAfterAll with 
   val CLIENT_NO_BODY_REQUEST_METHOD: String = HttpGet.METHOD_NAME
   val CLIENT_NO_BODY_REQUEST_PATH = "/resource/path"
 
+  val CLIENT_MCC_TIME_HEADER_VALUE = "1444672122"
+  val CLIENT_REQUEST_SIGNATURE_V2: String =
+    """et2ht0OkDx20yWlPvOQn1jdTFaT3rS//3t+yl0VqiTgqeMae7x24/UzfD2WQ
+      |Bk6o226eQVnCloRjGgq9iLqIIf1wrAFy4CjEHPVCwKOcfbpVQBJYLCyL3Ilz
+      |VX6oDmV1Ghukk29mIlgmHGhfHPwGf3vMPvgCQ42GsnAKpRrQ9T4L2IWMM9gk
+      |WRAFYDXE3igTM+mWBz3IRrJMLnC2440N/KFNmwh3mVCDxIx/3D4xGhhiGZwA
+      |udVbIHmOG045CTSlajxWSNCbClM3nBmAzZn+wRD3DvdvHvDMiAtfVpz7rNLq
+      |2rBY2KRNJmPBaAV5ss30FC146jfyg7b8I9fenyauaw==""".stripMargin
+  val CLIENT_REQUEST_AUTHENTICATION_HEADER_V2: String = "MWSV2 " + EXISTING_CLIENT_APP_UUID.toString + ":" + CLIENT_REQUEST_SIGNATURE_V2 + ";"
+
   val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
+
+  private val CLIENT_REQUEST_HEADERS = new java.util.HashMap[String, String]()
+  CLIENT_REQUEST_HEADERS.put(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, CLIENT_REQUEST_AUTHENTICATION_HEADER)
+  CLIENT_REQUEST_HEADERS.put(MAuthRequest.X_MWS_TIME_HEADER_NAME, CLIENT_X_MWS_TIME_HEADER_VALUE)
+  CLIENT_REQUEST_HEADERS.put(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
+  CLIENT_REQUEST_HEADERS.put(MAuthRequest.MCC_TIME_HEADER_NAME, CLIENT_MCC_TIME_HEADER_VALUE)
 
   override protected def beforeAll() {
     Security.addProvider(new BouncyCastleProvider)
@@ -98,4 +114,26 @@ trait RequestAuthenticatorBaseSpec extends FlatSpec with BeforeAndAfterAll with 
       .withResourcePath(CLIENT_NO_BODY_REQUEST_PATH)
       .build
   }
+
+  def getSimpleRequestV2: MAuthRequest = {
+    MAuthRequest.Builder.get
+      .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
+      .withTimeHeaderValue(CLIENT_MCC_TIME_HEADER_VALUE)
+      .withHttpMethod(CLIENT_REQUEST_METHOD)
+      .withMessagePayload(CLIENT_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))
+      .withResourcePath(CLIENT_REQUEST_PATH)
+      .withQueryParameters("")
+      .build
+  }
+
+  def getRequestWithAllHeaders: MAuthRequest = {
+    MAuthRequest.Builder.get
+      .withHttpMethod(CLIENT_REQUEST_METHOD)
+      .withRequestHeaders(CLIENT_REQUEST_HEADERS)
+      .withMessagePayload(CLIENT_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))
+      .withResourcePath(CLIENT_REQUEST_PATH)
+      .withQueryParameters("")
+      .build
+  }
+
 }

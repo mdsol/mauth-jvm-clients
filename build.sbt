@@ -29,6 +29,7 @@ val nonCrossPublishSettings = Seq(
 )
 
 lazy val `mauth-common` = (project in file("modules/mauth-common"))
+  .dependsOn(`mauth-test-utils` % "test")
   .settings(
     basicSettings,
     publishSettings,

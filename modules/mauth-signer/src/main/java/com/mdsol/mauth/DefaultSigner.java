@@ -25,13 +25,15 @@ public class DefaultSigner implements Signer {
   private final UUID appUUID;
   private final PrivateKey privateKey;
   private final EpochTimeProvider epochTimeProvider;
+  private boolean disableV1 = false;
 
   static {
     Security.addProvider(new BouncyCastleProvider());
   }
 
   public DefaultSigner(SignerConfiguration configuration) {
-    this(configuration.getAppUUID(), configuration.getPrivateKey());
+    this(configuration.getAppUUID(), getPrivateKeyFromString(configuration.getPrivateKey()),
+        new CurrentEpochTimeProvider(), configuration.isDisableV1());
   }
 
   public DefaultSigner(UUID appUUID, String privateKey) {
@@ -47,20 +49,67 @@ public class DefaultSigner implements Signer {
   }
 
   public DefaultSigner(UUID appUUID, PrivateKey privateKey, EpochTimeProvider epochTimeProvider) {
+    this(appUUID, privateKey, epochTimeProvider, false);
+  }
+
+  public DefaultSigner(UUID appUUID, String privateKey, EpochTimeProvider epochTimeProvider, boolean disableV1) {
+    this(appUUID, getPrivateKeyFromString(privateKey), epochTimeProvider, disableV1);
+  }
+
+  public DefaultSigner(UUID appUUID, PrivateKey privateKey, EpochTimeProvider epochTimeProvider, boolean disableV1) {
     this.appUUID = appUUID;
     this.privateKey = privateKey;
     this.epochTimeProvider = epochTimeProvider;
+    this.disableV1 = disableV1;
   }
 
   @Override
-  public Map<String, String> generateRequestHeaders(String httpVerb, String requestPath, String requestPayload) throws MAuthSigningException {
+  @Deprecated
+  public Map<String, String> generateRequestHeadersV1(String httpVerb,
+      String requestPath, String requestPayload) throws MAuthSigningException {
     if (null == requestPayload) {
       requestPayload = "";
     }
     // mAuth uses an epoch time measured in seconds
     long currentTime = epochTimeProvider.inSeconds();
 
-    String unencryptedSignature = MAuthSignatureHelper.generateUnencryptedSignature(appUUID, httpVerb, requestPath, requestPayload, String.valueOf(currentTime));
+    return generateRequestHeadersV1(httpVerb, requestPath, requestPayload, currentTime);
+  }
+
+  @Override
+  public Map<String, String> generateRequestHeaders(String httpVerb,
+      String requestPath, String requestPayload, String queryParameters) throws MAuthSigningException {
+
+    if (null == requestPayload) {
+      requestPayload = "";
+    }
+    if (null == queryParameters) {
+      queryParameters = "";
+    }
+
+    // mAuth uses an epoch time measured in seconds
+    long currentTime = epochTimeProvider.inSeconds();
+
+    HashMap<String, String> headers = new HashMap<>();
+    if (!disableV1) {
+      // Add v1 headers if Mauth V1 is not disabled
+      Map<String, String> headersV1 = generateRequestHeadersV1(httpVerb, requestPath, requestPayload, currentTime);
+      if (!headersV1.isEmpty()) {
+        headers.putAll(headersV1);
+      }
+    }
+
+    Map<String, String> headersV2 = generateRequestHeadersV2(httpVerb, requestPath, queryParameters, requestPayload, currentTime);
+    if (!headersV2.isEmpty()) {
+      headers.putAll(headersV2);
+    }
+    return headers;
+  }
+
+  private Map<String, String> generateRequestHeadersV1(String httpVerb, String requestPath, String requestPayload, long currentTime) throws MAuthSigningException {
+
+    String unencryptedSignature = MAuthSignatureHelper.generateUnencryptedSignature(
+        appUUID, httpVerb, requestPath, requestPayload, String.valueOf(currentTime));
 
     String encryptedSignature;
     try {
@@ -80,4 +129,29 @@ public class DefaultSigner implements Signer {
 
     return headers;
   }
+
+  private Map<String, String> generateRequestHeadersV2(String httpVerb, String requestPath, String queryParameters,
+      String requestPayload, long currentTime) throws MAuthSigningException {
+    MAuthVersion mauthVersion = MAuthVersion.MWSV2;
+    String stringTosign = MAuthSignatureHelper.generateStringToSign(
+        appUUID, httpVerb, requestPath, queryParameters, requestPayload, String.valueOf(currentTime), mauthVersion);
+
+    String encryptedSignature;
+    try {
+      encryptedSignature = MAuthSignatureHelper.encryptSignatureRSA(privateKey, stringTosign);
+    } catch (Exception e) {
+      logger.error("Error generating request headers for V2", e);
+      throw new MAuthSigningException(e);
+    }
+
+    HashMap<String, String> headers = new HashMap<>();
+    headers.put(
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME,
+        MAuthHeadersHelper.createAuthenticationHeaderValue(appUUID, encryptedSignature, mauthVersion.getValue())
+    );
+    headers.put(MAuthRequest.MCC_TIME_HEADER_NAME, MAuthHeadersHelper.createTimeHeaderValue(currentTime));
+
+    return headers;
+  }
+
 }
