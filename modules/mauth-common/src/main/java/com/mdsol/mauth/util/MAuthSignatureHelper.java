@@ -13,7 +13,6 @@ import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.annotation.meta.param;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -30,37 +29,12 @@ public class MAuthSignatureHelper {
   private static final Logger logger = LoggerFactory.getLogger(MAuthSignatureHelper.class);
 
   /**
-   * Generate string_to_sign for Mauth
-   * @param appUUID: app uuid
-   * @param httpMethod: Http_Verb
-   * @param resourceUrl: resource_url_path (no host, port or query string; first "/" is included)
-   * @param queryParameters: request parameters string
-   * @param requestBody: request body string
-   * @param epochTime: current seconds since Epoch
-   * @param mauthVersion: Mauth version (MSW or MSWV2)
-   * @return String
-   *
-   * @throws MAuthSigningException
-   */
-  public static String generateStringToSign(UUID appUUID, String httpMethod, String resourceUrl, String queryParameters,
-      String requestBody, String epochTime, MAuthVersion mauthVersion) throws MAuthSigningException {
-    String strTosign;
-    if (mauthVersion.equals(MAuthVersion.MWS)) {
-      strTosign = generateUnencryptedSignature(appUUID, httpMethod, resourceUrl, requestBody, epochTime);
-    }
-    else {
-      strTosign = generateStringToSignV2(appUUID, httpMethod, resourceUrl, queryParameters, requestBody, epochTime);
-    }
-    return strTosign;
-  }
-
-  /**
    * Generate string_to_sign for Mauth V1 protocol
    *
    * @deprecated
    *   This is used for Mauth V1 protocol,
-   *   replaced by {@link #generateStringToSign(UUID appUUID, String httpMethod, String resourceUrl,
-   *       String queryParameters, String requestBody, String epochTime, MAuthVersion mauthVersion)} for Mauth V2 protocol
+   *   replaced by {@link #generateStringToSignV2(UUID appUUID, String httpMethod, String resourceUrl,
+   *       String queryParameters, byte[] requestBody, String epochTime)} for Mauth V2 protocol
    *
    * @param appUUID: app uuid
    * @param httpMethod: Http_Verb
@@ -83,15 +57,15 @@ public class MAuthSignatureHelper {
    * @param httpMethod: Http_Verb
    * @param resourceUrl: resource_url_path (no host, port or query string; first "/" is included)
    * @param queryParameters: request parameters string
-   * @param requestBody: request body string
+   * @param requestBody: request body byte[]
    * @param epochTime: current seconds since Epoch
    * @return String
    *   httpMethod + "\n" + resourceUrl + "\n" + requestBody_digest + "\n" + app_uuid + "\n" + epochTime + "\n" + encoded_queryParameters
    *
    * @throws MAuthSigningException
    */
-  private static String generateStringToSignV2(UUID appUUID, String httpMethod, String resourceUrl,
-      String queryParameters, String requestBody, String epochTime) throws MAuthSigningException{
+  public static String generateStringToSignV2(UUID appUUID, String httpMethod, String resourceUrl,
+      String queryParameters, byte[] requestBody, String epochTime) throws MAuthSigningException{
     logger.debug("Generating String to sign for V2");
 
     String bodyDigest;
@@ -128,7 +102,7 @@ public class MAuthSignatureHelper {
     encryptEngine.init(true, PrivateKeyFactory.createKey(privateKey.getEncoded()));
     byte[] encryptedStringBytes = encryptEngine.processBlock(hexEncodedString.getBytes(), 0, hexEncodedString.getBytes().length);
 
-    return new String(Base64.encodeBase64(encryptedStringBytes), "UTF-8");
+    return new String(Base64.encodeBase64(encryptedStringBytes), StandardCharsets.UTF_8);
   }
 
   /**
@@ -164,14 +138,19 @@ public class MAuthSignatureHelper {
   }
 
   public static String getHexEncodedDigestedString(String unencryptedString) {
+    byte[] unencryptedData = unencryptedString.getBytes(StandardCharsets.UTF_8);
+    return getHexEncodedDigestedString(unencryptedData);
+  }
+
+  public static String getHexEncodedDigestedString(byte[] unencryptedData) {
     try {
       // Get digest
       MessageDigest md = MessageDigest.getInstance("SHA-512");
-      byte[] digestedString = md.digest(unencryptedString.getBytes(StandardCharsets.UTF_8));
+      byte[] digestedString = md.digest(unencryptedData);
       // Convert to hex
       return Hex.encodeHexString(digestedString);
     } catch (NoSuchAlgorithmException ex) {
-      final String message = "Invalid alghoritm or security provider.";
+      final String message = "Invalid algorithm or security provider.";
       logger.error(message, ex);
       throw new MAuthSigningException(message, ex);
     }

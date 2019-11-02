@@ -72,6 +72,46 @@ class RequestAuthenticatorSpec extends FlatSpec with RequestAuthenticatorBaseSpe
     }
   }
 
+  it should "authenticate a valid request with V2 headers" in clientContext { (client) =>
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
+
+    whenReady(authenticator.authenticate(getSimpleRequestV2)) { validationResult =>
+      validationResult shouldBe true
+    }
+  }
+
+  it should "authenticate a valid request with V2 headers only if V2 only enabled" in clientContext { (client) =>
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider, true)
+
+    val result = authenticator.authenticate(getSimpleRequestV2).futureValue
+    result shouldBe true
+  }
+
+  it should "authenticate a valid request with the both V1 and V2 headers provided" in clientContext { (client) =>
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
+
+    whenReady(authenticator.authenticate(getRequestWithAllHeaders)) { validationResult =>
+      validationResult shouldBe true
+    }
+  }
+
+  it should "reject a request with V1 headers when V2 only is enabled" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    val authenticator = new RequestAuthenticator(mock[ClientPublicKeyProvider], mockEpochTimeProvider, true)
+
+    whenReady(authenticator.authenticate(getSimpleRequest).failed) {
+      case e: MAuthValidationException => e.getMessage shouldBe "The service requires mAuth v2 authentication headers."
+      case _ => fail("should not be here")
+    }
+  }
+
   private def clientContext(test: (ClientPublicKeyProvider) => Any): Unit = {
     val client: ClientPublicKeyProvider = mock[ClientPublicKeyProvider]
     (client.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(Future(Some(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))))

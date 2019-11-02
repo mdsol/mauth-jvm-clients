@@ -31,4 +31,11 @@ public class FixturesLoader {
     }
   }
 
+  public static byte[] getBinaryFileBody() {
+    try {
+       return IOUtils.toByteArray(FixturesLoader.class.getResourceAsStream("/blank.jpeg"));
+    } catch (IOException ex) {
+      throw new IllegalStateException("Unable to load blank.jpeg.", ex);
+    }
+  }
 }

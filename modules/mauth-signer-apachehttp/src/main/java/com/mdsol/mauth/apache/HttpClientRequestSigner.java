@@ -16,6 +16,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.util.List;
 import java.util.Map;
@@ -43,8 +44,8 @@ public class HttpClientRequestSigner extends DefaultSigner {
     super(appUUID, privateKey, epochTimeProvider);
   }
 
-  public HttpClientRequestSigner(UUID appUUID, String privateKey, EpochTimeProvider epochTimeProvider, boolean disableV1) {
-    super(appUUID, privateKey, epochTimeProvider, disableV1);
+  public HttpClientRequestSigner(UUID appUUID, String privateKey, EpochTimeProvider epochTimeProvider, boolean v2OnlySignRequests) {
+    super(appUUID, privateKey, epochTimeProvider, v2OnlySignRequests);
   }
 
   /**
@@ -59,11 +60,11 @@ public class HttpClientRequestSigner extends DefaultSigner {
    */
   public void signRequest(HttpUriRequest request) throws MAuthSigningException {
     String httpVerb = request.getMethod();
-    String body = "";
+    byte[] body = "".getBytes(StandardCharsets.UTF_8);
 
     if (request instanceof HttpEntityEnclosingRequest) {
       try {
-        body = EntityUtils.toString(((HttpEntityEnclosingRequest) request).getEntity());
+        body = EntityUtils.toByteArray(((HttpEntityEnclosingRequest) request).getEntity());
       } catch (ParseException | IOException e) {
         throw new MAuthSigningException(e);
       }

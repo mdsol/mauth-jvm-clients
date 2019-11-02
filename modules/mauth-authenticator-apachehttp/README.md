@@ -6,7 +6,7 @@ This is an implementation of Medidata Authentication Client Authenticator to val
 
 1. Configuration
   * MAuth uses [Typesafe Config](https://github.com/typesafehub/config).
-  Create `application.conf` on your classpath with following content. The disable_v1 flag can be set to authenticate incoming requests with Mauth protocol V2 only, default to false.
+  Create `application.conf` on your classpath with following content. The v2_only_authenticate flag can be set to authenticate incoming requests with Mauth protocol V2 only, default to false.
 
         app {
             uuid: "aaaa-bbbbb-ccccc-ddddd-eeeee"
@@ -32,7 +32,7 @@ This is an implementation of Medidata Authentication Client Authenticator to val
             cache {
                 time_to_live_seconds: 90
             }
-            disable_v1: false
+            v2_only_authenticate: false
         }
 
   * Load Configuration
@@ -41,18 +41,18 @@ This is an implementation of Medidata Authentication Client Authenticator to val
         SignerConfiguration signerConfiguration = new SignerConfiguration(typeSafeConfig);
         AuthenticatorConfiguration authConfiguration = new AuthenticatorConfiguration(typeSafeConfig);
 
-1. To validate (authenticate) incoming requests, e.g. (using Servlet Filter):
+2. To validate (authenticate) incoming requests, e.g. (using Servlet Filter):
 
         HttpClientRequestSigner signer = new HttpClientRequestSigner(signerConfiguration);
         HttpClientPublicKeyProvider provider = new HttpClientPublicKeyProvider(authConfiguration, signer);
-        RequestAuthenticator authenticator = new RequestAuthenticator(provider, authConfiguration.isDisableV1());
+        RequestAuthenticator authenticator = new RequestAuthenticator(provider, authConfiguration.isV2OnlyAuthenticate());
         
         @Override
         public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
             HttpServletRequest request = (HttpServletRequest) req;
             MAuthRequest mRequest = MAuthRequest.Builder.get()
                 .withHttpMethod(request.getMethod()).withResourcePath(request.getRequestURI())
-                .withRequestHeaders(getRequestHeaders(request))
+                .withMauthHeaders(getMauthHeaders(request))
                 .withQueryParameters(request.getQueryString())
                 .withMessagePayload(retrieveRequestBody(request))
                 .build();
@@ -67,6 +67,16 @@ This is an implementation of Medidata Authentication Client Authenticator to val
             // get request body from the request...
         }
 
-        private Map<String, String> getRequestHeaders(HttpServletRequest request) {
-          // get request headers from the request...
+        private Map<String, String> getMauthHeaders(HttpServletRequest request) {
+          // get supported mauth headers from the request headers...
+          List<String> supportedMauthHeaders = Arrays.asList(
+            MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME,   // for Mauth V2
+            MAuthRequest.MCC_TIME_HEADER_NAME,             // for Mauth V2
+            MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, // for Mauth V1
+            MAuthRequest.X_MWS_TIME_HEADER_NAME);          // for Mauth V1
+
+          Map<String, String> map = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+          ...
+
+          return map;
         }

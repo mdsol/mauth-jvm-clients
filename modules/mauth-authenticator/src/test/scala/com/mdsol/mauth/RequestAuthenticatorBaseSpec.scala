@@ -129,7 +129,7 @@ trait RequestAuthenticatorBaseSpec extends FlatSpec with BeforeAndAfterAll with 
   def getRequestWithAllHeaders: MAuthRequest = {
     MAuthRequest.Builder.get
       .withHttpMethod(CLIENT_REQUEST_METHOD)
-      .withRequestHeaders(CLIENT_REQUEST_HEADERS)
+      .withMauthHeaders(CLIENT_REQUEST_HEADERS)
       .withMessagePayload(CLIENT_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))
       .withResourcePath(CLIENT_REQUEST_PATH)
       .withQueryParameters("")

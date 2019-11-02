@@ -158,7 +158,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
     request.getQueryParameters shouldBe CLIENT_REQUEST_QUERY_PARAMETERS
   }
 
-  it should "correctly create MAuthRequest for V2 if disabled V1" in {
+  it should "correctly create MAuthRequest for V2 if V2 only enabled" in {
     val request = MAuthRequest.Builder
       .get()
       .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
@@ -185,7 +185,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
       .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
       .withResourcePath(CLIENT_REQUEST_PATH)
       .withQueryParameters(CLIENT_REQUEST_QUERY_PARAMETERS)
-      .withRequestHeaders(CLIENT_REQUEST_HEADERS_V1)
+      .withMauthHeaders(CLIENT_REQUEST_HEADERS_V1)
       .build()
 
     request.getAppUUID shouldBe UUID.fromString(CLIENT_APP_UUID)
@@ -204,7 +204,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
       .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
       .withResourcePath(CLIENT_REQUEST_PATH)
       .withQueryParameters(CLIENT_REQUEST_QUERY_PARAMETERS)
-      .withRequestHeaders(CLIENT_REQUEST_HEADERS_V2)
+      .withMauthHeaders(CLIENT_REQUEST_HEADERS_V2)
       .build()
 
     request.getAppUUID shouldBe UUID.fromString(CLIENT_APP_UUID)
@@ -223,7 +223,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
       .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
       .withResourcePath(CLIENT_REQUEST_PATH)
       .withQueryParameters(CLIENT_REQUEST_QUERY_PARAMETERS)
-      .withRequestHeaders(CLIENT_REQUEST_HEADERS)
+      .withMauthHeaders(CLIENT_REQUEST_HEADERS)
       .build()
 
     request.getAppUUID shouldBe UUID.fromString(CLIENT_APP_UUID)

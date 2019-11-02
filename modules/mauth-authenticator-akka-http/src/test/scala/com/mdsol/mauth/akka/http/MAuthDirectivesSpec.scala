@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import com.mdsol.mauth.MAuthRequest
+import com.mdsol.mauth.{MAuthRequest, MAuthVersion}
 import com.mdsol.mauth.http.{`X-MWS-Authentication`, `X-MWS-Time`}
 import com.mdsol.mauth.scaladsl.RequestAuthenticator
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
@@ -35,11 +35,22 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
   private val authHeader: String = s"$authPrefix $appUuid:$signature"
   private val timeHeader: Long = 1509041057L
 
+  private val requestParams: String = "key2=data2&key1=data1"
+  private val timeHeaderV2 = 1509041057L
+  private val authPrefixV2: String = "MWSV2"
+  val signatureV2: String =
+    s"""h0MJYf5/zlX9VqqchANLr7XUln0RydMV4msZSXzLq2sbr3X+TGeJ60K9ZSlSuRrzyHbzzwuZABA
+       |3P2j3l9t+gyBC1c/JSa8mldMrIXXYzp0lYLxLkghH09hm3k0pEW2la94K/Num3xgNymn6D/B9dJ1onRIgl+T+e/m4k6
+       |T3apKHcV/6cJ9asm+jDjzB8OuCVWVsLZQKQbtiydUYNisYerKVxWPLs9SHNZ6GmAqq4ZCCpyEQZuMNF6cMmXgQ0Pxe9
+       |X/yNA1Xc3Fakuga47lUQ6Bn7xvhkH6P+ZP0k4U7kidziXpxpkDts8fEXTpkvFX0PR7vaxjbMZzWsU413jyNsw==;""".stripMargin.replaceAll("\n", "")
+  private val authHeaderV2: String = s"$authPrefixV2 $appUuid:$signatureV2"
+
   private implicit val timeout: FiniteDuration = 30 seconds
   private implicit val requestValidationTimeout: Duration = 10 seconds
   private val client = mock[ClientPublicKeyProvider]
   private val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
   private implicit val authenticator: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
+  private implicit val authenticatorV2: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider, true)
 
   "authenticate" should {
     lazy val route: Route = authenticate(executor, authenticator, timeout, requestValidationTimeout).apply(complete(HttpResponse()))
@@ -131,6 +142,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
       }
     }
   }
+
   "extractMAuthHeader" should {
     lazy val route =
       extractMAuthHeader { x ⇒
@@ -184,4 +196,229 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
       }
     }
   }
+
+  "authenticate for V2" should {
+    lazy val route: Route = authenticate(executor, authenticatorV2, timeout, requestValidationTimeout).apply(complete(HttpResponse()))
+    val publicKey = MAuthKeysHelper.getPublicKeyFromString(FixturesLoader.getPublicKey)
+
+    "pass successfully authenticated request with parameters" in {
+      (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
+      //noinspection ConvertibleToMethodValue
+      (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
+
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2),
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeaderV2.toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
+      ) ~> route ~> check {
+        status shouldEqual StatusCodes.OK
+      }
+    }
+
+    "pass successfully authenticated request with V2 headers" in {
+      (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
+      //noinspection ConvertibleToMethodValue
+      (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
+
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2)
+      ) ~> route ~> check {
+        status shouldEqual StatusCodes.OK
+      }
+    }
+
+    "reject if request validation timeout passed" in {
+      (client.getPublicKey _).expects(*).never
+      //noinspection ConvertibleToMethodValue
+      (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
+
+      Get().withHeaders(
+        RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, (timeHeader - requestValidationTimeout.toSeconds - 10).toString),
+        RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2),
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, (timeHeader - requestValidationTimeout.toSeconds - 10).toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
+      ) ~> route ~> check {
+        inside(rejection) { case MdsolAuthFailedRejection ⇒ }
+      }
+    }
+
+    "reject if public key cannot be found" in {
+      (client.getPublicKey _).expects(appUuid).returns(Future(None))
+      //noinspection ConvertibleToMethodValue
+      (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
+
+      Get().withHeaders(
+        RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2),
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
+      ) ~> route ~> check {
+        inside(rejection) { case MdsolAuthFailedRejection ⇒ }
+      }
+    }
+
+    "reject if Authentication header is missing" in {
+      (client.getPublicKey _).expects(appUuid).never
+
+      Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString)) ~> route ~> check {
+        inside(rejection) {
+          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
+        }
+      }
+    }
+
+    "reject if Time header is missing" in {
+      (client.getPublicKey _).expects(appUuid).never
+
+      Get().withHeaders(RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2)) ~> route ~> check {
+        inside(rejection) {
+          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
+        }
+      }
+    }
+  }
+
+  "extractLatestAuthenticationHeaders" should {
+    lazy val route =
+      extractLatestAuthenticationHeaders(false) { x ⇒
+        complete(x.toString)
+      }
+
+    "extract Authentication Signature from request" in {
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
+      ) ~> route ~> check {
+        responseAs[String] shouldBe MauthHeaderValues(authHeader, timeHeader).toString
+      }
+    }
+
+    "extract Authentication Signature from request with the both V1 and V2" in {
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2),
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
+      ) ~> route ~> check {
+        responseAs[String] shouldBe MauthHeaderValues(authHeaderV2, timeHeader).toString
+      }
+    }
+
+    "reject with a MalformedHeaderRejection if Authentication header is missing" in {
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString)
+      ) ~> route ~> check {
+        inside(rejection) {
+          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME
+        }
+      }
+    }
+
+    "reject with a MalformedHeaderRejection if Time header is missing" in {
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
+      ) ~> route ~> check {
+        inside(rejection) {
+          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_TIME_HEADER_NAME
+        }
+      }
+    }
+
+    "reject with a MalformedHeaderRejection if V1 Time header is missing (mixed headers)" in {
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader),
+        RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString)
+      ) ~> route ~> check {
+        inside(rejection) {
+          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_TIME_HEADER_NAME
+        }
+      }
+    }
+
+  }
+
+  "extractLatestAuthenticationHeaders with V2 only enabled" should {
+    lazy val route =
+      extractLatestAuthenticationHeaders(true) { x ⇒
+        complete(x.toString)
+      }
+
+    "extract Authentication Signature from request with the both V1 and V2" in {
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2),
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
+      ) ~> route ~> check {
+        responseAs[String] shouldBe MauthHeaderValues(authHeaderV2, timeHeader).toString
+      }
+    }
+
+    "extract Authentication Signature from request with V2" in {
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2)
+      ) ~> route ~> check {
+        responseAs[String] shouldBe MauthHeaderValues(authHeaderV2, timeHeader).toString
+      }
+    }
+
+    "reject with a MalformedHeaderRejection with V1 headers only" in {
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
+      ) ~> route ~> check {
+        inside(rejection) {
+          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
+        }
+      }
+    }
+
+    "reject with a MalformedHeaderRejection if supplied with bad format" in {
+      Get().withHeaders(
+        RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2),
+        RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, "xyz")
+      ) ~> route ~> check {
+        inside(rejection) {
+          case MalformedHeaderRejection("mcc-time", "mcc-time header supplied with bad format: [xyz]", None) ⇒
+        }
+      }
+    }
+
+    "reject with a MalformedHeaderRejection if V2 Authentication header is missing" in {
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
+      ) ~> route ~> check {
+        inside(rejection) {
+          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
+        }
+      }
+    }
+
+    "reject with a MalformedHeaderRejection if Time header is missing" in {
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2)
+      ) ~> route ~> check {
+        inside(rejection) {
+          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
+        }
+      }
+    }
+
+    "reject with a MalformedHeaderRejection if V2 Time header is missing (mixed headers)" in {
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2),
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString)
+      ) ~> route ~> check {
+        inside(rejection) {
+          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
+        }
+      }
+    }
+
+  }
+
 }

@@ -1,5 +1,6 @@
 package com.mdsol.mauth
 
+import java.nio.charset.StandardCharsets
 import java.security.Security
 import java.util.UUID
 
@@ -47,14 +48,13 @@ class MAuthSignatureHelperSpec extends FlatSpec with Matchers {
       CLIENT_APP_UUID + "\n" + String.valueOf(TEST_EPOCH_TIME) + "\n" +
       CLIENT_REQUEST_QUERY_PARAMETERS
 
-    MAuthSignatureHelper.generateStringToSign(
+    MAuthSignatureHelper.generateStringToSignV2(
       UUID.fromString(CLIENT_APP_UUID),
       CLIENT_REQUEST_METHOD,
       CLIENT_REQUEST_PATH,
       CLIENT_REQUEST_QUERY_PARAMETERS,
-      CLIENT_REQUEST_PAYLOAD,
-      String.valueOf(TEST_EPOCH_TIME),
-      MAuthVersion.MWSV2
+      CLIENT_REQUEST_PAYLOAD.getBytes(StandardCharsets.UTF_8),
+      String.valueOf(TEST_EPOCH_TIME)
     ) shouldBe expectedString
   }
 
@@ -131,6 +131,23 @@ class MAuthSignatureHelperSpec extends FlatSpec with Matchers {
     val testString = "Hello world"
     val signString = MAuthSignatureHelper.encryptSignatureRSA(getPrivateKeyFromString(FixturesLoader.getPrivateKey), testString)
     MAuthSignatureHelper.verifyRSA(testString, signString, getPublicKeyFromString(FixturesLoader.getPublicKey)) shouldBe true
+  }
+
+  it should "correctly generate signature of binary body for V2 " in {
+    val testString = MAuthSignatureHelper.generateStringToSignV2(
+      UUID.fromString("5ff4257e-9c16-11e0-b048-0026bbfffe5e"),
+      "PUT",
+      "/v1/pictures",
+      "key=-_.~!@#$%^*()+{}|:\"'`<>?&∞=v&キ=v&0=v&a=v&a=b&a=c&a=a&k=&k=v",
+      FixturesLoader.getBinaryFileBody,
+      "1309891855"
+    )
+    val expectedString = ("kXMtivUVa2aciWcHpxWNFtIAKGHkbC2LjvQCYx5llhhiZOfFQOWNyEcy3qdHj0" +
+      "3g27FhefGeMNke/4PThXVRD0fg06Kn+wSCZp+ZHTxUp9m1ZDjlAaNGYjS+LMkQs2oxwg/iJFFAAzvjxzZ9" +
+      "jIhinWM6+PXok5NfU2rvbjjaI5WfRZa8wNl0NeOYlBZPICTcARbT1G6Kr3bjkgBTixNY2dSR1s7MmvpPHz" +
+      "fWSAyaYFppWnJwstRAU/JsR/JzcATZNx/CIk8N+46aWN1Na5avQgLFoNJn6eenXW3W51cENQyhtw7jatvr" +
+      "IKnVckAMoOkygfkbHdCixNfV5G0u1LHU3w==").stripMargin.replaceAll("\n", "")
+    MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe expectedString
   }
 
 }

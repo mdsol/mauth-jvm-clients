@@ -7,6 +7,7 @@ import java.util.UUID
 import com.mdsol.mauth.util.{CurrentEpochTimeProvider, EpochTimeProvider, MAuthKeysHelper}
 
 import scala.util.{Failure, Success, Try}
+import scala.collection.JavaConverters
 
 /**
   * Library agnostic representation of the data required for a request signing
@@ -14,17 +15,20 @@ import scala.util.{Failure, Success, Try}
   * @param httpMethod The HTTP verb of this API call
   * @param uri        The URI of the API call , (host name and port not included)
   * @param body       The body of the request in string form
+  * @param parameters The query parameters of the request in string form
+  *
   */
-case class UnsignedRequest(httpMethod: String = "GET", uri: URI, body: Option[String] = None, headers: Map[String, String] = Map.empty)
+case class UnsignedRequest(httpMethod: String = "GET", uri: URI, body: Option[String] = None, parameters: String = "", headers: Map[String, String] = Map.empty)
 
 /**
-  * Library agnostic representation of a signed request, including header data
+  * Library agnostic representation of a signed request, including header data for V1 or V2
   *
-  * @param req        The original request that was used to create this object
-  * @param authHeader The Auth header information
-  * @param timeHeader The Time header information
+  * @note it includes V2 headers only if V2 only is enabled, otherwise it includes the both V1 and V2 headers
+  *
+  * @param req          The original request that was used to create this object
+  * @param authHeaders  The Auth header information
   */
-case class SignedRequest(req: UnsignedRequest, authHeader: String, timeHeader: String)
+case class SignedRequest(req: UnsignedRequest, authHeaders: Map[String, String])
 
 case class CryptoError(msg: String, cause: Option[Throwable] = None)
 
@@ -32,9 +36,12 @@ trait RequestSigner {
   def signRequest(request: UnsignedRequest): Either[Throwable, SignedRequest]
 }
 
-class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider)
-    extends DefaultSigner(appUUID, privateKey, epochTimeProvider)
+class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider, v2OnlySignRequests: Boolean)
+    extends DefaultSigner(appUUID, privateKey, epochTimeProvider, v2OnlySignRequests)
     with RequestSigner {
+
+  def this(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider) =
+    this(appUUID, privateKey, epochTimeProvider, false)
 
   def this(appUUID: UUID, privateKey: PrivateKey) = this(appUUID, privateKey, new CurrentEpochTimeProvider)
 
@@ -45,6 +52,9 @@ class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvide
   def this(appUUID: UUID, privateKey: String, epochTimeProvider: EpochTimeProvider) =
     this(appUUID, MAuthKeysHelper.getPrivateKeyFromString(privateKey), epochTimeProvider)
 
+  def this(appUUID: UUID, privateKey: String, epochTimeProvider: EpochTimeProvider, v2OnlySignRequests: Boolean) =
+    this(appUUID, MAuthKeysHelper.getPrivateKeyFromString(privateKey), epochTimeProvider, v2OnlySignRequests)
+
   /**
     * Sign a request specification and return the desired header signatures
     *
@@ -53,13 +63,14 @@ class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvide
     */
   override def signRequest(request: UnsignedRequest): Either[Throwable, SignedRequest] = {
     val body = request.body match {
-      case Some(entityBody) => entityBody
-      case None => ""
+      case Some(entityBody) => entityBody.getBytes
+      case None => "".getBytes
     }
 
-    Try(generateRequestHeadersV1(request.httpMethod, request.uri.getPath, body)) match {
+    Try(generateRequestHeaders(request.httpMethod, request.uri.getPath, body, request.parameters)) match {
       case Success(mauthHeaders) =>
-        Right(SignedRequest(request, mauthHeaders.get(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME), mauthHeaders.get(MAuthRequest.X_MWS_TIME_HEADER_NAME)))
+        val sMap = JavaConverters.mapAsScalaMapConverter(mauthHeaders).asScala.toMap(Predef.$conforms)
+        Right(SignedRequest(request, sMap))
       case Failure(e) => Left(e)
     }
   }
@@ -77,4 +88,10 @@ object MAuthRequestSigner {
 
   def apply(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider): MAuthRequestSigner =
     new MAuthRequestSigner(appUUID, privateKey, epochTimeProvider)
+
+  def apply(appUUID: UUID, privateKey: String, epochTimeProvider: EpochTimeProvider, v2OnlySignRequests: Boolean): MAuthRequestSigner =
+    new MAuthRequestSigner(appUUID, privateKey, epochTimeProvider, v2OnlySignRequests)
+
+  def apply(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider, v2OnlySignRequests: Boolean): MAuthRequestSigner =
+    new MAuthRequestSigner(appUUID, privateKey, epochTimeProvider, v2OnlySignRequests)
 }

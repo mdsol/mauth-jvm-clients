@@ -18,12 +18,10 @@ public class RequestAuthenticator implements Authenticator {
 
   private static final Logger logger = LoggerFactory.getLogger(RequestAuthenticator.class);
 
-  private static final boolean DEFAULT_DISABLE_V1 = false;
-
   private final ClientPublicKeyProvider clientPublicKeyProvider;
   private final long requestValidationTimeoutSeconds;
   private final EpochTimeProvider epochTimeProvider;
-  private final boolean disableV1;
+  private final boolean v2OnlyAuthenticate;
 
   static {
     Security.addProvider(new BouncyCastleProvider());
@@ -46,12 +44,12 @@ public class RequestAuthenticator implements Authenticator {
    * {@link com.mdsol.mauth.utils.ClientPublicKeyProvider} as the EpochTimeProvider
    *
    * @param clientPublicKeyProvider PublicKey provider
-   * @param disableV1 the flag to identify authenticate with protocol V1 or not,
+   * @param v2OnlyAuthenticate the flag to identify authenticate with protocol V2 only or not,
    *                  if true, clients will authenticate with protocol V2,
    *                  if false, clients will authenticate with only the highest protocol version (V2 or V1)
    */
-  public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider, boolean disableV1) {
-    this(clientPublicKeyProvider, 10L, disableV1);
+  public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider, boolean v2OnlyAuthenticate) {
+    this(clientPublicKeyProvider, 10L, v2OnlyAuthenticate);
   }
 
   /**
@@ -69,26 +67,26 @@ public class RequestAuthenticator implements Authenticator {
    *
    * @param clientPublicKeyProvider  PublicKey provider
    * @param requestValidationTimeoutSeconds timeout
-   * @param disableV1 the flag to identify authenticate with protocol V1 or not,
+   * @param v2OnlyAuthenticate the flag to identify authenticate with protocol V2 only or not,
    *                  if true, clients will authenticate with protocol V2,
    *                  if false, clients will authenticate with only the highest protocol version (V2 or V1)
    */
   public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider,
-      long requestValidationTimeoutSeconds, boolean disableV1) {
-    this(clientPublicKeyProvider, requestValidationTimeoutSeconds, new CurrentEpochTimeProvider(), disableV1);
+      long requestValidationTimeoutSeconds, boolean v2OnlyAuthenticate) {
+    this(clientPublicKeyProvider, requestValidationTimeoutSeconds, new CurrentEpochTimeProvider(), v2OnlyAuthenticate);
   }
 
   public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider,
       long requestValidationTimeoutSeconds, EpochTimeProvider epochTimeProvider) {
-    this(clientPublicKeyProvider, requestValidationTimeoutSeconds, epochTimeProvider, DEFAULT_DISABLE_V1);
+    this(clientPublicKeyProvider, requestValidationTimeoutSeconds, epochTimeProvider, false);
   }
 
   public RequestAuthenticator(ClientPublicKeyProvider clientPublicKeyProvider,
-      long requestValidationTimeoutSeconds, EpochTimeProvider epochTimeProvider, boolean disableV1) {
+      long requestValidationTimeoutSeconds, EpochTimeProvider epochTimeProvider, boolean v2OnlyAuthenticate) {
     this.clientPublicKeyProvider = clientPublicKeyProvider;
     this.requestValidationTimeoutSeconds = requestValidationTimeoutSeconds;
     this.epochTimeProvider = epochTimeProvider;
-    this.disableV1 = disableV1;
+    this.v2OnlyAuthenticate = v2OnlyAuthenticate;
   }
 
   @Override
@@ -102,7 +100,7 @@ public class RequestAuthenticator implements Authenticator {
       throw new MAuthValidationException(message);
     }
 
-    if (disableV1 && !mAuthRequest.getMauthVersion().equals(MAuthVersion.MWSV2)) {
+    if (v2OnlyAuthenticate && !mAuthRequest.getMauthVersion().equals(MAuthVersion.MWSV2)) {
       final  String message  = "The service requires mAuth v2 authentication headers.";
       logger.error(message);
       throw new MAuthValidationException(message);
@@ -149,12 +147,11 @@ public class RequestAuthenticator implements Authenticator {
 
     // Recreate the plain text signature, based on the incoming request parameters, and hash it.
     String unencryptedRequestString =
-        MAuthSignatureHelper.generateStringToSign(
+        MAuthSignatureHelper.generateStringToSignV2(
             mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(), mAuthRequest.getResourcePath(),
             mAuthRequest.getQueryParameters(),
-            new String(mAuthRequest.getMessagePayload(), StandardCharsets.UTF_8),
-            String.valueOf(mAuthRequest.getRequestTime()),
-            MAuthVersion.MWSV2
+            mAuthRequest.getMessagePayload(),
+            String.valueOf(mAuthRequest.getRequestTime())
         );
 
     // Compare the decrypted signature and the recreated signature hashes.

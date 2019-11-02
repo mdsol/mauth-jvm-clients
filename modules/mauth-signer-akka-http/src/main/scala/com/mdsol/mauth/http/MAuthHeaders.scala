@@ -36,3 +36,35 @@ object `X-MWS-Time` extends ModeledCustomHeaderCompanion[`X-MWS-Time`] {
 
   override def parse(value: String): Try[`X-MWS-Time`] = Try(new `X-MWS-Time`(value))
 }
+
+final class `MCC-Authentication`(token: String) extends ModeledCustomHeader[`MCC-Authentication`] {
+  override def renderInRequests: Boolean = true
+
+  override def renderInResponses: Boolean = true
+
+  override val companion: `MCC-Authentication`.type = `MCC-Authentication`
+
+  override def value: String = token
+}
+
+object `MCC-Authentication` extends ModeledCustomHeaderCompanion[`MCC-Authentication`] {
+  override val name: String = MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
+
+  override def parse(value: String): Try[`MCC-Authentication`] = Try(new `MCC-Authentication`(value))
+}
+
+final class `MCC-Time`(token: String) extends ModeledCustomHeader[`MCC-Time`] {
+  override def renderInRequests: Boolean = true
+
+  override def renderInResponses: Boolean = true
+
+  override val companion: `MCC-Time`.type = `MCC-Time`
+
+  override def value: String = token
+}
+
+object `MCC-Time` extends ModeledCustomHeaderCompanion[`MCC-Time`] {
+  override val name: String = MAuthRequest.MCC_TIME_HEADER_NAME
+
+  override def parse(value: String): Try[`MCC-Time`] = Try(new `MCC-Time`(value))
+}

@@ -1,5 +1,6 @@
 package com.mdsol.mauth.apache
 
+import java.nio.charset.StandardCharsets
 import java.security.Security
 import java.util
 
@@ -45,7 +46,7 @@ class HttpClientPublicKeyProviderSpec extends FlatSpec with Matchers with MockFa
     mockedHeaders.put(X_MWS_TIME_HEADER_NAME, EXPECTED_TIME_HEADER_VALUE)
     mockedHeaders.put(MCC_AUTHENTICATION_HEADER_NAME, EXPECTED_AUTHENTICATION_HEADER_VALUE_V2)
     mockedHeaders.put(MCC_TIME_HEADER_NAME, EXPECTED_TIME_HEADER_VALUE)
-    (mockedSigner.generateRequestHeaders _).expects("GET", *, "", "").returns(mockedHeaders)
+    (mockedSigner.generateRequestHeaders _).expects("GET", *, null, "").returns(mockedHeaders)
     new HttpClientPublicKeyProvider(configuration, mockedSigner)
   }
 

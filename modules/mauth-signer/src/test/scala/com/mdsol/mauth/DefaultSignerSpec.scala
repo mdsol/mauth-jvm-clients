@@ -75,11 +75,11 @@ class DefaultSignerSpec extends FlatSpec with Matchers with MockFactory {
   it should "generated headers includes time header with correct time for V2" in {
     //noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
-    val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeaders("GET", "/", "", "").asScala.toMap
+    val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeaders("GET", "/", "".getBytes, "").asScala.toMap
     headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe String.valueOf(TEST_EPOCH_TIME)
   }
 
-  it should "generated headers with body includes expected authentication header for V2 only if disabled V1" in {
+  it should "generated headers with body includes expected authentication header for V2 only if V2 only enabled" in {
     //noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val EXPECTED_POST_AUTHENTICATION_HEADER: String =
@@ -90,12 +90,12 @@ class DefaultSignerSpec extends FlatSpec with Matchers with MockFactory {
          |HMWfnq2CMF1Lx4sspwHL3Vux27n3iHyLfxm2ZxchHPGX61awtAV7ZPHLlhx
          |tKVsZ29Qu3ZktDThdUeQnD4qt6LoGVkzru/ynJddeLinQB0m0ixjYRFiTr3
          |YOGg==;""".stripMargin.replaceAll("\n", "")
-    val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeaders("POST", "/", TEST_REQUEST_BODY, "").asScala.toMap
+    val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeaders("POST", "/", TEST_REQUEST_BODY.getBytes, "").asScala.toMap
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches (AUTHENTICATION_HEADER_PATTERN_V2)
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_POST_AUTHENTICATION_HEADER
   }
 
-  it should "generated headers with parameters includes expected authentication header for V2 only if disabled V1" in {
+  it should "generated headers with parameters includes expected authentication header for V2 only if V2 only enabled" in {
     //noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val EXPECTED_GET_AUTHENTICATION_HEADER: String =
@@ -106,12 +106,12 @@ class DefaultSignerSpec extends FlatSpec with Matchers with MockFactory {
          |593PmtO7a530axpf/ogiIWLUICG2lSVVz5Y23SxnSNC0QL5sEHvby8RETES
          |Hqu5G+5/6DiTt4W2iTEkC9BUV/OObdNNbr72hN1Z5qHo/X8qZ7NMSRPyZPA
          |xe6A==;""".stripMargin.replaceAll("\n", "")
-    val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeaders("GET", "/", "", TEST_REQUEST_PARAMS).asScala.toMap
+    val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeaders("GET", "/", "".getBytes, TEST_REQUEST_PARAMS).asScala.toMap
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches (AUTHENTICATION_HEADER_PATTERN_V2)
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_GET_AUTHENTICATION_HEADER
   }
 
-  it should "generated headers for both V1 and V2 if V1 is not disabled" in {
+  it should "generated headers for both V1 and V2 if V2 only is disabled" in {
     //noinspection ConvertibleToMethodValue
     val mAuthSigner = new DefaultSigner(testUUID, FixturesLoader.getPrivateKey, mockEpochTimeProvider, false)
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
@@ -131,7 +131,7 @@ class DefaultSignerSpec extends FlatSpec with Matchers with MockFactory {
          |HMWfnq2CMF1Lx4sspwHL3Vux27n3iHyLfxm2ZxchHPGX61awtAV7ZPHLlhx
          |tKVsZ29Qu3ZktDThdUeQnD4qt6LoGVkzru/ynJddeLinQB0m0ixjYRFiTr3
          |YOGg==;""".stripMargin.replaceAll("\n", "")
-    val headers: Map[String, String] = mAuthSigner.generateRequestHeaders("POST", "/", TEST_REQUEST_BODY, "").asScala.toMap
+    val headers: Map[String, String] = mAuthSigner.generateRequestHeaders("POST", "/", TEST_REQUEST_BODY.getBytes, "").asScala.toMap
     headers(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_POST_AUTHENTICATION_HEADER_V1
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_POST_AUTHENTICATION_HEADER_V2
     headers(MAuthRequest.X_MWS_TIME_HEADER_NAME) shouldBe String.valueOf(TEST_EPOCH_TIME)
