@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import com.mdsol.mauth.{MAuthRequest, MAuthVersion}
+import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.http.{`X-MWS-Authentication`, `X-MWS-Time`}
 import com.mdsol.mauth.scaladsl.RequestAuthenticator
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
@@ -50,7 +50,8 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
   private val client = mock[ClientPublicKeyProvider]
   private val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
   private implicit val authenticator: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
-  private implicit val authenticatorV2: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider, true)
+  private val v2OnlyAuthenticate = true
+  private implicit val authenticatorV2: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider, v2OnlyAuthenticate)
 
   "authenticate" should {
     lazy val route: Route = authenticate(executor, authenticator, timeout, requestValidationTimeout).apply(complete(HttpResponse()))
@@ -69,6 +70,20 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
       }
     }
 
+    "pass successfully authenticated request with both v1 and v2 headers, with V2 headers taking precedence" in {
+      (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
+      (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
+
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2),
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, (timeHeader - requestValidationTimeout.toSeconds - 10).toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, "invalid auth header")
+      ) ~> route ~> check {
+        status shouldEqual StatusCodes.OK
+      }
+    }
+
     "reject if request validation timeout passed" in {
       (client.getPublicKey _).expects(*).never
       //noinspection ConvertibleToMethodValue
@@ -78,7 +93,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
         RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, (timeHeader - requestValidationTimeout.toSeconds - 10).toString),
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
       ) ~> route ~> check {
-        inside(rejection) { case MdsolAuthFailedRejection ⇒ }
+        inside(rejection) { case MdsolAuthFailedRejection => }
       }
     }
 
@@ -91,7 +106,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
         RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
       ) ~> route ~> check {
-        inside(rejection) { case MdsolAuthFailedRejection ⇒ }
+        inside(rejection) { case MdsolAuthFailedRejection => }
       }
     }
 
@@ -110,7 +125,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Time`.name
+          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Time`.name
         }
       }
     }
@@ -137,7 +152,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
     "reject with a MissingHeaderRejection if header is missing" in {
       Get() ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Time`.name
+          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Time`.name
         }
       }
     }
@@ -159,7 +174,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
       val wrongHeader = s" $appUuid:$signature"
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, wrongHeader)) ~> route ~> check {
         inside(rejection) {
-          case MalformedHeaderRejection(actualHeader, actualMsg, _) ⇒
+          case MalformedHeaderRejection(actualHeader, actualMsg, _) =>
             actualHeader shouldBe "x-mws-authentication"
             actualMsg shouldBe s"x-mws-authentication header supplied with bad format: [$wrongHeader]"
         }
@@ -170,7 +185,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
       val wrongHeader = s"$authPrefix :$signature"
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, wrongHeader)) ~> route ~> check {
         inside(rejection) {
-          case MalformedHeaderRejection(actualHeader, actualMsg, _) ⇒
+          case MalformedHeaderRejection(actualHeader, actualMsg, _) =>
             actualHeader shouldBe "x-mws-authentication"
             actualMsg shouldBe s"x-mws-authentication header supplied with bad format: [$wrongHeader]"
         }
@@ -181,7 +196,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
       val wrongHeader = s"$authPrefix $appUuid:"
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, wrongHeader)) ~> route ~> check {
         inside(rejection) {
-          case MalformedHeaderRejection(actualHeader, actualMsg, _) ⇒
+          case MalformedHeaderRejection(actualHeader, actualMsg, _) =>
             actualHeader shouldBe "x-mws-authentication"
             actualMsg shouldBe s"x-mws-authentication header supplied with bad format: [$wrongHeader]"
         }
@@ -191,30 +206,15 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
     "reject with a MissingHeaderRejection if header is missing" in {
       Get() ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Authentication`.name
+          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Authentication`.name
         }
       }
     }
   }
 
-  "authenticate for V2" should {
+  "authenticate when v2OnlyAuthenticate = true" should {
     lazy val route: Route = authenticate(executor, authenticatorV2, timeout, requestValidationTimeout).apply(complete(HttpResponse()))
     val publicKey = MAuthKeysHelper.getPublicKeyFromString(FixturesLoader.getPublicKey)
-
-    "pass successfully authenticated request with parameters" in {
-      (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
-      //noinspection ConvertibleToMethodValue
-      (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
-
-      Get("/").withHeaders(
-        RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString),
-        RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2),
-        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeaderV2.toString),
-        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
-      ) ~> route ~> check {
-        status shouldEqual StatusCodes.OK
-      }
-    }
 
     "pass successfully authenticated request with V2 headers" in {
       (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
@@ -237,10 +237,10 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
       Get().withHeaders(
         RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, (timeHeader - requestValidationTimeout.toSeconds - 10).toString),
         RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2),
-        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, (timeHeader - requestValidationTimeout.toSeconds - 10).toString),
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
       ) ~> route ~> check {
-        inside(rejection) { case MdsolAuthFailedRejection ⇒ }
+        inside(rejection) { case MdsolAuthFailedRejection => }
       }
     }
 
@@ -255,16 +255,16 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
         RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
       ) ~> route ~> check {
-        inside(rejection) { case MdsolAuthFailedRejection ⇒ }
+        inside(rejection) { case MdsolAuthFailedRejection => }
       }
     }
 
     "reject if Authentication header is missing" in {
       (client.getPublicKey _).expects(appUuid).never
 
-      Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString)) ~> route ~> check {
+      Get().withHeaders(RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString)) ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
+          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
         }
       }
     }
@@ -274,10 +274,24 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
 
       Get().withHeaders(RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2)) ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
+          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
         }
       }
     }
+
+    "reject if only v1 headers provided" in {
+      (client.getPublicKey _).expects(appUuid).never
+
+      Get().withHeaders(
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
+      ) ~> route ~> check {
+        inside(rejection) {
+          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
+        }
+      }
+    }
+
   }
 
   "extractLatestAuthenticationHeaders" should {
@@ -311,7 +325,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
         RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString)
       ) ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME
+          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME
         }
       }
     }
@@ -321,7 +335,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
       ) ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_TIME_HEADER_NAME
+          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_TIME_HEADER_NAME
         }
       }
     }
@@ -332,7 +346,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
         RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString)
       ) ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_TIME_HEADER_NAME
+          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_TIME_HEADER_NAME
         }
       }
     }
@@ -341,7 +355,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
 
   "extractLatestAuthenticationHeaders with V2 only enabled" should {
     lazy val route =
-      extractLatestAuthenticationHeaders(true) { x ⇒
+      extractLatestAuthenticationHeaders(true) { x =>
         complete(x.toString)
       }
 
@@ -371,7 +385,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
       ) ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
+          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
         }
       }
     }
@@ -382,7 +396,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
         RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, "xyz")
       ) ~> route ~> check {
         inside(rejection) {
-          case MalformedHeaderRejection("mcc-time", "mcc-time header supplied with bad format: [xyz]", None) ⇒
+          case MalformedHeaderRejection("mcc-time", "mcc-time header supplied with bad format: [xyz]", None) =>
         }
       }
     }
@@ -393,7 +407,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
       ) ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
+          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
         }
       }
     }
@@ -403,7 +417,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
         RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2)
       ) ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
+          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
         }
       }
     }
@@ -414,7 +428,7 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
         RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString)
       ) ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
+          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
         }
       }
     }

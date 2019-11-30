@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 /**
@@ -152,7 +153,7 @@ public class MAuthRequest {
     private String timeHeaderValue;
     private String resourcePath;
     private String queryParameters;
-    private Map<String, String> mauthHeaders;
+    private TreeMap<String, String> mauthHeaders = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER);
 
     public static Builder get() {
       return new Builder();
@@ -197,7 +198,7 @@ public class MAuthRequest {
      * @return
      */
     public Builder withMauthHeaders(Map<String, String> mauthHeaders) {
-      this.mauthHeaders = mauthHeaders;
+      this.mauthHeaders.putAll(mauthHeaders);
       return this;
     }
 
