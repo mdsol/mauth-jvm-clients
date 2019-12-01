@@ -25,10 +25,12 @@ case class UnsignedRequest(httpMethod: String = "GET", uri: URI, body: Option[St
   *
   * @note it includes V2 headers only if V2 only is enabled, otherwise it includes the both V1 and V2 headers
   *
-  * @param req          The original request that was used to create this object
-  * @param authHeaders  The Auth header information
+  * @param req           The original request that was used to create this object
+  * @param authHeader    The Auth header information (Mauth V1 only for binary compatibility)
+  * @param timeHeader    The Time header information (Mauth V1 only for binary compatibility)
+  * @param mauthHeaders  The map of mauth headers ( headers of Mauth V1 and V2)
   */
-case class SignedRequest(req: UnsignedRequest, authHeaders: Map[String, String])
+case class SignedRequest(req: UnsignedRequest, authHeader: String = "", timeHeader: String = "", mauthHeaders: Map[String, String] = Map.empty)
 
 case class CryptoError(msg: String, cause: Option[Throwable] = None)
 
@@ -70,7 +72,7 @@ class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvide
     Try(generateRequestHeaders(request.httpMethod, request.uri.getPath, body, request.parameters)) match {
       case Success(mauthHeaders) =>
         val sMap = JavaConverters.mapAsScalaMapConverter(mauthHeaders).asScala.toMap(Predef.$conforms)
-        Right(SignedRequest(request, sMap))
+        Right(SignedRequest(request, mauthHeaders = sMap))
       case Failure(e) => Left(e)
     }
   }

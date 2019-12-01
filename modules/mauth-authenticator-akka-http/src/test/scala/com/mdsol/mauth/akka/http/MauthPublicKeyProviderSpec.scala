@@ -60,7 +60,7 @@ class MauthPublicKeyProviderSpec
     FakeMAuthServer.return200()
     val mockedSigner = mock[MAuthRequestSigner]
     val unsignedRequest = UnsignedRequest("GET", URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.EXISTING_CLIENT_APP_UUID.toString)))
-    val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, mauthHeadersWithValue))
+    val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, mauthHeaders = mauthHeadersWithValue))
     (mockedSigner.signRequest _).expects(*).returns(mockedResponse)
 
     whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) { result =>
@@ -72,7 +72,7 @@ class MauthPublicKeyProviderSpec
     FakeMAuthServer.return401()
     val mockedSigner = mock[MAuthRequestSigner]
     val unsignedRequest = UnsignedRequest("GET", URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.NON_EXISTING_CLIENT_APP_UUID.toString)))
-    val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, mauthHeadersWithValue))
+    val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, mauthHeaders = mauthHeadersWithValue))
     (mockedSigner.signRequest _).expects(*).returns(mockedResponse)
 
     whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) {

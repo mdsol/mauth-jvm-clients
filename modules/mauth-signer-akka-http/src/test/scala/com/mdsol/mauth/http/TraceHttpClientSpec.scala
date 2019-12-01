@@ -29,7 +29,7 @@ class TraceHttpClientSpec extends FlatSpec with TraceHttpClient with BeforeAndAf
   private implicit val actorSystem: ActorSystem = ActorSystem()
   private implicit val materializer: ActorMaterializer = ActorMaterializer()
   private implicit val dispatcher: ExecutionContext = actorSystem.dispatcher
-  private implicit val mauthHeaders = Map(
+  private implicit val mauthHeadersMap = Map(
     MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> "",
     MAuthRequest.X_MWS_TIME_HEADER_NAME -> "",
     MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> "",
@@ -64,7 +64,7 @@ class TraceHttpClientSpec extends FlatSpec with TraceHttpClient with BeforeAndAf
   }
 
   it should "traceCall with SignedRequest adds tracing headers" in traceContext { (span) =>
-    val signedRequest = SignedRequest(UnsignedRequest(uri = java.net.URI.create(testUrl)), mauthHeaders)
+    val signedRequest = SignedRequest(UnsignedRequest(uri = java.net.URI.create(testUrl)), mauthHeaders = mauthHeadersMap)
     whenReady(traceCall(signedRequest, "trace_1", span)) { response =>
       response.status == StatusCodes.OK
     }

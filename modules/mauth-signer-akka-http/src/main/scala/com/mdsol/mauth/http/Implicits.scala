@@ -2,7 +2,7 @@ package com.mdsol.mauth.http
 
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpEntity, _}
-import com.mdsol.mauth.{SignedRequest}
+import com.mdsol.mauth.SignedRequest
 import com.mdsol.mauth.http.HttpVerbOps._
 
 import scala.language.implicitConversions
@@ -18,12 +18,19 @@ object Implicits {
     }
     val contentType: Option[String] = extractContentTypeFromHeaders(sr.req.headers)
     val headersWithoutContentType: Map[String, String] = removeContentTypeFromHeaders(sr.req.headers)
-
-    val headers: scala.collection.immutable.Seq[HttpHeader] = sr.authHeaders.map { case (k, v) => RawHeader(k, v) }.to[scala.collection.immutable.Seq]
-    HttpRequest(method = sr.req.httpMethod, uri = Uri(sr.req.uri.toString), entity = getHttpEntity(contentType, entityBody))
-      .withHeaders(
-        mapToHeaderSequence(headersWithoutContentType) ++: headers
-      )
+    if (sr.mauthHeaders.nonEmpty) {
+      val headers: scala.collection.immutable.Seq[HttpHeader] = sr.mauthHeaders.map { case (k, v) => RawHeader(k, v) }.to[scala.collection.immutable.Seq]
+      HttpRequest(method = sr.req.httpMethod, uri = Uri(sr.req.uri.toString), entity = getHttpEntity(contentType, entityBody))
+        .withHeaders(
+          mapToHeaderSequence(headersWithoutContentType) ++: headers
+        )
+    } else {
+      // Mauth V1 only for binary compatibility
+      val headers = mapToHeaderSequence(headersWithoutContentType) ++: scala.collection.immutable
+        .Seq(`X-MWS-Authentication`(sr.authHeader), `X-MWS-Time`(sr.timeHeader))
+      HttpRequest(method = sr.req.httpMethod, uri = Uri(sr.req.uri.toString), entity = getHttpEntity(contentType, entityBody))
+        .withHeaders(headers)
+    }
   }
 
   implicit def fromMaybeSignedRequestToMaybeHttpRequest(maybeSignedRequest: Option[SignedRequest]): Option[HttpRequest] =

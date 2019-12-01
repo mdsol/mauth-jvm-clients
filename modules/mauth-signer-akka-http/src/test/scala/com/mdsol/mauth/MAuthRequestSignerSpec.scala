@@ -56,13 +56,13 @@ class MAuthRequestSignerSpec extends FlatSpec with Matchers {
        |i9hTFF0FCqDM63UiLxTt3ooTpj4iUx/3htvPJ2AlSW5TaoviQUjQFYdb+CB6xDi0LFp93V5289lEXdPOVCULUGesqDA==;""".stripMargin.replaceAll("\n", "")
 
   "MAuthRequestSigner" should "add time header to a request" in {
-    val authHeaders = signer.signRequest(simpleUnsignedRequest).right.get.authHeaders
+    val authHeaders = signer.signRequest(simpleUnsignedRequest).right.get.mauthHeaders
     authHeaders.get(MAuthRequest.X_MWS_TIME_HEADER_NAME).get shouldBe EXPECTED_GET_TIME_HEADER
     authHeaders.get(MAuthRequest.MCC_TIME_HEADER_NAME).get shouldBe EXPECTED_GET_TIME_HEADER
   }
 
   it should "add authentication header to a request" in {
-    val authHeaders = signer.signRequest(simpleUnsignedRequest).right.get.authHeaders
+    val authHeaders = signer.signRequest(simpleUnsignedRequest).right.get.mauthHeaders
     authHeaders.get(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME).get shouldBe EXPECTED_GET_X_MWS_AUTHENTICATION_HEADER_FOR_SIMPLE_REQUEST
     authHeaders.get(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME).get shouldBe EXPECTED_GET_MCC_AUTHENTICATION_HEADER_FOR_SIMPLE_REQUEST
   }
@@ -72,7 +72,7 @@ class MAuthRequestSignerSpec extends FlatSpec with Matchers {
       .signRequest(UnsignedRequest(uri = new URI("/"), body = Some("Request Body")))
       .right
       .get
-      .authHeaders
+      .mauthHeaders
       .get(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME)
       .get shouldBe "MWS " +
       "2a6790ab-f6c6-45be-86fc-9e9be76ec12a:OoxiQ/Z6EjTUAoAGNKD5FS6ka+9IcWW5rtuzbXRDLRGj4pzSdeI0FPIlT0E/ZR96xR0a5EJlJ3E8usr" +
@@ -81,25 +81,25 @@ class MAuthRequestSignerSpec extends FlatSpec with Matchers {
   }
 
   it should "add authentication header to a request with body and params" in {
-    val authHeaders = signer.signRequest(unsignedRequest).right.get.authHeaders
+    val authHeaders = signer.signRequest(unsignedRequest).right.get.mauthHeaders
     authHeaders.get(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME).get shouldBe EXPECTED_GET_X_MWS_AUTHENTICATION_HEADER
     authHeaders.get(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME).get shouldBe EXPECTED_GET_MCC_AUTHENTICATION_HEADER
   }
 
   "MAuthRequestSigner with V2 only enabled" should "add time header to a request for V2 only " in {
-    val authHeaders = signerV2.signRequest(simpleUnsignedRequest).right.get.authHeaders
+    val authHeaders = signerV2.signRequest(simpleUnsignedRequest).right.get.mauthHeaders
     authHeaders.get(MAuthRequest.X_MWS_TIME_HEADER_NAME) shouldBe None
     authHeaders.get(MAuthRequest.MCC_TIME_HEADER_NAME).get shouldBe EXPECTED_GET_TIME_HEADER
   }
 
   it should "add authentication header to a request for V2 only" in {
-    val authHeaders = signerV2.signRequest(simpleUnsignedRequest).right.get.authHeaders
+    val authHeaders = signerV2.signRequest(simpleUnsignedRequest).right.get.mauthHeaders
     authHeaders.get(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe None
     authHeaders.get(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME).get shouldBe EXPECTED_GET_MCC_AUTHENTICATION_HEADER_FOR_SIMPLE_REQUEST
   }
 
   it should "add authentication header to a request with body and params for V2 only" in {
-    val authHeaders = signerV2.signRequest(unsignedRequest).right.get.authHeaders
+    val authHeaders = signerV2.signRequest(unsignedRequest).right.get.mauthHeaders
     authHeaders.get(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe None
     authHeaders.get(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME).get shouldBe EXPECTED_GET_MCC_AUTHENTICATION_HEADER
   }
