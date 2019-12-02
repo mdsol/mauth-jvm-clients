@@ -49,9 +49,8 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
   private implicit val requestValidationTimeout: Duration = 10 seconds
   private val client = mock[ClientPublicKeyProvider]
   private val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
-  private implicit val authenticator: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
-  private val v2OnlyAuthenticate = true
-  private implicit val authenticatorV2: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider, v2OnlyAuthenticate)
+  private val authenticator: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
+  private val authenticatorV2: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider, v2OnlyAuthenticate = true)
 
   "authenticate" should {
     lazy val route: Route = authenticate(executor, authenticator, timeout, requestValidationTimeout).apply(complete(HttpResponse()))
@@ -216,6 +215,20 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
     lazy val route: Route = authenticate(executor, authenticatorV2, timeout, requestValidationTimeout).apply(complete(HttpResponse()))
     val publicKey = MAuthKeysHelper.getPublicKeyFromString(FixturesLoader.getPublicKey)
 
+    "pass successfully authenticated request with both v1 and v2 headers, with V2 headers taking precedence" in {
+      (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
+      (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
+
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString),
+        RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2),
+        RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, (timeHeader - requestValidationTimeout.toSeconds - 10).toString),
+        RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, "invalid auth header")
+      ) ~> route ~> check {
+        status shouldEqual StatusCodes.OK
+      }
+    }
+
     "pass successfully authenticated request with V2 headers" in {
       (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
       //noinspection ConvertibleToMethodValue
@@ -224,6 +237,19 @@ class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest
       Get("/").withHeaders(
         RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString),
         RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2)
+      ) ~> route ~> check {
+        status shouldEqual StatusCodes.OK
+      }
+    }
+
+    "pass successfully authenticated request with V2 headers in UpperCase " in {
+      (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
+      //noinspection ConvertibleToMethodValue
+      (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
+
+      Get("/").withHeaders(
+        RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME.toUpperCase(), timeHeader.toString),
+        RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME.toUpperCase(), authHeaderV2)
       ) ~> route ~> check {
         status shouldEqual StatusCodes.OK
       }
