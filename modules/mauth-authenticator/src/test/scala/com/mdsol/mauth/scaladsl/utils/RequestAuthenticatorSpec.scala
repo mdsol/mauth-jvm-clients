@@ -7,14 +7,15 @@ import com.mdsol.mauth.test.utils.FakeMAuthServer.EXISTING_CLIENT_APP_UUID
 import com.mdsol.mauth.util.MAuthKeysHelper
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class RequestAuthenticatorSpec extends FlatSpec with RequestAuthenticatorBaseSpec with Matchers with ScalaFutures with MockFactory {
+class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBaseSpec with Matchers with ScalaFutures with MockFactory {
 
   private implicit val requestValidationTimeout: Duration = 10 seconds
 

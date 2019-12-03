@@ -1,6 +1,6 @@
 language: scala
 scala:
-  - 2.12.5
+  - 2.12.10
 jdk:
   - openjdk8
 services:
@@ -16,12 +16,12 @@ before_cache:
   - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
   - find $HOME/.sbt -name "*.lock" -delete
 before_install:
-  - export APP_MAUTH_PRIVATE_KEY=$(cat travis/fake_private_key_for_testing)
+  - export APP_MAUTH_PRIVATE_KEY=$(cat .travis/fake_private_key_for_testing)
   - echo -e "machine github.com\n  login $GITHUB_AUTH_TOKEN" >> ~/.netrc
 script: sbt ++$TRAVIS_SCALA_VERSION scalafmtSbtCheck scalafmtCheckAll test
 deploy:
   - provider: script
-    script: travis/deploy.sh
+    script: .travis/deploy.sh
     on:
       all_branches: true
       tags: false
