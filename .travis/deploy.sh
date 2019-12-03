@@ -12,7 +12,6 @@ decrypt_private_key() {
 }
 
 if [[ ${TRAVIS_PULL_REQUEST} == false && -z "$TRAVIS_TAG" ]] ; then
-    decrypt_private_key
     if [[ ${TRAVIS_BRANCH} == master ]] ; then
         setup_git
         git checkout master

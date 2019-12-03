@@ -13,15 +13,15 @@ import com.typesafe.tools.mima.plugin.MimaPlugin.autoImport._
 
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
-  val scala211 = "2.11.11"
   val scala212 = "2.12.10"
+  val scala213 = "2.13.1"
 
   lazy val basicSettings = Seq(
     homepage := Some(new URL("https://github.com/mdsol/mauth-jvm-clients")),
     organization := "com.mdsol",
     organizationHomepage := Some(new URL("http://mdsol.com")),
     description := "MAuth clients",
-    scalaVersion := scala212,
+    scalaVersion := scala213,
     resolvers += Resolver.mavenLocal,
     resolvers += Resolver.sonatypeRepo("releases"),
     javacOptions ++= Seq("-encoding", "UTF-8"),

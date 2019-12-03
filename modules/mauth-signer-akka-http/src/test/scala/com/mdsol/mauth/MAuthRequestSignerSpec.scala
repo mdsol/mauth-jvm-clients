@@ -32,7 +32,6 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers with HttpClient w
   implicit val system: ActorSystem = ActorSystem()
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   var service = new WireMockServer(wireMockConfig.dynamicPort)
-
   val TIME_CONSTANT = 1509041057L
   val epochTimeProvider = new EpochTimeProvider() { override def inSeconds(): Long = TIME_CONSTANT }
   val testUUID = "2a6790ab-f6c6-45be-86fc-9e9be76ec12a"
