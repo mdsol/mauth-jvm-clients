@@ -13,7 +13,7 @@ public interface Signer {
    * within 5 minutes of being generated otherwise the request will fail.
    *
    * @deprecated
-   * This is used for Mauth V1 protocol only, replaced by {@link #generateRequestHeaders(String, String, String, String)} for Mauth V2 protocol
+   * This is used for Mauth V1 protocol only, replaced by {@link #generateRequestHeaders(String, String, byte[], String)} for Mauth V2 protocol
    *
    * @param httpVerb The HTTP verb of the request, e.g. GET, POST, etc.
    * @param requestPath The path of the request, not including protocol, host or query parameters.
@@ -33,12 +33,12 @@ public interface Signer {
    *
    * @param httpVerb The HTTP verb of the request, e.g. GET, POST, etc.
    * @param requestPath The path of the request, not including protocol, host or query parameters.
-   * @param queryParameters The query parameters
    * @param requestPayload The payload of the request
+   * @param queryParameters The query parameters
    * @return MAuth headers which should be appended to the request before sending.
    * @throws MAuthSigningException when request cannot be signed
    */
   Map<String, String> generateRequestHeaders(String httpVerb,
-      String requestPath, String queryParameters, String requestPayload) throws MAuthSigningException;
+      String requestPath, byte[] requestPayload, String queryParameters) throws MAuthSigningException;
 
 }

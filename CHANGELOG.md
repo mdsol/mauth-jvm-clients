@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Add support for MWSV2 protocol in Java modules
+- Add support for MWSV2 protocol in Scala modules
 
 ### Changed
 - Renamed com.mdsol.mauth.Signer.generateRequestHeaders to com.mdsol.mauth.Signer.generateRequestHeadersV1

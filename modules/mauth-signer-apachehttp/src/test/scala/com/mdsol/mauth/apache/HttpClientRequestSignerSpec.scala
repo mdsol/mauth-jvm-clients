@@ -68,7 +68,7 @@ class HttpClientRequestSignerSpec extends FlatSpec with Matchers with MockFactor
     post.getFirstHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME).getValue shouldBe EXPECTED_POST_AUTHENTICATION_HEADER
   }
 
-  it should "adds expected time header for V2 only if disabled V1" in {
+  it should "adds expected time header for V2 only if V2 only enabled" in {
     //noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val get = new HttpGet("http://mauth.imedidata.com/")
@@ -77,7 +77,7 @@ class HttpClientRequestSignerSpec extends FlatSpec with Matchers with MockFactor
     get.getHeaders(MAuthRequest.X_MWS_TIME_HEADER_NAME).isEmpty shouldBe true
   }
 
-  it should "sign requests with parameters adds expected authentication header for V2 only if disabled V1" in {
+  it should "sign requests with parameters adds expected authentication header for V2 only if V2 only enabled" in {
     //noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val get = new HttpGet("http://mauth.imedidata.com/query?k1=v1&k2=v2")
@@ -95,7 +95,7 @@ class HttpClientRequestSignerSpec extends FlatSpec with Matchers with MockFactor
     post.getFirstHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME).getValue matches AUTHENTICATION_HEADER_PATTERN_V2
   }
 
-  it should "sign requests adds expected headers for V1 and V2 if V1 is not disabled" in {
+  it should "sign requests adds expected headers for V1 and V2 if V2 only is disabled" in {
     //noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val mAuthSigner = new HttpClientRequestSigner(testUUID, privateKeyString, mockEpochTimeProvider, false)

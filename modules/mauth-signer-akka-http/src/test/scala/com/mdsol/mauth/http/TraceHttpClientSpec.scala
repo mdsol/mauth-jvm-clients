@@ -8,7 +8,7 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.matching.RegexPattern
-import com.mdsol.mauth.{SignedRequest, UnsignedRequest}
+import com.mdsol.mauth.{MAuthRequest, SignedRequest, UnsignedRequest}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec}
 import zipkin2.Endpoint
@@ -29,6 +29,12 @@ class TraceHttpClientSpec extends FlatSpec with TraceHttpClient with BeforeAndAf
   private implicit val actorSystem: ActorSystem = ActorSystem()
   private implicit val materializer: ActorMaterializer = ActorMaterializer()
   private implicit val dispatcher: ExecutionContext = actorSystem.dispatcher
+  private implicit val mauthHeadersMap = Map(
+    MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> "",
+    MAuthRequest.X_MWS_TIME_HEADER_NAME -> "",
+    MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> "",
+    MAuthRequest.MCC_TIME_HEADER_NAME -> ""
+  )
 
   override implicit val tracer: Tracer = Tracing
     .newBuilder()
@@ -58,7 +64,7 @@ class TraceHttpClientSpec extends FlatSpec with TraceHttpClient with BeforeAndAf
   }
 
   it should "traceCall with SignedRequest adds tracing headers" in traceContext { (span) =>
-    val signedRequest = SignedRequest(UnsignedRequest(uri = java.net.URI.create(testUrl)), "", "")
+    val signedRequest = SignedRequest(UnsignedRequest(uri = java.net.URI.create(testUrl)), mauthHeaders = mauthHeadersMap)
     whenReady(traceCall(signedRequest, "trace_1", span)) { response =>
       response.status == StatusCodes.OK
     }

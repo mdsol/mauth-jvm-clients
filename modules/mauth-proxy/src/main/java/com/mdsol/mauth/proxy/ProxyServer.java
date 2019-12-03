@@ -27,7 +27,7 @@ public class ProxyServer {
                 proxyConfig.getAppUuid(),
                 proxyConfig.getPrivateKey(),
                 new CurrentEpochTimeProvider(),
-                proxyConfig.isV1Disabled()
+                proxyConfig.isV2OnlySignRequests()
         );
     }
 

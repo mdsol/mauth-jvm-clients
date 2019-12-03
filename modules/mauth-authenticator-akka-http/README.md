@@ -5,7 +5,7 @@ This is an implementation of Medidata Authentication Client Authenticator to val
 ## Usage
 
 1. Configuration
-  * MAuth uses [Typesafe Config](https://github.com/typesafehub/config).
+  * MAuth uses [Typesafe Config](https://github.com/typesafehub/config). The v2_only_authenticate flag can be set to authenticate incoming requests with Mauth protocol V2 only, default to false.
   Create `application.conf` on your classpath with following content.
 
         app {
@@ -32,6 +32,7 @@ This is an implementation of Medidata Authentication Client Authenticator to val
             cache {
                 time_to_live_seconds: 90
             }
+            v2_only_authenticate: false
         }
 
 1. To validate (authenticate) incoming requests, e.g. (using Servlet Filter):
@@ -46,7 +47,7 @@ This is an implementation of Medidata Authentication Client Authenticator to val
             implicit val publicKeyProvider: ClientPublicKeyProvider = new MauthPublicKeyProvider(authConfig, MAuthRequestSigner(singerConfiguration))
             implicit val timeout: FiniteDuration = 10 seconds
             implicit val requestValidationTimeout: Duration = authConfig.getTimeToLive seconds
-            implicit val authenticator: RequestAuthenticator = new RequestAuthenticator(publicKeyProvider, new CurrentEpochTimeProvider)
+            implicit val authenticator: RequestAuthenticator = new RequestAuthenticator(publicKeyProvider, new CurrentEpochTimeProvider, authConfig.isV2OnlyAuthenticate)
             
             def getResource = authenticate.apply {
                 get {

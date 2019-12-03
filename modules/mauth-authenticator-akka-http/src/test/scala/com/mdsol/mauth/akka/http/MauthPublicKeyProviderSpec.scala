@@ -6,7 +6,7 @@ import java.security.Security
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.mdsol.mauth.test.utils.{FakeMAuthServer, PortFinder}
-import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequestSigner, SignedRequest, UnsignedRequest}
+import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequest, MAuthRequestSigner, SignedRequest, UnsignedRequest}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
@@ -34,6 +34,11 @@ class MauthPublicKeyProviderSpec
   private val SECURITY_TOKENS_PATH = "/security_tokens/%s.json"
   private val FIVE_MINUTES = 300L
 
+  val mauthHeadersWithValue = Map(
+    MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> EXPECTED_AUTHENTICATION_HEADER_VALUE,
+    MAuthRequest.X_MWS_TIME_HEADER_NAME -> EXPECTED_TIME_HEADER_VALUE
+  )
+
   override def beforeAll() {
     FakeMAuthServer.start(MAUTH_PORT)
     Security.addProvider(new BouncyCastleProvider)
@@ -55,7 +60,7 @@ class MauthPublicKeyProviderSpec
     FakeMAuthServer.return200()
     val mockedSigner = mock[MAuthRequestSigner]
     val unsignedRequest = UnsignedRequest("GET", URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.EXISTING_CLIENT_APP_UUID.toString)))
-    val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, EXPECTED_AUTHENTICATION_HEADER_VALUE, EXPECTED_TIME_HEADER_VALUE))
+    val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, mauthHeaders = mauthHeadersWithValue))
     (mockedSigner.signRequest _).expects(*).returns(mockedResponse)
 
     whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) { result =>
@@ -67,7 +72,7 @@ class MauthPublicKeyProviderSpec
     FakeMAuthServer.return401()
     val mockedSigner = mock[MAuthRequestSigner]
     val unsignedRequest = UnsignedRequest("GET", URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.NON_EXISTING_CLIENT_APP_UUID.toString)))
-    val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, EXPECTED_AUTHENTICATION_HEADER_VALUE, EXPECTED_TIME_HEADER_VALUE))
+    val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, mauthHeaders = mauthHeadersWithValue))
     (mockedSigner.signRequest _).expects(*).returns(mockedResponse)
 
     whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) {

@@ -158,7 +158,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
     request.getQueryParameters shouldBe CLIENT_REQUEST_QUERY_PARAMETERS
   }
 
-  it should "correctly create MAuthRequest for V2 if disabled V1" in {
+  it should "correctly create MAuthRequest for V2 if V2 only enabled" in {
     val request = MAuthRequest.Builder
       .get()
       .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
@@ -185,7 +185,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
       .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
       .withResourcePath(CLIENT_REQUEST_PATH)
       .withQueryParameters(CLIENT_REQUEST_QUERY_PARAMETERS)
-      .withRequestHeaders(CLIENT_REQUEST_HEADERS_V1)
+      .withMauthHeaders(CLIENT_REQUEST_HEADERS_V1)
       .build()
 
     request.getAppUUID shouldBe UUID.fromString(CLIENT_APP_UUID)
@@ -204,7 +204,7 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
       .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
       .withResourcePath(CLIENT_REQUEST_PATH)
       .withQueryParameters(CLIENT_REQUEST_QUERY_PARAMETERS)
-      .withRequestHeaders(CLIENT_REQUEST_HEADERS_V2)
+      .withMauthHeaders(CLIENT_REQUEST_HEADERS_V2)
       .build()
 
     request.getAppUUID shouldBe UUID.fromString(CLIENT_APP_UUID)
@@ -223,7 +223,54 @@ class MAuthRequestSpec extends FlatSpec with Matchers {
       .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
       .withResourcePath(CLIENT_REQUEST_PATH)
       .withQueryParameters(CLIENT_REQUEST_QUERY_PARAMETERS)
-      .withRequestHeaders(CLIENT_REQUEST_HEADERS)
+      .withMauthHeaders(CLIENT_REQUEST_HEADERS)
+      .build()
+
+    request.getAppUUID shouldBe UUID.fromString(CLIENT_APP_UUID)
+    request.getHttpMethod shouldBe CLIENT_REQUEST_METHOD
+    request.getResourcePath shouldBe CLIENT_REQUEST_PATH
+    request.getRequestTime shouldBe CLIENT_REQUEST_TIME_HEADER_V2.toLong
+    request.getMessagePayload shouldBe CLIENT_REQUEST_PAYLOAD
+    request.getQueryParameters shouldBe CLIENT_REQUEST_QUERY_PARAMETERS
+    request.getMauthVersion shouldBe MAuthVersion.MWSV2
+  }
+
+  it should "correctly create MAuthRequest with uppercase headers " in {
+    val CLIENT_REQUEST_HEADERS_V2_UPPERCASE = new java.util.HashMap[String, String]()
+    CLIENT_REQUEST_HEADERS_V2_UPPERCASE.put(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME.toUpperCase, CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
+    CLIENT_REQUEST_HEADERS_V2_UPPERCASE.put(MAuthRequest.MCC_TIME_HEADER_NAME.toUpperCase, CLIENT_REQUEST_TIME_HEADER_V2)
+
+    val request = MAuthRequest.Builder
+      .get()
+      .withHttpMethod(CLIENT_REQUEST_METHOD)
+      .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
+      .withResourcePath(CLIENT_REQUEST_PATH)
+      .withQueryParameters(CLIENT_REQUEST_QUERY_PARAMETERS)
+      .withMauthHeaders(CLIENT_REQUEST_HEADERS_V2_UPPERCASE)
+      .build()
+
+    request.getAppUUID shouldBe UUID.fromString(CLIENT_APP_UUID)
+    request.getHttpMethod shouldBe CLIENT_REQUEST_METHOD
+    request.getResourcePath shouldBe CLIENT_REQUEST_PATH
+    request.getRequestTime shouldBe CLIENT_REQUEST_TIME_HEADER_V2.toLong
+    request.getMessagePayload shouldBe CLIENT_REQUEST_PAYLOAD
+    request.getQueryParameters shouldBe CLIENT_REQUEST_QUERY_PARAMETERS
+    request.getMauthVersion shouldBe MAuthVersion.MWSV2
+  }
+
+  it should "correctly create MAuthRequest (case insensitive) " in {
+
+    val CLIENT_REQUEST_HEADERS_CASE_INSENSITIVE = new java.util.HashMap[String, String]()
+    CLIENT_REQUEST_HEADERS_CASE_INSENSITIVE.put("Mcc-Authentication", CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
+    CLIENT_REQUEST_HEADERS_CASE_INSENSITIVE.put("Mcc-Time", CLIENT_REQUEST_TIME_HEADER_V2)
+
+    val request = MAuthRequest.Builder
+      .get()
+      .withHttpMethod(CLIENT_REQUEST_METHOD)
+      .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
+      .withResourcePath(CLIENT_REQUEST_PATH)
+      .withQueryParameters(CLIENT_REQUEST_QUERY_PARAMETERS)
+      .withMauthHeaders(CLIENT_REQUEST_HEADERS_CASE_INSENSITIVE)
       .build()
 
     request.getAppUUID shouldBe UUID.fromString(CLIENT_APP_UUID)

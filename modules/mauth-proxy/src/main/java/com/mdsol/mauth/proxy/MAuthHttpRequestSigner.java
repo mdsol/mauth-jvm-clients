@@ -1,15 +1,14 @@
 package com.mdsol.mauth.proxy;
 
 import com.mdsol.mauth.Signer;
+
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.QueryStringDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
 import java.util.Map;
 
 class MAuthHttpRequestSigner {
@@ -23,13 +22,12 @@ class MAuthHttpRequestSigner {
   void signRequest(HttpRequest request) {
     final String verb = request.getMethod().name();
 
-    String requestPayload = null;
+    byte[] requestPayload = null;
     String queryString = null;
     if (request instanceof FullHttpRequest) {
-      requestPayload = ((FullHttpRequest)request).content().toString(Charset.forName("UTF-8"));
+      requestPayload = ((FullHttpRequest) request).content().array();
     }
     String uriString = request.getUri();
-    QueryStringDecoder queryParams = new QueryStringDecoder(uriString);
     try {
       URI uri = new URI(uriString);
       uriString = uri.getPath();
@@ -39,7 +37,7 @@ class MAuthHttpRequestSigner {
     }
 
     logger.debug("Generating request headers for Verb: '" + verb + "' URI: '" + uriString +
-        "' Payload: " + requestPayload + "' Query parameters: " + queryString);
+        "' Payload: " + requestPayload.toString() + "' Query parameters: " + queryString);
     Map<String, String> mAuthHeaders = httpClientRequestSigner.generateRequestHeaders(verb, uriString, requestPayload, queryString);
     mAuthHeaders.forEach((key, value) -> request.headers().add(key, value));
   }
