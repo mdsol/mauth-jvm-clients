@@ -43,7 +43,7 @@ class MAuthRequestSignerSpec extends FlatSpec with Matchers {
        |T3apKHcV/6cJ9asm+jDjzB8OuCVWVsLZQKQbtiydUYNisYerKVxWPLs9SHNZ6GmAqq4ZCCpyEQZuMNF6cMmXgQ0Pxe9
        |X/yNA1Xc3Fakuga47lUQ6Bn7xvhkH6P+ZP0k4U7kidziXpxpkDts8fEXTpkvFX0PR7vaxjbMZzWsU413jyNsw==;""".stripMargin.replaceAll("\n", "")
 
-  val unsignedRequest = UnsignedRequest(uri = new URI("/"), body = Some("Request Body"), parameters = "key2=data2&key1=data1")
+  val unsignedRequest = UnsignedRequest(uri = new URI("/" + "?key2=data2&key1=data1"), body = Some("Request Body"))
   val EXPECTED_GET_X_MWS_AUTHENTICATION_HEADER =
     s"""MWS $testUUID:OoxiQ/Z6EjTUAoAGNKD5FS6ka+9IcWW5rtuzbXRDLRGj4pzSdeI0FPIlT0E/ZR96xR0a5EJlJ3E
        |8usr5qas/uzNEDajAqpjqOaO4m3j+4juXt0QrdBvj3sgStD6ozOJrfhyeSWvFp3d9SBx8tPkPrqv6z5ewQliaSOaI

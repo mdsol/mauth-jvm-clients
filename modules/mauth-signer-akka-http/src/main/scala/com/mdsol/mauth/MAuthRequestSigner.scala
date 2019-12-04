@@ -15,10 +15,8 @@ import scala.collection.JavaConverters
   * @param httpMethod The HTTP verb of this API call
   * @param uri        The URI of the API call , (host name and port not included)
   * @param body       The body of the request in string form
-  * @param parameters The query parameters of the request in string form
-  *
   */
-case class UnsignedRequest(httpMethod: String = "GET", uri: URI, body: Option[String] = None, parameters: String = "", headers: Map[String, String] = Map.empty)
+case class UnsignedRequest(httpMethod: String = "GET", uri: URI, body: Option[String] = None, headers: Map[String, String] = Map.empty)
 
 /**
   * Library agnostic representation of a signed request, including header data for V1 or V2
@@ -69,7 +67,7 @@ class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvide
       case None => "".getBytes
     }
 
-    Try(generateRequestHeaders(request.httpMethod, request.uri.getPath, body, request.parameters)) match {
+    Try(generateRequestHeaders(request.httpMethod, request.uri.getPath, body, request.uri.getQuery)) match {
       case Success(mauthHeaders) =>
         val sMap = JavaConverters.mapAsScalaMapConverter(mauthHeaders).asScala.toMap(Predef.$conforms)
         Right(SignedRequest(request, mauthHeaders = sMap))
