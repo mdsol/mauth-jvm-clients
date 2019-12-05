@@ -2,6 +2,7 @@ import BuildSettings._
 import Dependencies._
 import ExampleTesting._
 import com.amazonaws.regions.{Region, Regions}
+import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProblem}
 
 conflictManager := ConflictManager.strict
 useGpg := false
@@ -58,7 +59,11 @@ lazy val `mauth-signer` = (project in file("modules/mauth-signer"))
     nonCrossPublishSettings,
     name := "mauth-signer",
     libraryDependencies ++=
-      Dependencies.test(scalaMock).map(withExclusions)
+      Dependencies.test(scalaMock).map(withExclusions),
+    mimaBinaryIssueFilters ++= Seq(
+      // TODO: Remove after Mauth v2 is released
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("com.mdsol.mauth.Signer.generateRequestHeaders")
+    )
   )
 
 lazy val `mauth-signer-apachehttp` = (project in file("modules/mauth-signer-apachehttp"))
@@ -87,7 +92,11 @@ lazy val `mauth-signer-akka-http` = (project in file("modules/mauth-signer-akka-
       Dependencies.provided(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.compile(scalaLogging, zipkinBrave).map(withExclusions) ++
         Dependencies.example(akkaHttp, akkaStream).map(withExclusions) ++
-        Dependencies.test(scalaMock, wiremock).map(withExclusions)
+        Dependencies.test(scalaMock, wiremock).map(withExclusions),
+    mimaBinaryIssueFilters ++= Seq(
+      // TODO: Remove after Mauth v2 is released
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("com.mdsol.mauth.RequestSigner.signRequest"),
+    )
   )
 
 lazy val `mauth-authenticator` = (project in file("modules/mauth-authenticator"))
@@ -98,7 +107,11 @@ lazy val `mauth-authenticator` = (project in file("modules/mauth-authenticator")
     nonCrossPublishSettings,
     name := "mauth-authenticator",
     libraryDependencies ++=
-      Dependencies.test(logbackClassic, scalaMock).map(withExclusions)
+      Dependencies.test(logbackClassic, scalaMock).map(withExclusions),
+    mimaBinaryIssueFilters ++= Seq(
+      // TODO: Remove after Mauth v2 is released
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("com.mdsol.mauth.scaladsl.Authenticator.isV2OnlyAuthenticate"),
+    )
   )
 
 lazy val `mauth-authenticator-apachehttp` = (project in file("modules/mauth-authenticator-apachehttp"))
@@ -133,6 +146,7 @@ lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
     basicSettings,
     publishSettings,
     assemblySettings,
+    mimaPreviousArtifacts := Set(),
     nonCrossPublishSettings,
     name := "mauth-proxy",
     libraryDependencies ++=
@@ -163,7 +177,7 @@ lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
     buildOptions in docker := BuildOptions(cache = false)
   )
 
-lazy val `mauth-java-client` = (project in file("."))
+lazy val `mauth-jvm-clients` = (project in file("."))
   .aggregate(
     `mauth-authenticator`,
     `mauth-authenticator-akka-http`,

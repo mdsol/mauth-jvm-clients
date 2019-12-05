@@ -3,6 +3,8 @@ package com.mdsol.mauth
 import java.net.URI
 import java.security.PrivateKey
 import java.util.UUID
+import scala.collection.JavaConverters._
+import models.{UnsignedRequest => NewUnsignedRequest, SignedRequest => NewSignedRequest}
 
 import com.mdsol.mauth.util.{CurrentEpochTimeProvider, EpochTimeProvider, MAuthKeysHelper}
 
@@ -16,6 +18,7 @@ import scala.collection.JavaConverters
   * @param uri        The URI of the API call , (host name and port not included)
   * @param body       The body of the request in string form
   */
+@deprecated("Use com.mdsol.mauth.models.UnsignedRequest")
 case class UnsignedRequest(httpMethod: String = "GET", uri: URI, body: Option[String] = None, headers: Map[String, String] = Map.empty)
 
 /**
@@ -26,14 +29,17 @@ case class UnsignedRequest(httpMethod: String = "GET", uri: URI, body: Option[St
   * @param req           The original request that was used to create this object
   * @param authHeader    The Auth header information (Mauth V1 only for binary compatibility)
   * @param timeHeader    The Time header information (Mauth V1 only for binary compatibility)
-  * @param mauthHeaders  The map of mauth headers ( headers of Mauth V1 and V2)
   */
-case class SignedRequest(req: UnsignedRequest, authHeader: String = "", timeHeader: String = "", mauthHeaders: Map[String, String] = Map.empty)
+@deprecated("Use com.mdsol.mauth.models.SignedRequest")
+case class SignedRequest(req: UnsignedRequest, authHeader: String = "", timeHeader: String = "")
 
 case class CryptoError(msg: String, cause: Option[Throwable] = None)
 
 trait RequestSigner {
+  @deprecated("This method only signs requests for MAuth V1. Use the other non-deprecated method")
   def signRequest(request: UnsignedRequest): Either[Throwable, SignedRequest]
+
+  def signRequest(request: NewUnsignedRequest): NewSignedRequest
 }
 
 class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider, v2OnlySignRequests: Boolean)
@@ -41,7 +47,7 @@ class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvide
     with RequestSigner {
 
   def this(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider) =
-    this(appUUID, privateKey, epochTimeProvider, false)
+    this(appUUID, privateKey, epochTimeProvider, v2OnlySignRequests = false)
 
   def this(appUUID: UUID, privateKey: PrivateKey) = this(appUUID, privateKey, new CurrentEpochTimeProvider)
 
@@ -61,18 +67,26 @@ class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvide
     * @param request The request to sign
     * @return A signed API request or an Error
     */
+  @deprecated("This method only signs requests for MAuth V1. Use the other non-deprecated method")
   override def signRequest(request: UnsignedRequest): Either[Throwable, SignedRequest] = {
     val body = request.body match {
-      case Some(entityBody) => entityBody.getBytes
-      case None => "".getBytes
+      case Some(entityBody) => entityBody
+      case None => ""
     }
 
-    Try(generateRequestHeaders(request.httpMethod, request.uri.getPath, body, request.uri.getQuery)) match {
-      case Success(mauthHeaders) =>
-        val sMap = JavaConverters.mapAsScalaMapConverter(mauthHeaders).asScala.toMap(Predef.$conforms)
-        Right(SignedRequest(request, mauthHeaders = sMap))
+    Try(generateRequestHeaders(request.httpMethod, request.uri.getPath, body)) match {
+      case Success(mauthHeaders) => Right(
+        SignedRequest(request, mauthHeaders.get(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME), mauthHeaders.get(MAuthRequest.X_MWS_TIME_HEADER_NAME)))
       case Failure(e) => Left(e)
     }
+  }
+
+  override def signRequest(request: NewUnsignedRequest): NewSignedRequest = {
+    val headers = generateRequestHeaders(request.httpMethod, request.uri.getPath, request.body, request.uri.getQuery).asScala.toMap
+    NewSignedRequest(
+      request,
+      headers
+    )
   }
 }
 
