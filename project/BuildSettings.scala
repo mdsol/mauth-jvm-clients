@@ -7,6 +7,7 @@ import sbtassembly.AssemblyKeys._
 import sbtassembly.MergeStrategy
 import sbtrelease.ReleasePlugin.autoImport._
 import sbtrelease.ReleaseStateTransformations._
+import com.typesafe.tools.mima.plugin.MimaPlugin.autoImport._
 
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
@@ -45,6 +46,11 @@ object BuildSettings {
   )
 
   lazy val publishSettings = Seq(
+    mimaPreviousArtifacts := (if (crossPaths.value) { // Scala project
+                                Set(organization.value %% name.value % "1.0.16")
+                              } else {
+                                Set(organization.value % name.value % "1.0.16")
+                              }),
     publishMavenStyle := true,
     licenses := Seq("MDSOL" -> url("https://github.com/mdsol/mauth-java-client/blob/master/LICENSE.txt")),
     pomIncludeRepository := { _ =>
