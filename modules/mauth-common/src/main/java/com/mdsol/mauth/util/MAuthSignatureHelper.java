@@ -55,16 +55,16 @@ public class MAuthSignatureHelper {
    * Generate string_to_sign for Mauth V2 protocol
    * @param appUUID: application uuid
    * @param httpMethod: Http_Verb
-   * @param resourceUrl: resource_url_path (no host, port or query string; first "/" is included)
+   * @param resourcePath: resource_path (Only the path segment of the URL; first "/" is included)
    * @param queryParameters: request parameters string
    * @param requestBody: request body byte[]
    * @param epochTime: current seconds since Epoch
    * @return String
-   *   httpMethod + "\n" + resourceUrl + "\n" + requestBody_digest + "\n" + app_uuid + "\n" + epochTime + "\n" + encoded_queryParameters
+   *   httpMethod + "\n" + resourcePath + "\n" + requestBody_digest + "\n" + app_uuid + "\n" + epochTime + "\n" + encoded_queryParameters
    *
    * @throws MAuthSigningException
    */
-  public static String generateStringToSignV2(UUID appUUID, String httpMethod, String resourceUrl,
+  public static String generateStringToSignV2(UUID appUUID, String httpMethod, String resourcePath,
       String queryParameters, byte[] requestBody, String epochTime) throws MAuthSigningException{
     logger.debug("Generating String to sign for V2");
 
@@ -77,7 +77,7 @@ public class MAuthSignatureHelper {
       logger.error("Error generating Unencrypted Signature", e);
       throw new MAuthSigningException(e);
     }
-    return httpMethod.toUpperCase() + "\n" + resourceUrl + "\n" + bodyDigest + "\n"
+    return httpMethod.toUpperCase() + "\n" + resourcePath + "\n" + bodyDigest + "\n"
         + appUUID.toString() + "\n" + epochTime + "\n" + encryptedQueryParams;
   }
 
