@@ -11,13 +11,15 @@ import akka.stream.ActorMaterializer
 import brave.Span
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mdsol.mauth.http.{HttpClient, TraceHttpClient}
+import com.mdsol.mauth.models.UnsignedRequest
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
 import com.mdsol.mauth.util.MAuthKeysHelper
-import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequestSigner, UnsignedRequest}
+import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequestSigner}
 import com.typesafe.scalalogging.StrictLogging
 import scalacache.guava._
 import scalacache.memoization._
 import scalacache.modes.scalaFuture._
+import com.mdsol.mauth.http.Implicits._
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -41,12 +43,8 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
     * @return { @link PublicKey} registered in MAuth for the application with given appUUID.
     */
   override def getPublicKey(appUUID: UUID): Future[Option[PublicKey]] = memoizeF(Some(configuration.getTimeToLive seconds)) {
-    signer.signRequest(UnsignedRequest("GET", new URI(configuration.getBaseUrl + getRequestUrlPath(appUUID)))) match {
-      case Left(e) =>
-        logger.error("Request to get MAuth public key couldn't be signed", e)
-        Future(None)
-      case Right(signedRequest) => retrievePublicKey()(HttpClient.call(signedRequest))
-    }
+    val signedRequest = signer.signRequest(UnsignedRequest.noBody("GET", new URI(configuration.getBaseUrl + getRequestUrlPath(appUUID)), headers = Map.empty))
+    retrievePublicKey()(HttpClient.call(signedRequest.toAkkaHttpRequest))
   }
 
   protected def retrievePublicKey()(mauthPublicKeyFetcher: => Future[HttpResponse]): Future[Option[PublicKey]] = {
@@ -99,11 +97,7 @@ class TraceMauthPublicKeyProvider(configuration: AuthenticatorConfiguration, sig
     * @return { @link PublicKey} registered in MAuth for the application with given appUUID.
     */
   def traceGetPublicKey(appUUID: UUID, traceName: String, parentSpan: Span): Future[Option[PublicKey]] = memoizeF(Some(configuration.getTimeToLive seconds)) {
-    signer.signRequest(UnsignedRequest("GET", new URI(configuration.getBaseUrl + getRequestUrlPath(appUUID)))) match {
-      case Left(e) =>
-        logger.error("Request to get MAuth public key couldn't be signed", e)
-        Future(None)
-      case Right(signedRequest) => retrievePublicKey()(traceHttpClient.traceCall(signedRequest, traceName, parentSpan))
-    }
+    val signedRequest = signer.signRequest(UnsignedRequest.noBody("GET", new URI(configuration.getBaseUrl + getRequestUrlPath(appUUID)), headers = Map.empty))
+    retrievePublicKey()(traceHttpClient.traceCall(signedRequest.toAkkaHttpRequest, traceName, parentSpan))
   }
 }

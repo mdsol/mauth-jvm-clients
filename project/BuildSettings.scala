@@ -24,6 +24,9 @@ object BuildSettings {
     resolvers += Resolver.mavenLocal,
     resolvers += Resolver.sonatypeRepo("releases"),
     javacOptions ++= Seq("-encoding", "UTF-8"),
+    // Avoid issues such as java.lang.IllegalAccessError: tried to access method org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey
+    // By running tests in a separate JVM
+    Test / fork := true,
     scalacOptions := Seq(
       "-encoding",
       "utf8",

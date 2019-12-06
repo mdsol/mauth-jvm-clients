@@ -140,7 +140,7 @@ class ImplicitsTest extends WordSpec with Matchers {
       )
     }
 
-   /* Failed as
+    /* Failed as
     Expected :text/plain; charset=UTF-8,
     Actual   :application/octet-stream
 
@@ -157,7 +157,7 @@ class ImplicitsTest extends WordSpec with Matchers {
         NewSignedRequest(NewUnsignedRequest.fromStringBodyUtf8("POST", new URI("/"), "", headers), mauthHeaders = mauthHeadersMap)
       NewSignedRequestOps(signedRequest).toAkkaHttpRequest.entity.contentType should be(ContentTypes.`text/plain(UTF-8)`)
     }
-   */
+     */
 
     "Generate a POST HttpRequest should created a entity with the binary content type" in {
       val headers = Map("Content-Type" -> ContentTypes.`application/octet-stream`.toString())

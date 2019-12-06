@@ -2,15 +2,15 @@ package com.mdsol.mauth.akka.http
 
 import java.util.UUID
 
+import akka.http.javadsl.model.HttpHeader
 import akka.http.javadsl.server.AuthorizationFailedRejection
 import akka.http.scaladsl.model.{HttpEntity, HttpRequest}
-
 import akka.http.scaladsl.server.Directives.{headerValueByName, headerValueByType}
 import akka.http.scaladsl.server.{Directive1, _}
 import akka.http.scaladsl.server.directives.BasicDirectives._
 import akka.http.scaladsl.server.directives.FutureDirectives.onComplete
 import akka.http.scaladsl.server.directives.RouteDirectives.reject
-import com.mdsol.mauth.{MAuthRequest}
+import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.http.{`X-MWS-Authentication`, `X-MWS-Time`, HttpVerbOps}
 import com.mdsol.mauth.scaladsl.Authenticator
 import com.typesafe.scalalogging.StrictLogging
@@ -137,8 +137,12 @@ trait MAuthDirectives extends StrictLogging {
 
   private def getQueryString(req: HttpRequest): String = req.uri.rawQueryString.getOrElse("")
 
-  private def extractRequestHeader(request: HttpRequest, headerName: String): String =
-    request.getHeader(headerName).map[String](_.value()).orElse("")
+  private def extractRequestHeader(request: HttpRequest, headerName: String): String = {
+    val f = new java.util.function.Function[akka.http.javadsl.model.HttpHeader, String] {
+      override def apply(h: HttpHeader): String = h.value()
+    }
+    request.getHeader(headerName).map[String](f).orElse("")
+  }
 
   /**
     * Extracts the authentication header value of the HTTP request header for latest version of Mauth

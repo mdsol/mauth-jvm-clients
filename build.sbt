@@ -95,7 +95,7 @@ lazy val `mauth-signer-akka-http` = (project in file("modules/mauth-signer-akka-
         Dependencies.test(scalaMock, wiremock).map(withExclusions),
     mimaBinaryIssueFilters ++= Seq(
       // TODO: Remove after Mauth v2 is released
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("com.mdsol.mauth.RequestSigner.signRequest"),
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("com.mdsol.mauth.RequestSigner.signRequest")
     )
   )
 
@@ -110,7 +110,7 @@ lazy val `mauth-authenticator` = (project in file("modules/mauth-authenticator")
       Dependencies.test(logbackClassic, scalaMock).map(withExclusions),
     mimaBinaryIssueFilters ++= Seq(
       // TODO: Remove after Mauth v2 is released
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("com.mdsol.mauth.scaladsl.Authenticator.isV2OnlyAuthenticate"),
+      ProblemFilters.exclude[ReversedMissingMethodProblem]("com.mdsol.mauth.scaladsl.Authenticator.isV2OnlyAuthenticate")
     )
   )
 
@@ -135,7 +135,7 @@ lazy val `mauth-authenticator-akka-http` = (project in file("modules/mauth-authe
     libraryDependencies ++=
       Dependencies.provided(akkaHttp, akkaStream) ++
         Dependencies.compile(jacksonDataBind, scalaCache).map(withExclusions) ++
-        Dependencies.test(akkaHttpTestKit, scalaMock, wiremock).map(withExclusions)
+        Dependencies.test(scalaMock, wiremock) ++ Dependencies.test(akkaHttpTestKit: _*).map(withExclusions)
   )
 
 lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
@@ -147,6 +147,10 @@ lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
     publishSettings,
     assemblySettings,
     mimaPreviousArtifacts := Set(),
+    // apachehttp uses Guava 27, but littleproxy is compiled against Guava 20 calling now-removed method,
+    // throwing java.lang.NoSuchMethodError. Overriding the dep to use v20 seems to work...for now...
+    // (This is fine - mauth-proxy is only a helper utility devs/testers run locally)
+    dependencyOverrides += "com.google.guava" % "guava" % "20.0",
     nonCrossPublishSettings,
     name := "mauth-proxy",
     libraryDependencies ++=
@@ -193,5 +197,5 @@ lazy val `mauth-jvm-clients` = (project in file("."))
     basicSettings,
     publishSettings,
     publishArtifact := false,
-    mimaPreviousArtifacts := Set.empty,
+    mimaPreviousArtifacts := Set.empty
   )
