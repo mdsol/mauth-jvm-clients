@@ -9,7 +9,6 @@ import models.{UnsignedRequest => NewUnsignedRequest, SignedRequest => NewSigned
 import com.mdsol.mauth.util.{CurrentEpochTimeProvider, EpochTimeProvider, MAuthKeysHelper}
 
 import scala.util.{Failure, Success, Try}
-import scala.collection.JavaConverters
 
 /**
   * Library agnostic representation of the data required for a request signing
@@ -75,8 +74,8 @@ class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvide
     }
 
     Try(generateRequestHeaders(request.httpMethod, request.uri.getPath, body)) match {
-      case Success(mauthHeaders) => Right(
-        SignedRequest(request, mauthHeaders.get(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME), mauthHeaders.get(MAuthRequest.X_MWS_TIME_HEADER_NAME)))
+      case Success(mauthHeaders) =>
+        Right(SignedRequest(request, mauthHeaders.get(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME), mauthHeaders.get(MAuthRequest.X_MWS_TIME_HEADER_NAME)))
       case Failure(e) => Left(e)
     }
   }

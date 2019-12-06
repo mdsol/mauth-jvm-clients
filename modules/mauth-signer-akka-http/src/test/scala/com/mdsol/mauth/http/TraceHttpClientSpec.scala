@@ -64,7 +64,7 @@ class TraceHttpClientSpec extends FlatSpec with TraceHttpClient with BeforeAndAf
   }
 
   it should "traceCall with SignedRequest adds tracing headers" in traceContext { (span) =>
-    val signedRequest = SignedRequest(UnsignedRequest(uri = java.net.URI.create(testUrl)), mauthHeaders = mauthHeadersMap)
+    val signedRequest = SignedRequest(UnsignedRequest(uri = java.net.URI.create(testUrl)), "", "")
     whenReady(traceCall(signedRequest, "trace_1", span)) { response =>
       response.status == StatusCodes.OK
     }

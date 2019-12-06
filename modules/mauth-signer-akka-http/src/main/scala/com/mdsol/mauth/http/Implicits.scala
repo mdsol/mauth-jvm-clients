@@ -20,30 +20,29 @@ object Implicits {
     val contentType: Option[String] = extractContentTypeFromHeaders(sr.req.headers)
     val headersWithoutContentType: Map[String, String] = removeContentTypeFromHeaders(sr.req.headers)
 
-    HttpRequest(
-      method = sr.req.httpMethod,
-      uri = Uri(sr.req.uri.toString),
-      entity = getHttpEntity(contentType, entityBody))
-      .withHeaders(mapToHeaderSequence(headersWithoutContentType) ++: scala.collection.immutable.Seq(
-        `X-MWS-Authentication`(sr.authHeader),
-        `X-MWS-Time`(sr.timeHeader)))
+    HttpRequest(method = sr.req.httpMethod, uri = Uri(sr.req.uri.toString), entity = getHttpEntity(contentType, entityBody))
+      .withHeaders(
+        mapToHeaderSequence(headersWithoutContentType) ++: scala.collection.immutable.Seq(`X-MWS-Authentication`(sr.authHeader), `X-MWS-Time`(sr.timeHeader))
+      )
   }
 
   implicit class NewSignedRequestOps(val signedRequest: NewSignedRequest) extends AnyVal {
+
     /**
       * Create an akka-http request from a [[com.mdsol.mauth.models.SignedRequest]]
       */
     def toAkkaHttpRequest: HttpRequest = {
       val allHeaders = (signedRequest.req.headers ++ signedRequest.mauthHeaders).toList
-          .map { case (name, value) =>
+        .map {
+          case (name, value) =>
             RawHeader(name, value)
-          }
+        }
 
       HttpRequest(
         method = signedRequest.req.httpMethod,
         uri = Uri(signedRequest.req.uri.toString),
         entity = HttpEntity(signedRequest.req.body),
-        headers = allHeaders,
+        headers = allHeaders
       )
     }
   }
