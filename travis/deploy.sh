@@ -15,8 +15,8 @@ if [[ ${TRAVIS_PULL_REQUEST} == false && -z "$TRAVIS_TAG" ]] ; then
     if [[ ${TRAVIS_BRANCH} == master ]] ; then
         setup_git
         git checkout master
-        sbt ++${TRAVIS_SCALA_VERSION} 'release cross with-defaults skip-tests'
+        sbt 'release cross with-defaults skip-tests'
     elif [[ ${TRAVIS_BRANCH} == develop ]]; then
-        sbt ++${TRAVIS_SCALA_VERSION} +publishSigned
+        sbt +publishSigned
     fi
 fi
