@@ -13,6 +13,15 @@ pgpPassphrase := sys.env.get("PGP_PASS").map(_.toArray)
 
 val withExclusions: (ModuleID) => ModuleID = moduleId => moduleId.excludeAll(Dependencies.exclusions: _*)
 
+val javaProjectSettings = Seq(
+  crossScalaVersions := Seq(scala212),
+  crossPaths := false
+)
+
+val scalaProjectSettings = Seq(
+  crossScalaVersions := Seq(scala212)
+)
+
 val currentBranch = Def.setting {
   git.gitCurrentBranch.value.replaceAll("/", "_")
 }
@@ -23,18 +32,12 @@ val mainBranch = Def.setting {
   }
 }
 
-// To fix java modules being published twice
-val nonCrossPublishSettings = Seq(
-  crossPaths := false,
-  skip in publish := (scalaVersion.value != scala212)
-)
-
 lazy val `mauth-common` = (project in file("modules/mauth-common"))
   .dependsOn(`mauth-test-utils` % "test")
   .settings(
     basicSettings,
+    javaProjectSettings,
     publishSettings,
-    nonCrossPublishSettings,
     name := "mauth-common",
     libraryDependencies ++=
       Dependencies.compile(commonsCodec, commonsLang3, bouncyCastlePkix, slf4jApi, typeSafeConfig).map(withExclusions) ++
@@ -45,7 +48,7 @@ lazy val `mauth-test-utils` = (project in file("modules/mauth-test-utils"))
   .settings(
     basicSettings,
     publishSettings,
-    nonCrossPublishSettings,
+    javaProjectSettings,
     name := "mauth-test-utils",
     libraryDependencies ++=
       Dependencies.compile(commonsIO, logbackClassic, wiremock).map(withExclusions)
@@ -56,7 +59,7 @@ lazy val `mauth-signer` = (project in file("modules/mauth-signer"))
   .settings(
     basicSettings,
     publishSettings,
-    nonCrossPublishSettings,
+    javaProjectSettings,
     name := "mauth-signer",
     libraryDependencies ++=
       Dependencies.test(scalaMock).map(withExclusions),
@@ -73,7 +76,7 @@ lazy val `mauth-signer-apachehttp` = (project in file("modules/mauth-signer-apac
     basicSettings,
     exampleSettings,
     publishSettings,
-    nonCrossPublishSettings,
+    javaProjectSettings,
     name := "mauth-signer-apachehttp",
     libraryDependencies ++=
       Dependencies.compile(apacheHttpClient).map(withExclusions) ++
@@ -87,6 +90,7 @@ lazy val `mauth-signer-akka-http` = (project in file("modules/mauth-signer-akka-
     basicSettings,
     exampleSettings,
     publishSettings,
+    scalaProjectSettings,
     name := "mauth-signer-akka-http",
     libraryDependencies ++=
       Dependencies.provided(akkaHttp, akkaStream).map(withExclusions) ++
@@ -104,7 +108,7 @@ lazy val `mauth-authenticator` = (project in file("modules/mauth-authenticator")
   .settings(
     basicSettings,
     publishSettings,
-    nonCrossPublishSettings,
+    javaProjectSettings,
     name := "mauth-authenticator",
     libraryDependencies ++=
       Dependencies.test(logbackClassic, scalaMock).map(withExclusions),
@@ -119,7 +123,7 @@ lazy val `mauth-authenticator-apachehttp` = (project in file("modules/mauth-auth
   .settings(
     basicSettings,
     publishSettings,
-    nonCrossPublishSettings,
+    javaProjectSettings,
     name := "mauth-authenticator-apachehttp",
     libraryDependencies ++=
       Dependencies.compile(jacksonDataBind, guava, slf4jApi).map(withExclusions) ++
@@ -131,6 +135,7 @@ lazy val `mauth-authenticator-akka-http` = (project in file("modules/mauth-authe
   .settings(
     basicSettings,
     publishSettings,
+    scalaProjectSettings,
     name := "mauth-authenticator-akka-http",
     libraryDependencies ++=
       Dependencies.provided(akkaHttp, akkaStream) ++
@@ -151,7 +156,8 @@ lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
     // throwing java.lang.NoSuchMethodError. Overriding the dep to use v20 seems to work...for now...
     // (This is fine - mauth-proxy is only a helper utility devs/testers run locally)
     dependencyOverrides += "com.google.guava" % "guava" % "20.0",
-    nonCrossPublishSettings,
+    crossScalaVersions := Seq(scala212), // This is an application so only need to be published once
+    crossPaths := false,
     name := "mauth-proxy",
     libraryDependencies ++=
       Dependencies.compile(jacksonDataBind, littleProxy, logbackClassic, logbackCore).map(withExclusions) ++
