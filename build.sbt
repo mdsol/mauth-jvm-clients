@@ -2,7 +2,7 @@ import BuildSettings._
 import Dependencies._
 import ExampleTesting._
 import com.amazonaws.regions.{Region, Regions}
-import com.typesafe.tools.mima.core.{ProblemFilters, ReversedMissingMethodProblem}
+import com.typesafe.tools.mima.core.{DirectMissingMethodProblem, ProblemFilters, ReversedMissingMethodProblem}
 
 conflictManager := ConflictManager.strict
 useGpg := false
@@ -140,7 +140,11 @@ lazy val `mauth-authenticator-akka-http` = (project in file("modules/mauth-authe
     libraryDependencies ++=
       Dependencies.provided(akkaHttp, akkaStream) ++
         Dependencies.compile(jacksonDataBind, scalaCache).map(withExclusions) ++
-        Dependencies.test(scalaMock, wiremock) ++ Dependencies.test(akkaHttpTestKit: _*).map(withExclusions)
+        Dependencies.test(scalaMock, wiremock) ++ Dependencies.test(akkaHttpTestKit: _*).map(withExclusions),
+    mimaBinaryIssueFilters ++= Seq(
+      // TODO: Remove after Mauth v2 is released
+      ProblemFilters.exclude[DirectMissingMethodProblem]("com.mdsol.mauth.akka.http.utils.MAuthSignatureEngine.logger")
+    )
   )
 
 lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
