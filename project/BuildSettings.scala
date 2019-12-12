@@ -4,7 +4,7 @@ import com.typesafe.sbt.pgp.PgpKeys
 import sbt.Keys._
 import sbt.{url, _}
 import sbtassembly.AssemblyKeys._
-import sbtassembly.MergeStrategy
+import sbtassembly.{MergeStrategy, PathList}
 import sbtrelease.ReleasePlugin.autoImport._
 import sbtrelease.ReleaseStateTransformations._
 import com.typesafe.tools.mima.plugin.MimaPlugin.autoImport._
@@ -90,6 +90,7 @@ object BuildSettings {
     assemblyJarName in assembly := s"mauth-proxy-${version.value}.jar",
     assemblyMergeStrategy in assembly := {
       case "logback.xml" => MergeStrategy.first
+      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
       case x =>
         val oldStrategy = (assemblyMergeStrategy in assembly).value
         oldStrategy(x)
