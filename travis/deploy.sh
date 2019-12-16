@@ -7,7 +7,7 @@ setup_git() {
 }
 
 decrypt_private_key() {
-    openssl aes-256-cbc -K $encrypted_1ba84326c684_key -iv $encrypted_1ba84326c684_iv -in travis/secring.asc.enc -out project/.gnupg/secring.asc -d
+    openssl aes-256-cbc -K $encrypted_ff550e95c537_key -iv $encrypted_ff550e95c537_iv -in travis/secring.asc.enc -out project/.gnupg/secring.asc -d
 }
 
 if [[ ${TRAVIS_PULL_REQUEST} == false && -z "$TRAVIS_TAG" ]] ; then
