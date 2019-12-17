@@ -6,17 +6,19 @@ import java.security.Security
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.mdsol.mauth.test.utils.{FakeMAuthServer, PortFinder}
-import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequest, MAuthRequestSigner, SignedRequest, UnsignedRequest}
+import com.mdsol.mauth._
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Right
 
 class MauthPublicKeyProviderSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with ScalaFutures

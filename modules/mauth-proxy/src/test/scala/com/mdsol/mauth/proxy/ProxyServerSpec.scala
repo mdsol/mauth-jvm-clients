@@ -11,8 +11,10 @@ import org.apache.http.impl.conn.DefaultProxyRoutePlanner
 import org.apache.http.{HttpHost, HttpStatus}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class ProxyServerSpec extends FlatSpec with Matchers with MockFactory with BeforeAndAfterAll with BeforeAndAfterEach {
+class ProxyServerSpec extends AnyFlatSpec with Matchers with MockFactory with BeforeAndAfterAll with BeforeAndAfterEach {
   private val BASE_URL = "http://localhost"
   private val MY_RESOURCE = "/my/resource"
   private val QUERY_PARAMETERS = "k1=v1&k2=v2"

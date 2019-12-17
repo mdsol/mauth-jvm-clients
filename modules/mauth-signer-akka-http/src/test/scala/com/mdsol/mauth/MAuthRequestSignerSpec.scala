@@ -7,9 +7,10 @@ import java.util.UUID
 import com.mdsol.mauth.test.utils.FixturesLoader
 import com.mdsol.mauth.util.EpochTimeProvider
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class MAuthRequestSignerSpec extends FlatSpec with Matchers {
+class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers {
   val TIME_CONSTANT = 1509041057L
   val epochTimeProvider = new EpochTimeProvider() { override def inSeconds(): Long = TIME_CONSTANT }
   val testUUID = "2a6790ab-f6c6-45be-86fc-9e9be76ec12a"

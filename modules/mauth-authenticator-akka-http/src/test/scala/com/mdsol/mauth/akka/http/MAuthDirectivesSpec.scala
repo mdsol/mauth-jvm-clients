@@ -15,13 +15,15 @@ import com.mdsol.mauth.test.utils.FixturesLoader
 import com.mdsol.mauth.util.{EpochTimeProvider, MAuthKeysHelper}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{Inside, Matchers, WordSpec}
+import org.scalatest.Inside
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class MAuthDirectivesSpec extends WordSpec with Matchers with ScalatestRouteTest with MAuthDirectives with Directives with Inside with MockFactory {
+class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with MAuthDirectives with Directives with Inside with MockFactory {
 
   Security.addProvider(new BouncyCastleProvider)
 

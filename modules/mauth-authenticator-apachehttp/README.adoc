@@ -1,0 +1,70 @@
+= MAuth Authenticator Using Apache HttpClient
+
+This is an implementation of Medidata Authentication Client Authenticator to validate the Http requests
+
+== Usage
+
+. Configuration
+* MAuth uses https://github.com/typesafehub/config[Typesafe Config].
+ Create `application.conf` on your classpath with following content. The v2_only_authenticate flag can be set to authenticate incoming requests with Mauth protocol V2 only, default to false.
+
+----
+app {
+    uuid: "aaaa-bbbbb-ccccc-ddddd-eeeee"
+    private_key: "avasdfasdfadf"
+}
+
+mauth {
+    base_url: "http://localhost"
+}
+----
+
+* Load Configuration
+
+----
+final Config typeSafeConfig = ConfigFactory.load();
+SignerConfiguration signerConfiguration = new SignerConfiguration(typeSafeConfig);
+AuthenticatorConfiguration authConfiguration = new AuthenticatorConfiguration(typeSafeConfig);
+----
+
+. To validate (authenticate) incoming requests, e.g. (using Servlet Filter):
+
+----
+HttpClientRequestSigner signer = new HttpClientRequestSigner(signerConfiguration);
+HttpClientPublicKeyProvider provider = new HttpClientPublicKeyProvider(authConfiguration, signer);
+RequestAuthenticator authenticator = new RequestAuthenticator(provider, authConfiguration.isV2OnlyAuthenticate());
+
+@Override
+public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
+    HttpServletRequest request = (HttpServletRequest) req;
+    MAuthRequest mRequest = MAuthRequest.Builder.get()
+        .withHttpMethod(request.getMethod()).withResourcePath(request.getRequestURI())
+        .withMauthHeaders(getMauthHeaders(request))
+        .withQueryParameters(request.getQueryString())
+        .withMessagePayload(retrieveRequestBody(request))
+        .build();
+    if (authenticator.authenticate(mRequest)) {
+        // validation succeeded, proceed...
+    } else {
+        // validation failed, respond with 401...
+    }
+}
+
+private byte[] retrieveRequestBody(HttpServletRequest request){
+    // get request body from the request...
+}
+
+private Map<String, String> getMauthHeaders(HttpServletRequest request) {
+  // get supported mauth headers from the request headers...
+  List<String> supportedMauthHeaders = Arrays.asList(
+    MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME,   // for Mauth V2
+    MAuthRequest.MCC_TIME_HEADER_NAME,             // for Mauth V2
+    MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, // for Mauth V1
+    MAuthRequest.X_MWS_TIME_HEADER_NAME);          // for Mauth V1
+
+  Map<String, String> map = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+  ...
+
+  return map;
+}
+----

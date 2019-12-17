@@ -10,9 +10,10 @@ import org.apache.http.client.methods.{HttpGet, HttpPost}
 import org.apache.http.entity.StringEntity
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class HttpClientRequestSignerSpec extends FlatSpec with Matchers with MockFactory {
+class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
   Security.addProvider(new BouncyCastleProvider)
 
   private val TEST_EPOCH_TIME = 1424700000L

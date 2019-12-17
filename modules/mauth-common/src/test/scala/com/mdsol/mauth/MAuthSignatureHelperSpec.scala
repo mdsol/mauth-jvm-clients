@@ -4,14 +4,14 @@ import java.nio.charset.StandardCharsets
 import java.security.Security
 import java.util.UUID
 
-import com.mdsol.mauth.util.MAuthSignatureHelper
-import com.mdsol.mauth.util.MAuthKeysHelper.getPrivateKeyFromString
-import com.mdsol.mauth.util.MAuthKeysHelper.getPublicKeyFromString
 import com.mdsol.mauth.test.utils.FixturesLoader
-import org.scalatest.{FlatSpec, Matchers}
+import com.mdsol.mauth.util.MAuthKeysHelper.{getPrivateKeyFromString, getPublicKeyFromString}
+import com.mdsol.mauth.util.MAuthSignatureHelper
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class MAuthSignatureHelperSpec extends FlatSpec with Matchers {
+class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
 
   Security.addProvider(new BouncyCastleProvider)
 

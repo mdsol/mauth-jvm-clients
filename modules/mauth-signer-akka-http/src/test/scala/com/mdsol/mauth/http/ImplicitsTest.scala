@@ -6,9 +6,10 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
 import com.mdsol.mauth.http.Implicits._
 import com.mdsol.mauth.{MAuthRequest, SignedRequest, UnsignedRequest}
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-class ImplicitsTest extends WordSpec with Matchers {
+class ImplicitsTest extends AnyWordSpec with Matchers {
 
   val mauthHeadersMap = Map(
     MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> "",
