@@ -1,20 +1,23 @@
 import java.util
 
-import com.typesafe.sbt.pgp.PgpKeys
+import com.jsuereth.sbtpgp.SbtPgp.autoImport._
 import sbt.Keys._
 import sbt.{url, _}
 import sbtassembly.AssemblyKeys._
 import sbtassembly.{MergeStrategy, PathList}
 import sbtrelease.ReleasePlugin.autoImport._
+import xerial.sbt.Sonatype._
+import xerial.sbt.Sonatype.SonatypeKeys._
 import sbtrelease.ReleaseStateTransformations._
 import com.typesafe.tools.mima.plugin.MimaPlugin.autoImport._
 
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
+  val scala211 = "2.11.11"
   val scala212 = "2.12.10"
 
   lazy val basicSettings = Seq(
-    homepage := Some(new URL("https://github.com/mdsol/mauth-java-client")),
+    homepage := Some(new URL("https://github.com/mdsol/mauth-jvm-clients")),
     organization := "com.mdsol",
     organizationHomepage := Some(new URL("http://mdsol.com")),
     description := "MAuth clients",
@@ -26,15 +29,36 @@ object BuildSettings {
     // By running tests in a separate JVM
     Test / fork := true,
     scalacOptions := Seq(
-      "-encoding",
-      "utf8",
-      "-feature",
-      "-unchecked",
       "-deprecation",
-      "-target:jvm-1.8",
-      "-language:_",
-      "-Xlog-reflective-calls",
-      "-Ywarn-adapted-args"
+      "-encoding",
+      "utf-8",
+      "-explaintypes",
+      "-feature",
+      "-language:existentials",
+      "-language:experimental.macros",
+      "-language:higherKinds",
+      "-language:implicitConversions",
+      "-language:reflectiveCalls",
+      "-language:postfixOps",
+      "-unchecked",
+      "-Xcheckinit",
+      //      "-Xfatal-warnings",
+      "-Xlint:adapted-args",
+      "-Xlint:constant",
+      "-Xlint:delayedinit-select",
+      "-Xlint:doc-detached",
+      "-Xlint:inaccessible",
+      "-Xlint:missing-interpolator",
+      "-Xlint:nullary-override",
+      "-Xlint:nullary-unit",
+      "-Xlint:option-implicit",
+      "-Xlint:package-object-classes",
+      "-Xlint:poly-implicit-overload",
+      "-Xlint:private-shadow",
+      "-Xlint:stars-align",
+      "-Xlint:type-parameter-shadow",
+      "-Ywarn-dead-code",
+      "-Ywarn-numeric-widen"
     ),
     credentials += Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", env.get("SONATYPE_USER"), env.get("SONATYPE_TOKEN")),
     publishTo := Some(
@@ -52,23 +76,24 @@ object BuildSettings {
                               } else {
                                 Set(organization.value % name.value % "1.0.16")
                               }),
+    sonatypeProfileName := "com.mdsol",
     publishMavenStyle := true,
-    licenses := Seq("MDSOL" -> url("https://github.com/mdsol/mauth-java-client/blob/master/LICENSE.txt")),
-    pomIncludeRepository := { _ =>
-      false
-    },
+    licenses := Seq("MDSOL" -> url("https://github.com/mdsol/mauth-jvm-clients/blob/master/LICENSE.txt")),
     scmInfo := Some(
       ScmInfo(
-        url("https://github.com/mdsol/mauth-java-client"),
-        "scm:git@github.com:mdsol/mauth-java-client.git"
+        url("https://github.com/mdsol/mauth-jvm-clients"),
+        "scm:git@github.com:mdsol/mauth-jvm-clients.git"
       )
     ),
     developers := List(
       Developer(id = "austek", name = "Ali Ustek", email = "austek@mdsol.com", url = url("https://github.com/austek"))
     ),
+    sonatypeProjectHosting := Some(GitHubHosting("austek", "mauth-jvm-clients", "austek@mdsol.com")),
+    publishTo := sonatypePublishToBundle.value,
     releaseCommitMessage := s"Setting version to ${(version in ThisBuild).value} [ci skip]",
     releasePublishArtifactsAction := PgpKeys.publishSigned.value,
     releaseVersionBump := sbtrelease.Version.Bump.Bugfix,
+    releaseCrossBuild := false, // true if you cross-build the project for multiple Scala versions
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,
       inquireVersions,
@@ -77,10 +102,16 @@ object BuildSettings {
       commitReleaseVersion,
       tagRelease,
       releaseStepCommandAndRemaining("+publishSigned"),
+      releaseStepCommand("sonatypeBundleRelease"),
       setNextVersion,
       commitNextVersion,
-      releaseStepCommand("sonatypeReleaseAll"),
       pushChanges
+    ),
+    credentials += Credentials(
+      "GnuPG Key ID",
+      "pgp",
+      "A9A6453ABA90E61B2492BDCD9F58C26F3772CEEE",
+      "ignored"
     )
   )
 
@@ -91,6 +122,7 @@ object BuildSettings {
     assemblyMergeStrategy in assembly := {
       case "logback.xml" => MergeStrategy.first
       case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+      case x if x.endsWith("module-info.class") => MergeStrategy.discard
       case x =>
         val oldStrategy = (assemblyMergeStrategy in assembly).value
         oldStrategy(x)

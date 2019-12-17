@@ -16,7 +16,7 @@ before_cache:
   - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
   - find $HOME/.sbt -name "*.lock" -delete
 before_install:
-  - export APP_MAUTH_PRIVATE_KEY=$(cat travis/fake_private_key_for_testing)
+  - export APP_MAUTH_PRIVATE_KEY=$(cat .travis/fake_private_key_for_testing)
   - echo -e "machine github.com\n  login $GITHUB_AUTH_TOKEN" >> ~/.netrc
 jobs:
   include:
@@ -24,7 +24,7 @@ jobs:
       script: sbt scalafmtSbtCheck scalafmtCheckAll +test +mimaReportBinaryIssues
     - stage: release
       script: 
-        - travis/deploy.sh
+        - .travis/deploy.sh
         - sbt mauth-proxy/ecr:push
 stages:
   - test

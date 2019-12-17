@@ -9,9 +9,10 @@ import com.mdsol.mauth.util.EpochTimeProvider
 import org.apache.http.client.methods.{HttpGet, HttpPost}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{BeforeAndAfterAll, FlatSpec}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.flatspec.AnyFlatSpec
 
-trait RequestAuthenticatorBaseSpec extends FlatSpec with BeforeAndAfterAll with MockFactory {
+trait RequestAuthenticatorBaseSpec extends AnyFlatSpec with BeforeAndAfterAll with MockFactory {
 
   val CLIENT_X_MWS_TIME_HEADER_VALUE = "1444672122"
   val CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE = "1444748974"

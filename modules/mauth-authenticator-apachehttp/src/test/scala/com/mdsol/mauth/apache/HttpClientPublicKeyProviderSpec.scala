@@ -1,6 +1,5 @@
 package com.mdsol.mauth.apache
 
-import java.nio.charset.StandardCharsets
 import java.security.Security
 import java.util
 
@@ -14,8 +13,10 @@ import com.mdsol.mauth.{AuthenticatorConfiguration, Signer}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
 import org.scalatest._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class HttpClientPublicKeyProviderSpec extends FlatSpec with Matchers with MockFactory with BeforeAndAfterAll with BeforeAndAfterEach {
+class HttpClientPublicKeyProviderSpec extends AnyFlatSpec with Matchers with MockFactory with BeforeAndAfterAll with BeforeAndAfterEach {
   private val EXPECTED_TIME_HEADER_VALUE: String = "1444672125"
   private val EXPECTED_AUTHENTICATION_HEADER_VALUE: String = "MWS 92a1869e-c80d-4f06-8775-6c4ebb0758e0:lTMYNWPaG4...CXQ=="
   private val EXPECTED_AUTHENTICATION_HEADER_VALUE_V2: String = "MWSV2 92a1869e-c80d-4f06-8775-6c4ebb0758e0:F3xY8X...AOg==;"

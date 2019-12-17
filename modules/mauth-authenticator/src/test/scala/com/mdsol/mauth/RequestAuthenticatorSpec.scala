@@ -5,9 +5,10 @@ import com.mdsol.mauth.test.utils.FakeMAuthServer.EXISTING_CLIENT_APP_UUID
 import com.mdsol.mauth.util.MAuthKeysHelper
 import com.mdsol.mauth.utils.ClientPublicKeyProvider
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class RequestAuthenticatorSpec extends FlatSpec with RequestAuthenticatorBaseSpec with Matchers with MockFactory {
+class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBaseSpec with Matchers with MockFactory {
 
   val mockClientPublicKeyProvider: ClientPublicKeyProvider = mock[ClientPublicKeyProvider]
   val authenticator: RequestAuthenticator = new RequestAuthenticator(mockClientPublicKeyProvider, REQUEST_VALIDATION_TIMEOUT_SECONDS, mockEpochTimeProvider)

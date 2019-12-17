@@ -11,13 +11,15 @@ import com.mdsol.mauth.models.{SignedRequest, UnsignedRequest}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Right
 
 class MauthPublicKeyProviderSpec
-    extends FlatSpec
+    extends AnyFlatSpec
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with ScalaFutures

@@ -4,9 +4,10 @@ import java.nio.charset.StandardCharsets
 import java.util.UUID
 import java.util.Map
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
-class MAuthRequestSpec extends FlatSpec with Matchers {
+class MAuthRequestSpec extends AnyFlatSpec with Matchers {
 
   private val CLIENT_APP_UUID = "92a1869e-c80d-4f06-8775-6c4ebb0758e0"
   private val CLIENT_REQUEST_SIGNATURE =

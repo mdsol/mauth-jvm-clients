@@ -8,16 +8,17 @@ import com.mdsol.mauth.test.utils.FixturesLoader
 import com.mdsol.mauth.util.EpochTimeProvider
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.collection.JavaConverters._
 
-class DefaultSignerSpec extends FlatSpec with Matchers with MockFactory {
+class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
   private val TEST_EPOCH_TIME = 1424700000L
   private val testUUID = UUID.fromString("2a6790ab-f6c6-45be-86fc-9e9be76ec12a")
   private val TEST_REQUEST_BODY: String = "Request Body"
   private val TEST_REQUEST_PARAMS: String = "key2=data2&key1=data1"
-  private val AUTHENTICATION_HEADER_PATTERN_V2 = "MWSV2 $testUUID:[^;]*;"
+  private val AUTHENTICATION_HEADER_PATTERN_V2: String = "MWSV2 $testUUID:[^;]*;"
 
   private val mockEpochTimeProvider = mock[EpochTimeProvider]
   private val mAuthRequestSigner = new DefaultSigner(testUUID, FixturesLoader.getPrivateKey, mockEpochTimeProvider)

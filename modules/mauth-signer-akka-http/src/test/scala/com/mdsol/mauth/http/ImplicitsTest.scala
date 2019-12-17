@@ -8,9 +8,10 @@ import akka.http.scaladsl.model.headers.RawHeader
 import com.mdsol.mauth.http.Implicits._
 import com.mdsol.mauth.{MAuthRequest, SignedRequest, UnsignedRequest}
 import com.mdsol.mauth.models.{SignedRequest => NewSignedRequest, UnsignedRequest => NewUnsignedRequest}
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-class ImplicitsTest extends WordSpec with Matchers {
+class ImplicitsTest extends AnyWordSpec with Matchers {
 
   val EMPTY_BODY = "".getBytes(StandardCharsets.UTF_8)
 

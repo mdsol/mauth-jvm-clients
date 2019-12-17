@@ -8,9 +8,8 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import brave.Span
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.mdsol.mauth.http.{HttpClient, TraceHttpClient}
+import com.mdsol.mauth.http.HttpClient
 import com.mdsol.mauth.models.UnsignedRequest
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
 import com.mdsol.mauth.util.MAuthKeysHelper
@@ -82,22 +81,4 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
 
   protected def getRequestUrlPath(appUUID: UUID): String =
     configuration.getRequestUrlPath + String.format(configuration.getSecurityTokensUrlPath, appUUID.toString)
-}
-
-class TraceMauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, traceHttpClient: TraceHttpClient)(
-  implicit ec: ExecutionContext,
-  system: ActorSystem,
-  materializer: ActorMaterializer
-) extends MauthPublicKeyProvider(configuration, signer) {
-
-  /**
-    * Returns the associated public key for a given application UUID.
-    *
-    * @param appUUID , UUID of the application for which we want to retrieve its public key.
-    * @return { @link PublicKey} registered in MAuth for the application with given appUUID.
-    */
-  def traceGetPublicKey(appUUID: UUID, traceName: String, parentSpan: Span): Future[Option[PublicKey]] = memoizeF(Some(configuration.getTimeToLive seconds)) {
-    val signedRequest = signer.signRequest(UnsignedRequest.noBody("GET", new URI(configuration.getBaseUrl + getRequestUrlPath(appUUID)), headers = Map.empty))
-    retrievePublicKey()(traceHttpClient.traceCall(signedRequest.toAkkaHttpRequest, traceName, parentSpan))
-  }
 }
