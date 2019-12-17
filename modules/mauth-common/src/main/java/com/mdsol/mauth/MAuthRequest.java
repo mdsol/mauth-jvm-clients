@@ -195,7 +195,7 @@ public class MAuthRequest {
      *        Mauth V1, X_MWS_AUTHENTICATION_HEADER_NAME, X_MWS_TIME_HEADER_NAME
      *        Mauth V2, MCC_AUTHENTICATION_HEADER_NAME and MCC_TIME_HEADER_NAME
      *
-     * @return
+     * @return Builder
      */
     public Builder withMauthHeaders(Map<String, String> mauthHeaders) {
       this.mauthHeaders.putAll(mauthHeaders);
@@ -205,7 +205,6 @@ public class MAuthRequest {
     /**
      * Construct a MAuthRequest object
      *
-     * @Note
      * If mauthHeaders are provided, get the value of the highest protocol version to construct object
      *
      * @return a object of MAuthRequest

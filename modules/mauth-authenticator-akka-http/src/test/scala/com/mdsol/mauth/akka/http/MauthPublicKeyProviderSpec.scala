@@ -6,7 +6,8 @@ import java.security.Security
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.mdsol.mauth.test.utils.{FakeMAuthServer, PortFinder}
-import com.mdsol.mauth._
+import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequest, MAuthRequestSigner}
+import com.mdsol.mauth.models.{SignedRequest, UnsignedRequest}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
@@ -61,9 +62,19 @@ class MauthPublicKeyProviderSpec
   "MauthPublicKeyProvider" should "retrieve PublicKey from MAuth Server" in {
     FakeMAuthServer.return200()
     val mockedSigner = mock[MAuthRequestSigner]
-    val unsignedRequest = UnsignedRequest("GET", URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.EXISTING_CLIENT_APP_UUID.toString)))
-    val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, mauthHeaders = mauthHeadersWithValue))
-    (mockedSigner.signRequest _).expects(*).returns(mockedResponse)
+    val unsignedRequest = UnsignedRequest(
+      "GET",
+      URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.EXISTING_CLIENT_APP_UUID.toString)),
+      body = Array.empty,
+      headers = Map.empty
+    )
+    val mockedResponse = SignedRequest(
+      unsignedRequest,
+      mauthHeaders = Map(
+        "not_testing_signer_behaviour" -> "So any header is ok"
+      )
+    )
+    (mockedSigner.signRequest(_: UnsignedRequest)).expects(*).returns(mockedResponse)
 
     whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) { result =>
       result.toString should not be empty
@@ -73,9 +84,19 @@ class MauthPublicKeyProviderSpec
   it should "fail on invalid response from MAuth Server" in {
     FakeMAuthServer.return401()
     val mockedSigner = mock[MAuthRequestSigner]
-    val unsignedRequest = UnsignedRequest("GET", URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.NON_EXISTING_CLIENT_APP_UUID.toString)))
-    val mockedResponse = new Right[Throwable, SignedRequest](SignedRequest(unsignedRequest, mauthHeaders = mauthHeadersWithValue))
-    (mockedSigner.signRequest _).expects(*).returns(mockedResponse)
+    val unsignedRequest = UnsignedRequest(
+      "GET",
+      URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.NON_EXISTING_CLIENT_APP_UUID.toString)),
+      body = Array.empty,
+      headers = Map.empty
+    )
+    val mockedResponse = SignedRequest(
+      unsignedRequest,
+      mauthHeaders = Map(
+        "not_testing_signer_behaviour" -> "So any header is ok"
+      )
+    )
+    (mockedSigner.signRequest(_: UnsignedRequest)).expects(*).returns(mockedResponse)
 
     whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) {
       case Some(_) => fail("returned a public key, expected None")

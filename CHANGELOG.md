@@ -9,11 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add support for MWSV2 protocol in Java modules
 - Add support for MWSV2 protocol in Scala modules
 
-### Changed
-- Renamed com.mdsol.mauth.Signer.generateRequestHeaders to com.mdsol.mauth.Signer.generateRequestHeadersV1
-- Renamed com.mdsol.mauth.DefaultSigner.generateRequestHeaders to com.mdsol.mauth.DefaultSigner.generateRequestHeadersV1
-
 ### Deprecated
-- com.mdsol.mauth.Signer.generateRequestHeadersV1
-- com.mdsol.mauth.DefaultSigner.generateRequestHeadersV1
-- com.mdsol.mauth.util.MAuthSignatureHelper.generateUnencryptedSignature
+- All method and helper functions that deal with only MAuth V1 headers has been deprecated. 
+  Read the deprecation message of each for how to migrate.

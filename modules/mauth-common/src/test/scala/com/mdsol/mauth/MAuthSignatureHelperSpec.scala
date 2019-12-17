@@ -23,6 +23,13 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
   private val TEST_EPOCH_TIME = 1424700000L
   private val TEST_PRIVATE_KEY = getPrivateKeyFromString(FixturesLoader.getPrivateKey2)
 
+  // the same test data with ruby and python
+  private val CLIENT_APP_UUID_V2 = "5ff4257e-9c16-11e0-b048-0026bbfffe5e"
+  private val CLIENT_REQUEST_METHOD_V2 = "PUT"
+  private val CLIENT_REQUEST_PATH_V2 = "/v1/pictures"
+  private val CLIENT_REQUEST_QUERY_PARAMETERS_V2 = "key=-_.~ !@#$%^*()+{}|:\"'`<>?&∞=v&キ=v&0=v&a=v&a=b&a=c&a=a&k=&k=v"
+  private val TEST_EPOCH_TIME_V2 = "1309891855"
+
   behavior of "MAuthSignatureHelper"
 
   it should "correctly generate string to sign for mAuth V1" in {
@@ -133,20 +140,37 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
     MAuthSignatureHelper.verifyRSA(testString, signString, getPublicKeyFromString(FixturesLoader.getPublicKey)) shouldBe true
   }
 
-  it should "correctly generate signature of binary body for V2 " in {
+  it should "correctly generate signature of binary body for V2" in {
     val testString = MAuthSignatureHelper.generateStringToSignV2(
-      UUID.fromString("5ff4257e-9c16-11e0-b048-0026bbfffe5e"),
-      "PUT",
-      "/v1/pictures",
-      "key=-_.~!@#$%^*()+{}|:\"'`<>?&∞=v&キ=v&0=v&a=v&a=b&a=c&a=a&k=&k=v",
+      UUID.fromString(CLIENT_APP_UUID_V2),
+      CLIENT_REQUEST_METHOD_V2,
+      CLIENT_REQUEST_PATH_V2,
+      CLIENT_REQUEST_QUERY_PARAMETERS_V2,
       FixturesLoader.getBinaryFileBody,
-      "1309891855"
+      TEST_EPOCH_TIME_V2
     )
-    val expectedString = ("kXMtivUVa2aciWcHpxWNFtIAKGHkbC2LjvQCYx5llhhiZOfFQOWNyEcy3qdHj0" +
-      "3g27FhefGeMNke/4PThXVRD0fg06Kn+wSCZp+ZHTxUp9m1ZDjlAaNGYjS+LMkQs2oxwg/iJFFAAzvjxzZ9" +
-      "jIhinWM6+PXok5NfU2rvbjjaI5WfRZa8wNl0NeOYlBZPICTcARbT1G6Kr3bjkgBTixNY2dSR1s7MmvpPHz" +
-      "fWSAyaYFppWnJwstRAU/JsR/JzcATZNx/CIk8N+46aWN1Na5avQgLFoNJn6eenXW3W51cENQyhtw7jatvr" +
-      "IKnVckAMoOkygfkbHdCixNfV5G0u1LHU3w==").stripMargin.replaceAll("\n", "")
+    val expectedString = ("GpZIRB8RIxlfsjcROBElMEwa0r7jr632GkBe+R8lOv72vVV7bFMbJwQUHYm6vL/N" +
+      "KC7g4lJwvWcF60lllIUGwv/KWUOQwerqo5yCNoNumxjgDKjq7ILl8iFxsrV9LdvxwGyEBEwAPKzoTmW9xrad" +
+      "xmjn4ZZVMnQKEMns6iViBkwaAW2alp4ZtVfJIZHRRyiuFnITWH1PniyG0kI4Li16kY25VfmzfNkdAi0Cnl27" +
+      "Cy1+DtAl1zVnz6ObMAdtmsEtplvlqsRCRsdd37VfuUxUlolNpr5brjzTwXksScUjX80/HMnui5ZlFORGjHeb" +
+      "eZG5QVCouZPKBWTWsELGx1iyaw==").stripMargin.replaceAll("\n", "")
+    MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe expectedString
+  }
+
+  it should "correctly generate signature with empty body for V2" in {
+    val testString = MAuthSignatureHelper.generateStringToSignV2(
+      UUID.fromString(CLIENT_APP_UUID_V2),
+      CLIENT_REQUEST_METHOD_V2,
+      CLIENT_REQUEST_PATH_V2,
+      CLIENT_REQUEST_QUERY_PARAMETERS_V2,
+      Array.empty,
+      TEST_EPOCH_TIME_V2
+    )
+    val expectedString = ("jDB6fhwUA11ZSLb2W4ueS4l9hsguqmgcRez58kUo25iuMT5Uj9wWz+coHSpOd39B0" +
+      "cNW5D5UY6nWifw4RJIv/q8MdqS43WVgnCDSrNsSxpQ/ic6U3I3151S69PzSRZ+aR/I5A85Q9FgWB6wDNf4iX/" +
+      "BmZopfd5XjsLEyDymTRYedmB4DmONlTrsjVPs1DS2xY5xQyxIcxEUpVGDfTNroRTu5REBTttWbUB7BRXhKCc2" +
+      "pfRnUYPBo4Fa7nM8lI7J1/jUasMMLelr6hvcc6t21RCHhf4p9VlpokUOdN8slXU/kkC+OMUE04I021AUnZSpd" +
+      "hd/IoVR1JJDancBRzWA2HQ==").stripMargin.replaceAll("\n", "")
     MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe expectedString
   }
 

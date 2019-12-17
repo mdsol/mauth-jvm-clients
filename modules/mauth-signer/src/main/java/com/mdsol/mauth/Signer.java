@@ -22,8 +22,8 @@ public interface Signer {
    * @throws MAuthSigningException when request cannot be signed
    */
   @Deprecated
-  Map<String, String> generateRequestHeadersV1(String httpVerb,
-      String requestPath, String requestPayload) throws MAuthSigningException;
+  Map<String, String> generateRequestHeaders(String httpVerb, String requestPath,
+                                             String requestPayload) throws MAuthSigningException;
 
   /**
    * Generates the mAuth headers from the provided HTTP request data for Mauth V2(and V1) protocol

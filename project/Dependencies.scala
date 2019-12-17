@@ -25,12 +25,16 @@ object Dependencies extends DependencyUtils {
   val scalaLogging: ModuleID = "com.typesafe.scala-logging"    %% "scala-logging"    % "3.9.2"
 
   // TEST DEPENDENCIES
-  val akkaHttpTestKit: ModuleID = "com.typesafe.akka" %% "akka-http-testkit" % Version.akkaHttp
-  val akkaTestKit: ModuleID = "com.typesafe.akka"     %% "akka-testkit"      % Version.akka
-  val commonsIO: ModuleID = "commons-io"              % "commons-io"         % "2.6"
-  val scalaMock: ModuleID = "org.scalamock"           %% "scalamock"         % "4.4.0"
-  val scalaTest: ModuleID = "org.scalatest"           %% "scalatest"         % "3.1.0"
-  val wiremock: ModuleID = "com.github.tomakehurst"   % "wiremock"           % "2.25.1"
+  // Not sure why they don't make the akka-http test kit depends on other test kits...
+  val akkaHttpTestKit: Seq[ModuleID] = Seq(
+    "com.typesafe.akka" %% "akka-http-testkit"   % Version.akkaHttp,
+    "com.typesafe.akka" %% "akka-testkit"        % Version.akka,
+    "com.typesafe.akka" %% "akka-stream-testkit" % Version.akka
+  )
+  val commonsIO: ModuleID = "commons-io"            % "commons-io" % "2.6"
+  val scalaMock: ModuleID = "org.scalamock"         %% "scalamock" % "4.4.0"
+  val scalaTest: ModuleID = "org.scalatest"         %% "scalatest" % "3.1.0"
+  val wiremock: ModuleID = "com.github.tomakehurst" % "wiremock"   % "2.25.1"
 
   // Dependency Conflict Resolution
   val exclusions = Seq()

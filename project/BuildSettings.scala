@@ -4,11 +4,12 @@ import com.jsuereth.sbtpgp.SbtPgp.autoImport._
 import sbt.Keys._
 import sbt.{url, _}
 import sbtassembly.AssemblyKeys._
-import sbtassembly.MergeStrategy
+import sbtassembly.{MergeStrategy, PathList}
 import sbtrelease.ReleasePlugin.autoImport._
 import xerial.sbt.Sonatype._
 import xerial.sbt.Sonatype.SonatypeKeys._
 import sbtrelease.ReleaseStateTransformations._
+import com.typesafe.tools.mima.plugin.MimaPlugin.autoImport._
 
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
@@ -21,10 +22,12 @@ object BuildSettings {
     organizationHomepage := Some(new URL("http://mdsol.com")),
     description := "MAuth clients",
     scalaVersion := scala212,
-    crossScalaVersions := Seq(scala211, scala212),
     resolvers += Resolver.mavenLocal,
     resolvers += Resolver.sonatypeRepo("releases"),
     javacOptions ++= Seq("-encoding", "UTF-8"),
+    // Avoid issues such as java.lang.IllegalAccessError: tried to access method org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey
+    // By running tests in a separate JVM
+    Test / fork := true,
     scalacOptions := Seq(
       "-deprecation",
       "-encoding",
@@ -43,7 +46,6 @@ object BuildSettings {
       "-Xlint:adapted-args",
       "-Xlint:constant",
       "-Xlint:delayedinit-select",
-      "-Xlint:deprecation",
       "-Xlint:doc-detached",
       "-Xlint:inaccessible",
       "-Xlint:missing-interpolator",
@@ -69,6 +71,11 @@ object BuildSettings {
   )
 
   lazy val publishSettings = Seq(
+    mimaPreviousArtifacts := (if (crossPaths.value) { // Scala project
+                                Set(organization.value %% name.value % "1.0.16")
+                              } else {
+                                Set(organization.value % name.value % "1.0.16")
+                              }),
     sonatypeProfileName := "com.mdsol",
     publishMavenStyle := true,
     licenses := Seq("MDSOL" -> url("https://github.com/mdsol/mauth-jvm-clients/blob/master/LICENSE.txt")),
@@ -114,6 +121,7 @@ object BuildSettings {
     assemblyJarName in assembly := s"mauth-proxy-${version.value}.jar",
     assemblyMergeStrategy in assembly := {
       case "logback.xml" => MergeStrategy.first
+      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
       case x if x.endsWith("module-info.class") => MergeStrategy.discard
       case x =>
         val oldStrategy = (assemblyMergeStrategy in assembly).value

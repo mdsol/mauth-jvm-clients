@@ -65,7 +65,7 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
     * check if mauth v2 only authenticate is enabled or not
     * @return True or false identifying if v2 only authenticate is enabled or not.
     */
-  override def isV2OnlyAuthenticate() = v2OnlyAuthenticate
+  override val isV2OnlyAuthenticate: Boolean = v2OnlyAuthenticate
 
   // Check epoch time is not older than specified interval.
   protected def validateTime(requestTime: Long)(requestValidationTimeout: Duration): Boolean =

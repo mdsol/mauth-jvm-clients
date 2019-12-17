@@ -66,8 +66,8 @@ public class DefaultSigner implements Signer {
 
   @Override
   @Deprecated
-  public Map<String, String> generateRequestHeadersV1(String httpVerb,
-      String requestPath, String requestPayload) throws MAuthSigningException {
+  public Map<String, String> generateRequestHeaders(String httpVerb,
+                                                    String requestPath, String requestPayload) throws MAuthSigningException {
     if (null == requestPayload) {
       requestPayload = "";
     }
