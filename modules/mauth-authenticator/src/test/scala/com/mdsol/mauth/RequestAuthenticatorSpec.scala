@@ -1,5 +1,7 @@
 package com.mdsol.mauth
 
+import java.util.UUID
+
 import com.mdsol.mauth.exception.MAuthValidationException
 import com.mdsol.mauth.test.utils.FakeMAuthServer.EXISTING_CLIENT_APP_UUID
 import com.mdsol.mauth.util.MAuthKeysHelper
@@ -85,6 +87,15 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     }
 
     expectedException.getMessage shouldBe "The service requires mAuth v2 authentication headers."
+  }
+
+  it should "validate a valid request with binary body for V1" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_BINARY_VALUE.toLong + 3)
+    (mockClientPublicKeyProvider.getPublicKey _)
+      .expects(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID))
+      .returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY2))
+    authenticator.authenticate(getRequestWithBinaryBodyV1) shouldBe true
   }
 
 }

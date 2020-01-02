@@ -1,6 +1,5 @@
 package com.mdsol.mauth.util;
 
-import com.mdsol.mauth.MAuthVersion;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
@@ -14,14 +13,13 @@ import org.bouncycastle.crypto.util.PublicKeyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public class MAuthSignatureHelper {
@@ -49,6 +47,35 @@ public class MAuthSignatureHelper {
   public static String generateUnencryptedSignature(UUID appUUID, String httpMethod, String resourceUrl, String requestBody, String epochTime) {
     logger.debug("Generating String to sign for V1");
     return httpMethod + "\n" + resourceUrl + "\n" + requestBody + "\n" + appUUID.toString() + "\n" + epochTime;
+  }
+
+  /**
+   * Generate byte_arrary_to_sign for Mauth V1 protocol
+   *
+   * @deprecated
+   *   This is used for Mauth V1 protocol,
+   *   replaced by {@link #generateStringToSignV2(UUID appUUID, String httpMethod, String resourceUrl,
+   *       String queryParameters, byte[] requestBody, String epochTime)} for Mauth V2 protocol
+   *
+   * @param appUUID: app uuid
+   * @param httpMethod: Http_Verb
+   * @param resourceUrl: resource_url_path (no host, port or query string; first "/" is included)
+   * @param requestBody: request body byte[]
+   * @param epochTime: current seconds since Epoch
+   * @return byte[]
+   *   httpMethod + "\n" + resourceUrl + "\n" + requestBody + "\n" + app_uuid + "\n" + epochTime
+   *
+   */
+  @Deprecated
+  public static byte[] generateUnencryptedSignature(UUID appUUID, String httpMethod, String resourceUrl, byte[] requestBody, String epochTime) throws IOException{
+    logger.debug("Generating byte[] to sign for V1");
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    String part1 = httpMethod + "\n" + resourceUrl + "\n";
+    String part2 =  "\n" + appUUID.toString() + "\n" + epochTime;
+    baos.write(part1.getBytes());
+    baos.write(requestBody);
+    baos.write(part2.getBytes());
+    return baos.toByteArray();
   }
 
   /**
@@ -165,7 +192,6 @@ public class MAuthSignatureHelper {
 
     String[] params = query.split("&");
     Arrays.sort(params);
-    Map<String, String> map = new HashMap<String, String>();
     for (String param : params)
     {
       String [] keyPair = param.split("=");
