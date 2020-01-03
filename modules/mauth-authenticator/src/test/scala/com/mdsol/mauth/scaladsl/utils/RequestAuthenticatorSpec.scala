@@ -1,5 +1,7 @@
 package com.mdsol.mauth.scaladsl.utils
 
+import java.util.UUID
+
 import com.mdsol.mauth.RequestAuthenticatorBaseSpec
 import com.mdsol.mauth.exception.MAuthValidationException
 import com.mdsol.mauth.scaladsl.RequestAuthenticator
@@ -19,7 +21,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
 
   private implicit val requestValidationTimeout: Duration = 10 seconds
 
-  behavior of "RequestAuthenticator"
+  behavior of "RequestAuthenticator Scala"
 
   it should "authenticate a valid request" in clientContext { (client) =>
     //noinspection ConvertibleToMethodValue
@@ -110,6 +112,17 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     whenReady(authenticator.authenticate(getSimpleRequest).failed) {
       case e: MAuthValidationException => e.getMessage shouldBe "The service requires mAuth v2 authentication headers."
       case _ => fail("should not be here")
+    }
+  }
+
+  it should "authenticate a valid request with binary payload" in {
+    val client: ClientPublicKeyProvider = mock[ClientPublicKeyProvider]
+    (client.getPublicKey _).expects(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID)).returns(Future(Some(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY2))))
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_BINARY_VALUE.toLong + 3)
+    val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
+
+    whenReady(authenticator.authenticate(getRequestWithBinaryBodyV1)) { validationResult =>
+      validationResult shouldBe true
     }
   }
 
