@@ -72,9 +72,9 @@ public class MAuthSignatureHelper {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     String part1 = httpMethod + "\n" + resourceUrl + "\n";
     String part2 =  "\n" + appUUID.toString() + "\n" + epochTime;
-    baos.write(part1.getBytes());
+    baos.write(part1.getBytes(StandardCharsets.UTF_8));
     baos.write(requestBody);
-    baos.write(part2.getBytes());
+    baos.write(part2.getBytes(StandardCharsets.UTF_8));
     return baos.toByteArray();
   }
 
