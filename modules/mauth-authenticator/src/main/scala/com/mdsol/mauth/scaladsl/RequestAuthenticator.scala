@@ -97,9 +97,9 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
       util.Arrays.equals(messageDigest_bytes, decryptedSignature)
     } catch {
       case ex: Exception =>
-        val message = "MAuth request validation failed because of " + ex.getMessage
-        logger.error(message)
-        return false
+        val message = "MAuth request validation failed for V1."
+        logger.error(message, ex)
+        throw new MAuthValidationException(message, ex)
     }
   }
 
@@ -120,11 +120,10 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
       MAuthSignatureHelper.verifyRSA(unencryptedRequestString, mAuthRequest.getRequestSignature, clientPublicKey)
     } catch {
       case ex: Exception =>
-        val message = "MAuth request validation failed because of " + ex.getMessage
-        logger.error(message)
-        return false
+        val message = "MAuth request validation failed for V2."
+        logger.error(message, ex)
+        throw new MAuthValidationException(message, ex)
     }
 
   }
-
 }

@@ -101,7 +101,7 @@ public class RequestAuthenticator implements Authenticator {
     }
 
     if (v2OnlyAuthenticate && !mAuthRequest.getMauthVersion().equals(MAuthVersion.MWSV2)) {
-      final  String message  = "The service requires mAuth v2 authentication headers.";
+      final String message  = "The service requires mAuth v2 authentication headers.";
       logger.error(message);
       throw new MAuthValidationException(message);
     }
@@ -140,11 +140,10 @@ public class RequestAuthenticator implements Authenticator {
       // If both match, the request was signed by the requesting application and is valid.
       return Arrays.equals(messageDigest_bytes, decryptedSignature);
     } catch (Exception ex) {
-      final String message = "MAuth request validation failed because of " + ex.getMessage();
-      logger.error(message);
-      throw new MAuthValidationException(message);
+      final String message = "MAuth request validation failed for V1";
+      logger.error(message, ex);
+      throw new MAuthValidationException(message, ex);
     }
-
   }
 
   // check signature for V2
@@ -163,9 +162,9 @@ public class RequestAuthenticator implements Authenticator {
     try {
       return MAuthSignatureHelper.verifyRSA(unencryptedRequestString, mAuthRequest.getRequestSignature(), clientPublicKey);
     } catch (Exception ex) {
-      final String message = "MAuth request validation failed because of " + ex.getMessage();
-      logger.error(message);
-      throw new MAuthValidationException(message);
+      final String message = "MAuth request validation failed for V2";
+      logger.error(message, ex);
+      throw new MAuthValidationException(message, ex);
     }
   }
 
