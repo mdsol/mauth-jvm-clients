@@ -1,6 +1,5 @@
 package com.mdsol.mauth.util;
 
-import com.mdsol.mauth.MAuthVersion;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
@@ -14,14 +13,13 @@ import org.bouncycastle.crypto.util.PublicKeyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public class MAuthSignatureHelper {
@@ -49,6 +47,35 @@ public class MAuthSignatureHelper {
   public static String generateUnencryptedSignature(UUID appUUID, String httpMethod, String resourceUrl, String requestBody, String epochTime) {
     logger.debug("Generating String to sign for V1");
     return httpMethod + "\n" + resourceUrl + "\n" + requestBody + "\n" + appUUID.toString() + "\n" + epochTime;
+  }
+
+  /**
+   * Generate byte_arrary_to_sign for Mauth V1 protocol
+   *
+   * @deprecated
+   *   This is used for Mauth V1 protocol,
+   *   replaced by {@link #generateStringToSignV2(UUID appUUID, String httpMethod, String resourceUrl,
+   *       String queryParameters, byte[] requestBody, String epochTime)} for Mauth V2 protocol
+   *
+   * @param appUUID: app uuid
+   * @param httpMethod: Http_Verb
+   * @param resourceUrl: resource_url_path (no host, port or query string; first "/" is included)
+   * @param requestBody: request body byte[]
+   * @param epochTime: current seconds since Epoch
+   * @return byte[]
+   *   httpMethod + "\n" + resourceUrl + "\n" + requestBody + "\n" + app_uuid + "\n" + epochTime
+   *
+   */
+  @Deprecated
+  public static byte[] generateUnencryptedSignature(UUID appUUID, String httpMethod, String resourceUrl, byte[] requestBody, String epochTime) throws IOException{
+    logger.debug("Generating byte[] to sign for V1");
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    String part1 = httpMethod + "\n" + resourceUrl + "\n";
+    String part2 =  "\n" + appUUID.toString() + "\n" + epochTime;
+    baos.write(part1.getBytes(StandardCharsets.UTF_8));
+    baos.write(requestBody);
+    baos.write(part2.getBytes(StandardCharsets.UTF_8));
+    return baos.toByteArray();
   }
 
   /**
@@ -97,11 +124,33 @@ public class MAuthSignatureHelper {
   @Deprecated
   public static String encryptSignature(PrivateKey privateKey, String unencryptedString) throws IOException, CryptoException {
     String hexEncodedString = getHexEncodedDigestedString(unencryptedString);
+    return encryptSignaturePKCS1(privateKey, hexEncodedString);
+  }
 
+  /**
+   * Generate base64 encoded signature for Mauth V1 protocol
+   *
+   * @deprecated
+   *   This is used for Mauth V1 protocol,
+   *   replaced by {@link #encryptSignatureRSA(PrivateKey privateKey, String unencryptedString)} for Mauth V2 protocol
+   *
+   * @param privateKey the private key of the identity whose signature is going to be generated.
+   * @param unencryptedData the bytes array be signed
+   * @return String of Base64 decode the digital signature
+   * @throws IOException
+   * @throws CryptoException
+   */
+  @Deprecated
+  public static String encryptSignature(PrivateKey privateKey, byte[] unencryptedData) throws IOException, CryptoException {
+    String hexEncodedString = getHexEncodedDigestedString(unencryptedData);
+    return encryptSignaturePKCS1(privateKey, hexEncodedString);
+  }
+
+  @Deprecated
+  private static String encryptSignaturePKCS1(PrivateKey privateKey, String hexEncodedString) throws IOException, CryptoException {
     PKCS1Encoding encryptEngine = new PKCS1Encoding(new RSAEngine());
     encryptEngine.init(true, PrivateKeyFactory.createKey(privateKey.getEncoded()));
     byte[] encryptedStringBytes = encryptEngine.processBlock(hexEncodedString.getBytes(), 0, hexEncodedString.getBytes().length);
-
     return new String(Base64.encodeBase64(encryptedStringBytes), StandardCharsets.UTF_8);
   }
 
@@ -165,7 +214,6 @@ public class MAuthSignatureHelper {
 
     String[] params = query.split("&");
     Arrays.sort(params);
-    Map<String, String> map = new HashMap<String, String>();
     for (String param : params)
     {
       String [] keyPair = param.split("=");

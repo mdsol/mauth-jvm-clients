@@ -15,6 +15,14 @@ public class FixturesLoader {
     }
   }
 
+  public static String getPublicKey2() {
+    try {
+      return IOUtils.toString(FixturesLoader.class.getResourceAsStream("/keys/fake_publickey2.pem"), Charset.defaultCharset());
+    } catch (IOException ex) {
+      throw new IllegalStateException("Unable to load the public key2.", ex);
+    }
+  }
+
   public static String getPrivateKey() {
     try {
       return IOUtils.toString(FixturesLoader.class.getResourceAsStream("/keys/fake_privatekey.pem"), Charset.defaultCharset());

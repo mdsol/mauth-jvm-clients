@@ -32,6 +32,9 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
     * @return True or false indicating if the request is valid or not with respect to mAuth.
     */
   override def authenticate(mAuthRequest: MAuthRequest)(implicit ex: ExecutionContext, requestValidationTimeout: Duration): Future[Boolean] = {
+    val msgFormat = "Mauth-client attempting to authenticate request from app with mauth app uuid %s using version %s."
+    logger.info(String.format(msgFormat, mAuthRequest.getAppUUID, mAuthRequest.getMauthVersion.getValue))
+
     val promise = Promise[Boolean]()
     if (!validateTime(mAuthRequest.getRequestTime)(requestValidationTimeout)) {
       val message = s"MAuth request validation failed because of timeout $requestValidationTimeout"
@@ -79,18 +82,25 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
   private def validateSignatureV1(mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): Boolean = {
     val decryptedSignature = MAuthSignatureHelper.decryptSignature(clientPublicKey, mAuthRequest.getRequestSignature)
     // Recreate the plain text signature, based on the incoming request parameters, and hash it.
-    val unencryptedRequestString = MAuthSignatureHelper.generateUnencryptedSignature(
-      mAuthRequest.getAppUUID,
-      mAuthRequest.getHttpMethod,
-      mAuthRequest.getResourcePath,
-      new String(mAuthRequest.getMessagePayload, StandardCharsets.UTF_8),
-      String.valueOf(mAuthRequest.getRequestTime)
-    )
-    val messageDigest_bytes = MAuthSignatureHelper.getHexEncodedDigestedString(unencryptedRequestString).getBytes(StandardCharsets.UTF_8)
+    try {
+      val unencryptedRequestBytes = MAuthSignatureHelper.generateUnencryptedSignature(
+        mAuthRequest.getAppUUID,
+        mAuthRequest.getHttpMethod,
+        mAuthRequest.getResourcePath,
+        mAuthRequest.getMessagePayload,
+        String.valueOf(mAuthRequest.getRequestTime)
+      )
+      val messageDigest_bytes = MAuthSignatureHelper.getHexEncodedDigestedString(unencryptedRequestBytes).getBytes(StandardCharsets.UTF_8)
 
-    // Compare the decrypted signature and the recreated signature hashes.
-    // If both match, the request was signed by the requesting application and is valid.
-    util.Arrays.equals(messageDigest_bytes, decryptedSignature)
+      // Compare the decrypted signature and the recreated signature hashes.
+      // If both match, the request was signed by the requesting application and is valid.
+      util.Arrays.equals(messageDigest_bytes, decryptedSignature)
+    } catch {
+      case ex: Exception =>
+        val message = "MAuth request validation failed for V1."
+        logger.error(message, ex)
+        throw new MAuthValidationException(message, ex)
+    }
   }
 
   // check signature for V2
@@ -110,11 +120,10 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
       MAuthSignatureHelper.verifyRSA(unencryptedRequestString, mAuthRequest.getRequestSignature, clientPublicKey)
     } catch {
       case ex: Exception =>
-        val message = "MAuth request validation failed because of " + ex.getMessage
-        logger.error(message)
-        return false
+        val message = "MAuth request validation failed for V2."
+        logger.error(message, ex)
+        throw new MAuthValidationException(message, ex)
     }
 
   }
-
 }
