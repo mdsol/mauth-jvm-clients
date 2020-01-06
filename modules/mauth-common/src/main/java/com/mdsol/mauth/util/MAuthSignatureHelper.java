@@ -124,11 +124,33 @@ public class MAuthSignatureHelper {
   @Deprecated
   public static String encryptSignature(PrivateKey privateKey, String unencryptedString) throws IOException, CryptoException {
     String hexEncodedString = getHexEncodedDigestedString(unencryptedString);
+    return encryptSignaturePKCS1(privateKey, hexEncodedString);
+  }
 
+  /**
+   * Generate base64 encoded signature for Mauth V1 protocol
+   *
+   * @deprecated
+   *   This is used for Mauth V1 protocol,
+   *   replaced by {@link #encryptSignatureRSA(PrivateKey privateKey, String unencryptedString)} for Mauth V2 protocol
+   *
+   * @param privateKey the private key of the identity whose signature is going to be generated.
+   * @param unencryptedData the bytes array be signed
+   * @return String of Base64 decode the digital signature
+   * @throws IOException
+   * @throws CryptoException
+   */
+  @Deprecated
+  public static String encryptSignature(PrivateKey privateKey, byte[] unencryptedData) throws IOException, CryptoException {
+    String hexEncodedString = getHexEncodedDigestedString(unencryptedData);
+    return encryptSignaturePKCS1(privateKey, hexEncodedString);
+  }
+
+  @Deprecated
+  private static String encryptSignaturePKCS1(PrivateKey privateKey, String hexEncodedString) throws IOException, CryptoException {
     PKCS1Encoding encryptEngine = new PKCS1Encoding(new RSAEngine());
     encryptEngine.init(true, PrivateKeyFactory.createKey(privateKey.getEncoded()));
     byte[] encryptedStringBytes = encryptEngine.processBlock(hexEncodedString.getBytes(), 0, hexEncodedString.getBytes().length);
-
     return new String(Base64.encodeBase64(encryptedStringBytes), StandardCharsets.UTF_8);
   }
 

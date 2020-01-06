@@ -74,7 +74,7 @@ public class DefaultSigner implements Signer {
     // mAuth uses an epoch time measured in seconds
     long currentTime = epochTimeProvider.inSeconds();
 
-    return generateRequestHeadersV1(httpVerb, requestPath, requestPayload, currentTime);
+    return generateRequestHeadersV1(httpVerb, requestPath, requestPayload.getBytes(StandardCharsets.UTF_8), currentTime);
   }
 
   @Override
@@ -94,7 +94,7 @@ public class DefaultSigner implements Signer {
     HashMap<String, String> headers = new HashMap<>();
     if (!v2OnlySignRequests) {
       // Add v1 headers if not V2 only sign requests
-      Map<String, String> headersV1 = generateRequestHeadersV1(httpVerb, requestPath, new String(requestPayload, StandardCharsets.UTF_8), currentTime);
+      Map<String, String> headersV1 = generateRequestHeadersV1(httpVerb, requestPath, requestPayload, currentTime);
       if (!headersV1.isEmpty()) {
         headers.putAll(headersV1);
       }
@@ -107,15 +107,14 @@ public class DefaultSigner implements Signer {
     return headers;
   }
 
-  private Map<String, String> generateRequestHeadersV1(String httpVerb, String requestPath, String requestPayload, long currentTime) throws MAuthSigningException {
-
-    String unencryptedSignature = MAuthSignatureHelper.generateUnencryptedSignature(
-        appUUID, httpVerb, requestPath, requestPayload, String.valueOf(currentTime));
+  private Map<String, String> generateRequestHeadersV1(String httpVerb, String requestPath, byte[] requestPayload, long currentTime) throws MAuthSigningException {
 
     String encryptedSignature;
     try {
-      encryptedSignature =
-          MAuthSignatureHelper.encryptSignature(privateKey, unencryptedSignature);
+      byte[] unencryptedSignature = MAuthSignatureHelper.generateUnencryptedSignature(
+          appUUID, httpVerb, requestPath, requestPayload, String.valueOf(currentTime));
+
+      encryptedSignature = MAuthSignatureHelper.encryptSignature(privateKey, unencryptedSignature);
     } catch (IOException | CryptoException e) {
       logger.error("Error generating request headers", e);
       throw new MAuthSigningException(e);

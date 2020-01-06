@@ -139,4 +139,36 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
     headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe String.valueOf(TEST_EPOCH_TIME)
   }
 
+  it should "generated headers for binary payload for both V1 and V2 if V2 only is disabled" in {
+    //noinspection ConvertibleToMethodValue
+    val CLIENT_REQUEST_BINARY_APP_UUID = "5ff4257e-9c16-11e0-b048-0026bbfffe5e"
+    val CLIENT_REQUEST_BINARY_EPOCH_TIME = 1309891855
+    val CLIENT_REQUEST_BINARY_PATH = "/v1/pictures"
+    val CLIENT_REQUEST_QUERY_PARAMETERS = "key=-_.~ !@#$%^*()+{}|:\"'`<>?&∞=v&キ=v&0=v&a=v&a=b&a=c&a=a&k=&k=v"
+    val mAuthSigner = new DefaultSigner(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID), FixturesLoader.getPrivateKey2, mockEpochTimeProvider, false)
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_REQUEST_BINARY_EPOCH_TIME)
+    val EXPECTED_AUTHENTICATION_HEADER_V1: String =
+      s"""MWS $CLIENT_REQUEST_BINARY_APP_UUID:hDKYDRnzPFL2gzsru4zn7c7E7
+         |KpEvexeF4F5IR+puDxYXrMmuT2/fETZty5NkGGTZQ1nI6BTYGQGsU/73TkEAm
+         |7SvbJZcB2duLSCn8H5D0S1cafory1gnL1TpMPBlY8J/lq/Mht2E17eYw+P87F
+         |cpvDShINzy8GxWHqfquBqO8ml4XtirVEtAlI0xlkAsKkVq4nj7rKZUMS85mzo
+         |gjUAJn3WgpGCNXVU+EK+qElW5QXk3I9uozByZhwBcYt5Cnlg15o99+53wKzMM
+         |mdvFmVjA1DeUaSO7LMIuw4ZNLVdDcHJx7ZSpAKZ/EA34u1fYNECFcw5CSKOjd
+         |lU7JFr4o8Phw==""".stripMargin.replaceAll("\n", "")
+    val EXPECTED_AUTHENTICATION_HEADER_V2: String =
+      s"""MWSV2 $CLIENT_REQUEST_BINARY_APP_UUID:GpZIRB8RIxlfsjcROBElMEw
+         |a0r7jr632GkBe+R8lOv72vVV7bFMbJwQUHYm6vL/NKC7g4lJwvWcF60lllIUG
+         |wv/KWUOQwerqo5yCNoNumxjgDKjq7ILl8iFxsrV9LdvxwGyEBEwAPKzoTmW9x
+         |radxmjn4ZZVMnQKEMns6iViBkwaAW2alp4ZtVfJIZHRRyiuFnITWH1PniyG0k
+         |I4Li16kY25VfmzfNkdAi0Cnl27Cy1+DtAl1zVnz6ObMAdtmsEtplvlqsRCRsd
+         |d37VfuUxUlolNpr5brjzTwXksScUjX80/HMnui5ZlFORGjHebeZG5QVCouZPK
+         |BWTWsELGx1iyaw==;""".stripMargin.replaceAll("\n", "")
+    val headers: Map[String, String] =
+      mAuthSigner.generateRequestHeaders("PUT", CLIENT_REQUEST_BINARY_PATH, FixturesLoader.getBinaryFileBody, CLIENT_REQUEST_QUERY_PARAMETERS).asScala.toMap
+    headers(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTHENTICATION_HEADER_V1
+    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTHENTICATION_HEADER_V2
+    headers(MAuthRequest.X_MWS_TIME_HEADER_NAME) shouldBe String.valueOf(CLIENT_REQUEST_BINARY_EPOCH_TIME)
+    headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe String.valueOf(CLIENT_REQUEST_BINARY_EPOCH_TIME)
+  }
+
 }
