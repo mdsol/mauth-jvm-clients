@@ -6,6 +6,7 @@ import java.util.UUID
 import scala.concurrent.Future
 
 trait ClientPublicKeyProvider {
+
   /**
     * Returns the associated public key for a given application UUID.
     *

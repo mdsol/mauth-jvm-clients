@@ -1,5 +1,7 @@
 package com.mdsol.mauth.scaladsl.utils
 
+import java.util.UUID
+
 import com.mdsol.mauth.RequestAuthenticatorBaseSpec
 import com.mdsol.mauth.exception.MAuthValidationException
 import com.mdsol.mauth.scaladsl.RequestAuthenticator
@@ -7,18 +9,19 @@ import com.mdsol.mauth.test.utils.FakeMAuthServer.EXISTING_CLIENT_APP_UUID
 import com.mdsol.mauth.util.MAuthKeysHelper
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class RequestAuthenticatorSpec extends FlatSpec with RequestAuthenticatorBaseSpec with Matchers with ScalaFutures with MockFactory {
+class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBaseSpec with Matchers with ScalaFutures with MockFactory {
 
   private implicit val requestValidationTimeout: Duration = 10 seconds
 
-  behavior of "RequestAuthenticator"
+  behavior of "RequestAuthenticator Scala"
 
   it should "authenticate a valid request" in clientContext { (client) =>
     //noinspection ConvertibleToMethodValue
@@ -72,10 +75,60 @@ class RequestAuthenticatorSpec extends FlatSpec with RequestAuthenticatorBaseSpe
     }
   }
 
+  it should "authenticate a valid request with V2 headers" in clientContext { (client) =>
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
+
+    whenReady(authenticator.authenticate(getSimpleRequestV2)) { validationResult =>
+      validationResult shouldBe true
+    }
+  }
+
+  it should "authenticate a valid request with V2 headers only if V2 only enabled" in clientContext { (client) =>
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider, true)
+
+    val result = authenticator.authenticate(getSimpleRequestV2).futureValue
+    result shouldBe true
+  }
+
+  it should "authenticate a valid request with the both V1 and V2 headers provided" in clientContext { (client) =>
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
+
+    whenReady(authenticator.authenticate(getRequestWithAllHeaders)) { validationResult =>
+      validationResult shouldBe true
+    }
+  }
+
+  it should "reject a request with V1 headers when V2 only is enabled" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    val authenticator = new RequestAuthenticator(mock[ClientPublicKeyProvider], mockEpochTimeProvider, true)
+
+    whenReady(authenticator.authenticate(getSimpleRequest).failed) {
+      case e: MAuthValidationException => e.getMessage shouldBe "The service requires mAuth v2 authentication headers."
+      case _ => fail("should not be here")
+    }
+  }
+
+  it should "authenticate a valid request with binary payload" in {
+    val client: ClientPublicKeyProvider = mock[ClientPublicKeyProvider]
+    (client.getPublicKey _).expects(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID)).returns(Future(Some(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY2))))
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_BINARY_VALUE.toLong + 3)
+    val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
+
+    whenReady(authenticator.authenticate(getRequestWithBinaryBodyV1)) { validationResult =>
+      validationResult shouldBe true
+    }
+  }
+
   private def clientContext(test: (ClientPublicKeyProvider) => Any): Unit = {
     val client: ClientPublicKeyProvider = mock[ClientPublicKeyProvider]
-    (client.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(
-      Future(Some(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))))
+    (client.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(Future(Some(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))))
     test(client)
   }
 }

@@ -6,8 +6,10 @@ import com.mdsol.mauth.http.HttpClient
 import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.mdsol.mauth.http.Implicits._
+import scala.concurrent.duration._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
   * Example how to sign requests using Akka HttpClient
@@ -15,20 +17,23 @@ import scala.concurrent.{ExecutionContext, Future}
   * APP_MAUTH_UUID - app uuid
   * APP_MAUTH_PRIVATE_KEY - the application private key itself, not the path
   */
-object MauthRequestSignerExample extends App {
+object MauthRequestSignerExample {
 
-  implicit val system: ActorSystem = ActorSystem()
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
-  implicit val ec: ExecutionContext = system.dispatcher
+  def main(args: Array[String]): Unit = {
+    implicit val system: ActorSystem = ActorSystem()
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val ec: ExecutionContext = system.dispatcher
 
-  val configuration = new SignerConfiguration(ConfigFactory.load())
-  val httpMethod = "GET"
-  val uri = URI.create("https://api.mdsol.com/v1/countries")
+    val configuration = new SignerConfiguration(ConfigFactory.load())
+    val httpMethod = "GET"
+    val uri = URI.create("https://api.mdsol.com/v1/countries")
 
-  MAuthRequestSigner(configuration).signRequest(UnsignedRequest(httpMethod, uri)) match {
-    case Left(e) => Future.failed(e)
-    case Right(signedRequest) => HttpClient.call(signedRequest).map { response =>
-      println(s"response code: ${response._1.value}, response: ${response._3.toString}")
-    }.flatMap(Future.successful(_))
+    val signedRequest = MAuthRequestSigner(configuration).signRequest(models.UnsignedRequest(httpMethod, uri, body = Array.empty, headers = Map.empty))
+    Await.result(
+      HttpClient.call(signedRequest.toAkkaHttpRequest).map { response =>
+        println(s"response code: ${response._1.value}, response: ${response._3.toString}")
+      },
+      10.seconds
+    )
   }
 }

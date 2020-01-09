@@ -9,6 +9,7 @@ import com.mdsol.mauth.Signer;
 import com.mdsol.mauth.exception.HttpClientPublicKeyProviderException;
 import com.mdsol.mauth.util.MAuthKeysHelper;
 import com.mdsol.mauth.utils.ClientPublicKeyProvider;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -61,7 +62,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
 
   private PublicKey getPublicKeyFromEureka(UUID appUUID) {
     String requestUrlPath = getRequestUrlPath(appUUID);
-    Map<String, String> headers = signer.generateRequestHeaders("GET", requestUrlPath, "");
+    Map<String, String> headers = signer.generateRequestHeaders("GET", requestUrlPath, null, "");
     String requestUrl = configuration.getBaseUrl() + requestUrlPath;
     String publicKeyAsString = get(requestUrl, headers, publicKeyResponseHandler);
     return MAuthKeysHelper.getPublicKeyFromString(publicKeyAsString);

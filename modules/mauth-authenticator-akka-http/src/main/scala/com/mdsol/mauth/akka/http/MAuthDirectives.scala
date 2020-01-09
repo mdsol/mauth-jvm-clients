@@ -2,15 +2,16 @@ package com.mdsol.mauth.akka.http
 
 import java.util.UUID
 
+import akka.http.javadsl.model.HttpHeader
 import akka.http.javadsl.server.AuthorizationFailedRejection
-import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.{HttpEntity, HttpRequest}
 import akka.http.scaladsl.server.Directives.{headerValueByName, headerValueByType}
-import akka.http.scaladsl.server._
+import akka.http.scaladsl.server.{Directive1, _}
 import akka.http.scaladsl.server.directives.BasicDirectives._
 import akka.http.scaladsl.server.directives.FutureDirectives.onComplete
 import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import com.mdsol.mauth.MAuthRequest
-import com.mdsol.mauth.http.{HttpVerbOps, `X-MWS-Authentication`, `X-MWS-Time`}
+import com.mdsol.mauth.http.{`X-MWS-Authentication`, `X-MWS-Time`, HttpVerbOps}
 import com.mdsol.mauth.scaladsl.Authenticator
 import com.typesafe.scalalogging.StrictLogging
 
@@ -20,11 +21,11 @@ import scala.language.postfixOps
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
+case class MauthHeaderValues(authenticator: String, time: Long)
+
 case class AuthHeaderDetail(appId: UUID, hash: String)
 
-case object MdsolAuthFailedRejection
-    extends AuthorizationFailedRejection
-    with Rejection
+case object MdsolAuthFailedRejection extends AuthorizationFailedRejection with Rejection
 
 trait MAuthDirectives extends StrictLogging {
 
@@ -40,31 +41,46 @@ trait MAuthDirectives extends StrictLogging {
     */
   def authenticate(implicit ex: ExecutionContext, authenticator: Authenticator, timeout: FiniteDuration, requestValidationTimeout: Duration): Directive0 = {
     extractExecutionContext.flatMap { implicit ec =>
-      extractMwsAuthenticationHeader.flatMap { mAuthHeader =>
-        extractMwsTimeHeader.flatMap { time =>
-          toStrictEntity(timeout) &
-            extractRequest.flatMap { req =>
-              val isAuthed: Directive[Unit] = req.entity match {
-                case entity: HttpEntity.Strict =>
-                  onComplete(authenticator.authenticate(
-                    new MAuthRequest(mAuthHeader, entity.data.toArray[Byte], HttpVerbOps.httpVerb(req.method), time.toString, req.uri.path.toString)
-                  )(ec, requestValidationTimeout)).flatMap[Unit] {
-                    case Success(true) => pass
-                    case _ => reject(MdsolAuthFailedRejection)
-                  }
-                case _ =>
-                  logger.error(s"MAUTH: Non-Strict Entity in Request")
-                  reject(MdsolAuthFailedRejection)
-              }
-              isAuthed
+      extractLatestAuthenticationHeaders(authenticator.isV2OnlyAuthenticate).flatMap { mauthHeaderValues: MauthHeaderValues =>
+        toStrictEntity(timeout) &
+          extractRequest.flatMap { req =>
+            val isAuthed: Directive[Unit] = req.entity match {
+              case entity: HttpEntity.Strict =>
+                onComplete(
+                  authenticator.authenticate(
+                    new MAuthRequest(
+                      mauthHeaderValues.authenticator,
+                      entity.data.toArray[Byte],
+                      HttpVerbOps.httpVerb(req.method),
+                      mauthHeaderValues.time.toString,
+                      req.uri.path.toString,
+                      getQueryString(req)
+                    )
+                  )(ec, requestValidationTimeout)
+                ).flatMap[Unit] {
+                  case Success(true) => pass
+                  case _ => reject(MdsolAuthFailedRejection)
+                }
+              case _ =>
+                logger.error(s"MAUTH: Non-Strict Entity in Request")
+                reject(MdsolAuthFailedRejection)
             }
-        }
+            isAuthed
+          }
       }
     }
   }
 
+  @deprecated("This method is for Mauth V1 protocol only")
   val extractMwsAuthenticationHeader: Directive1[String] = headerValueByName(`X-MWS-Authentication`.name)
 
+  /**
+    * Extracts the detail information of the HTTP request header X-MWS-Authentication
+    *
+    * @return Directive1[AuthHeaderDetail] of Mauth V1 protocol
+    *         If invalidated, the request is rejected with a MalformedHeaderRejection.
+    */
+  @deprecated("This method is for Mauth V1 protocol only")
   val extractMAuthHeader: Directive1[AuthHeaderDetail] =
     headerValueByType[`X-MWS-Authentication`]((): Unit).flatMap { hdr =>
       extractAuthHeaderDetail(hdr.value) match {
@@ -77,6 +93,13 @@ trait MAuthDirectives extends StrictLogging {
       }
     }
 
+  /**
+    * Extracts the validated value of the HTTP request header X-MWS-Time
+    *
+    * @return Directive1[Long] of Mauth V1 protocol
+    *         If invalidated, the request is rejected with a MalformedHeaderRejection.
+    */
+  @deprecated("This method is for Mauth V1 protocol only")
   val extractMwsTimeHeader: Directive1[Long] =
     headerValueByType[`X-MWS-Time`]((): Unit).flatMap { time =>
       Try(time.value.toLong).toOption match {
@@ -91,7 +114,6 @@ trait MAuthDirectives extends StrictLogging {
   /////////////////////////////////////////////
   //  Utility functions
   /////////////////////////////////////////////
-
   private def extractAuthHeaderDetail(str: String): Option[AuthHeaderDetail] = {
     if (str.startsWith("MWS ")) {
       str.replaceFirst("MWS ", "").split(":").toList match {
@@ -112,6 +134,75 @@ trait MAuthDirectives extends StrictLogging {
       None
     }
   }
+
+  private def getQueryString(req: HttpRequest): String = req.uri.rawQueryString.getOrElse("")
+
+  private def extractRequestHeader(request: HttpRequest, headerName: String): String = {
+    val f = new java.util.function.Function[akka.http.javadsl.model.HttpHeader, String] {
+      override def apply(h: HttpHeader): String = h.value()
+    }
+    request.getHeader(headerName).map[String](f).orElse("")
+  }
+
+  /**
+    * Extracts the authentication header value of the HTTP request header for latest version of Mauth
+    *
+    * @param v2OnlyAuthenticate
+    *        the flag to specify if Mauth V2 only authenticate or not.
+    *        If Mauth v2 only authenticate is enabled, extracts the authentication header of MCC-Authentication only.
+    *        Otherwise, extracts the authentication header of X-MWS-Authentication if MCC-Authentication header is not found.
+    *
+    * @return Directive1[MauthHeaderValues] of Mauth authentication header values for V1 or V2
+    *         the request is rejected with a MissingHeaderRejection if the expected header is not present
+    */
+  def extractLatestAuthenticationHeaders(v2OnlyAuthenticate: Boolean): Directive1[MauthHeaderValues] = {
+    extractRequest.flatMap { request: HttpRequest =>
+      // Try to extract and verify V2 headers
+      val authenticationHeaderStr = extractRequestHeader(request, MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME)
+      if (authenticationHeaderStr.nonEmpty) {
+        val timeHeaderStr = extractRequestHeader(request, MAuthRequest.MCC_TIME_HEADER_NAME)
+        if (timeHeaderStr.nonEmpty) {
+          Try(timeHeaderStr.toLong).toOption match {
+            case Some(time: Long) =>
+              provide(new MauthHeaderValues(authenticationHeaderStr, time))
+            case None => {
+              val msg = s"${MAuthRequest.MCC_TIME_HEADER_NAME} header supplied with bad format: [$timeHeaderStr]"
+              logger.error(msg)
+              reject(MalformedHeaderRejection(headerName = MAuthRequest.MCC_TIME_HEADER_NAME, errorMsg = msg, None))
+            }
+          }
+        } else {
+          reject(MissingHeaderRejection(MAuthRequest.MCC_TIME_HEADER_NAME))
+        }
+      } else {
+        // If V2 headers not found, fallback to V1 headers if allowed
+        if (!v2OnlyAuthenticate) {
+          val authenticationHeaderStr = extractRequestHeader(request, MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME)
+          if (authenticationHeaderStr.nonEmpty) {
+            val timeHeaderStr = extractRequestHeader(request, MAuthRequest.X_MWS_TIME_HEADER_NAME)
+            if (timeHeaderStr.nonEmpty) {
+              Try(timeHeaderStr.toLong).toOption match {
+                case Some(time: Long) =>
+                  provide(new MauthHeaderValues(authenticationHeaderStr, time))
+                case None => {
+                  val msg = s"${MAuthRequest.X_MWS_TIME_HEADER_NAME} header supplied with bad format: [$timeHeaderStr]"
+                  logger.error(msg)
+                  reject(MalformedHeaderRejection(headerName = MAuthRequest.X_MWS_TIME_HEADER_NAME, errorMsg = msg, None))
+                }
+              }
+            } else {
+              reject(MissingHeaderRejection(MAuthRequest.X_MWS_TIME_HEADER_NAME))
+            }
+          } else {
+            reject(MissingHeaderRejection(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME))
+          }
+        } else {
+          reject(MissingHeaderRejection(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME))
+        }
+      }
+    }
+  }
+
 }
 
 object MAuthDirectives extends MAuthDirectives

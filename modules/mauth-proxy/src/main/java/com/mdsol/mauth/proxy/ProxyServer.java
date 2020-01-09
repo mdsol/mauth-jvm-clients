@@ -1,6 +1,8 @@
 package com.mdsol.mauth.proxy;
 
 import com.mdsol.mauth.apache.HttpClientRequestSigner;
+import com.mdsol.mauth.util.CurrentEpochTimeProvider;
+
 import com.typesafe.config.ConfigFactory;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpRequest;
@@ -23,7 +25,9 @@ public class ProxyServer {
 
         httpClientRequestSigner = new HttpClientRequestSigner(
                 proxyConfig.getAppUuid(),
-                proxyConfig.getPrivateKey()
+                proxyConfig.getPrivateKey(),
+                new CurrentEpochTimeProvider(),
+                proxyConfig.isV2OnlySignRequests()
         );
     }
 

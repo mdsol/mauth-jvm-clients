@@ -1,9 +1,12 @@
 package com.mdsol.mauth;
 
 import com.mdsol.mauth.util.MAuthHeadersHelper;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 /**
@@ -11,9 +14,20 @@ import java.util.UUID;
  */
 public class MAuthRequest {
 
+  /* @deprecated
+   * This is the header name for Mauth V1 protocol, replaced by MCC_TIME_HEADER_NAME for Mauth V2 protocol
+   */
+  @Deprecated
   public static final String X_MWS_TIME_HEADER_NAME = "x-mws-time";
+
+  /* @deprecated
+   * This is the header name for Mauth V1 protocol, replaced by MCC_AUTHENTICATION_HEADER_NAME for Mauth V2 protocol
+   */
+  @Deprecated
   public static final String X_MWS_AUTHENTICATION_HEADER_NAME = "x-mws-authentication";
 
+  public static final String MCC_TIME_HEADER_NAME = "mcc-time";
+  public static final String MCC_AUTHENTICATION_HEADER_NAME = "mcc-authentication";
   private static final String VALIDATION_EXCEPTION_MESSAGE_TEMPLATE = "%s cannot be null or empty.";
 
   private final UUID appUUID;
@@ -22,15 +36,48 @@ public class MAuthRequest {
   private final String httpMethod;
   private final long requestTime;
   private final String resourcePath;
+  private final String queryParameters;
+  private final MAuthVersion mauthVersion;
 
+  /**
+   * Create a Mauth request
+   *
+   * @deprecated
+   *   This is used for Mauth V1 protocol,
+   *   replaced by {@link #MAuthRequest(String authenticationHeaderValue, byte[] messagePayload, String httpMethod,
+   *       String timeHeaderValue, String resourcePath, String queryParameters)} for Mauth V2 protocol
+   *
+   * @param authenticationHeaderValue the string value of Mauth authentication Header
+   * @param messagePayload byte[] of request payload
+   * @param httpMethod the string value of Http_Verb
+   * @param timeHeaderValue the string value of Mauth time Header
+   * @param resourcePath resource_url_path (no host, port or query string; first "/" is included)
+   */
+  @Deprecated
   public MAuthRequest(String authenticationHeaderValue, byte[] messagePayload, String httpMethod,
-      String timeHeaderValue, String resourcePath) {
+       String timeHeaderValue, String resourcePath) {
+    this(authenticationHeaderValue, messagePayload, httpMethod, timeHeaderValue, resourcePath, "");
+  }
+
+  /**
+   * Create a Mauth request
+   *
+   * @param authenticationHeaderValue the string value of Mauth authentication Header
+   * @param messagePayload byte[] of request payload
+   * @param httpMethod the string value of Http_Verb
+   * @param timeHeaderValue the string value of Mauth time Header
+   * @param resourcePath resource_url_path (no host, port or query string; first "/" is included)
+   * @param queryParameters the string value of request parameters
+   */
+  public MAuthRequest(String authenticationHeaderValue, byte[] messagePayload, String httpMethod,
+      String timeHeaderValue, String resourcePath, String queryParameters) {
     validateNotBlank(authenticationHeaderValue, "Authentication header value");
+    validateNotBlank(timeHeaderValue, "Time header value");
+
     UUID appUUID = MAuthHeadersHelper.getAppUUIDFromAuthenticationHeader(authenticationHeaderValue);
     String requestSignature =
         MAuthHeadersHelper.getSignatureFromAuthenticationHeader(authenticationHeaderValue);
 
-    validateNotBlank(timeHeaderValue, "Time header value");
     long requestTime = MAuthHeadersHelper.getRequestTimeFromTimeHeader(timeHeaderValue);
 
     validateNotBlank(httpMethod, "Http method");
@@ -39,6 +86,9 @@ public class MAuthRequest {
     if (messagePayload == null) {
       messagePayload = new byte[] {};
     }
+    if (queryParameters == null) {
+      queryParameters = "";
+    }
 
     this.appUUID = appUUID;
     this.requestSignature = requestSignature;
@@ -46,6 +96,8 @@ public class MAuthRequest {
     this.httpMethod = httpMethod;
     this.requestTime = requestTime;
     this.resourcePath = resourcePath;
+    this.queryParameters = queryParameters;
+    this.mauthVersion = MAuthHeadersHelper.getMauthVersion(authenticationHeaderValue);
   }
 
   public UUID getAppUUID() {
@@ -72,6 +124,14 @@ public class MAuthRequest {
     return resourcePath;
   }
 
+  public String getQueryParameters() {
+    return queryParameters;
+  }
+
+  public MAuthVersion getMauthVersion() {
+    return mauthVersion;
+  }
+
   private void validateNotBlank(String field, String fieldNameInExceptionMessage) {
     if (StringUtils.isBlank(field)) {
       throw new IllegalArgumentException(
@@ -92,6 +152,8 @@ public class MAuthRequest {
     private String httpMethod;
     private String timeHeaderValue;
     private String resourcePath;
+    private String queryParameters;
+    private TreeMap<String, String> mauthHeaders = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER);
 
     public static Builder get() {
       return new Builder();
@@ -122,9 +184,44 @@ public class MAuthRequest {
       return this;
     }
 
+    public Builder withQueryParameters(String queryParameters) {
+      this.queryParameters = queryParameters;
+      return this;
+    }
+
+    /**
+     * Set Mauth headers (it may include the both sets of Mauth V1 and V2)
+     * @param mauthHeaders the request headers for Mauth, such as
+     *        Mauth V1, X_MWS_AUTHENTICATION_HEADER_NAME, X_MWS_TIME_HEADER_NAME
+     *        Mauth V2, MCC_AUTHENTICATION_HEADER_NAME and MCC_TIME_HEADER_NAME
+     *
+     * @return Builder
+     */
+    public Builder withMauthHeaders(Map<String, String> mauthHeaders) {
+      this.mauthHeaders.putAll(mauthHeaders);
+      return this;
+    }
+
+    /**
+     * Construct a MAuthRequest object
+     *
+     * If mauthHeaders are provided, get the value of the highest protocol version to construct object
+     *
+     * @return a object of MAuthRequest
+     */
     public MAuthRequest build() {
+      // get the newest mauth version from the request headers...
+      if (mauthHeaders != null && !mauthHeaders.isEmpty()) {
+        if (mauthHeaders.get(MCC_AUTHENTICATION_HEADER_NAME) != null) {
+          authenticationHeaderValue = mauthHeaders.get(MCC_AUTHENTICATION_HEADER_NAME);
+          timeHeaderValue = mauthHeaders.get(MCC_TIME_HEADER_NAME);
+        } else {
+          authenticationHeaderValue = mauthHeaders.get(X_MWS_AUTHENTICATION_HEADER_NAME);
+          timeHeaderValue = mauthHeaders.get(X_MWS_TIME_HEADER_NAME);
+        }
+      }
       return new MAuthRequest(authenticationHeaderValue, messagePayload, httpMethod,
-          timeHeaderValue, resourcePath);
+          timeHeaderValue, resourcePath, queryParameters);
     }
   }
 }

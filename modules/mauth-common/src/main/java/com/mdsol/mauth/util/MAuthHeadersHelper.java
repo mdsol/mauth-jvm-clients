@@ -1,11 +1,22 @@
 package com.mdsol.mauth.util;
 
+import com.mdsol.mauth.MAuthVersion;
+
 import java.util.UUID;
 
 public class MAuthHeadersHelper {
 
+  public static final String AUTH_HEADER_DELIMITER = ";";
+
   public static String createAuthenticationHeaderValue(UUID appUUID, String encryptedSignature) {
-    return "MWS " + appUUID.toString() + ":" + encryptedSignature;
+    return createAuthenticationHeaderValue(appUUID, encryptedSignature, MAuthVersion.MWS.getValue());
+  }
+
+  public static String createAuthenticationHeaderValue(UUID appUUID, String encryptedSignature, String mauthVersion) {
+    String authValue = mauthVersion + " " + appUUID.toString() + ":" + encryptedSignature;
+    if (mauthVersion.equalsIgnoreCase(MAuthVersion.MWSV2.toString()))
+      authValue += AUTH_HEADER_DELIMITER;
+    return authValue;
   }
 
   public static String createTimeHeaderValue(long epochTime) {
@@ -13,11 +24,16 @@ public class MAuthHeadersHelper {
   }
 
   public static String getSignatureFromAuthenticationHeader(String authenticationHeaderValue) {
-    return authenticationHeaderValue.split(":")[1];
+    String signature = authenticationHeaderValue.split(":")[1];
+    if (getMauthVersion(authenticationHeaderValue).equals(MAuthVersion.MWSV2.getValue())) {
+      signature = signature.substring(0, signature.lastIndexOf(AUTH_HEADER_DELIMITER));
+    }
+    return signature;
   }
 
   public static UUID getAppUUIDFromAuthenticationHeader(String authenticationHeaderValue) {
-    String appUUIDAsString = authenticationHeaderValue.split(":")[0].substring(4);
+    String mauthVersion = getMauthVersion(authenticationHeaderValue).getValue().concat(" ");
+    String appUUIDAsString = authenticationHeaderValue.split(":")[0].substring(mauthVersion.length());
     return UUID.fromString(appUUIDAsString);
   }
 
@@ -25,4 +41,8 @@ public class MAuthHeadersHelper {
     return Long.parseLong(timeHeaderValue);
   }
 
+  public static MAuthVersion getMauthVersion(String authenticationHeaderValue) {
+    return authenticationHeaderValue.startsWith(MAuthVersion.MWSV2.getValue() + " ") ?
+        MAuthVersion.MWSV2 : MAuthVersion.MWS;
+  }
 }
