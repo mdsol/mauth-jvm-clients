@@ -4,15 +4,35 @@ import java.net.URI
 import java.security.Security
 import java.util.UUID
 
+import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, equalTo, get, post, urlMatching, urlPathEqualTo}
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
+import com.mdsol.mauth.http.HttpClient
+import akka.http.scaladsl.model._
+import com.mdsol.mauth.http.Implicits._
+import com.mdsol.mauth.models.{UnsignedRequest => NewUnsignedRequest}
 import com.mdsol.mauth.test.utils.FixturesLoader
 import com.mdsol.mauth.util.EpochTimeProvider
-import models.{UnsignedRequest => NewUnsignedRequest, SignedRequest => NewSignedRequest}
-
+import org.apache.http.HttpStatus
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
+import org.scalatest.concurrent.PatienceConfiguration.Timeout
+import scala.concurrent.duration._
 
-class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers {
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+
+class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers with HttpClient with BeforeAndAfterAll with ScalaFutures {
+
+  implicit val system: ActorSystem = ActorSystem()
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
+  var service = new WireMockServer(wireMockConfig.dynamicPort)
+
   val TIME_CONSTANT = 1509041057L
   val epochTimeProvider = new EpochTimeProvider() { override def inSeconds(): Long = TIME_CONSTANT }
   val testUUID = "2a6790ab-f6c6-45be-86fc-9e9be76ec12a"
@@ -31,6 +51,14 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers {
     epochTimeProvider,
     true
   )
+
+  override protected def beforeAll() {
+    service.start()
+  }
+
+  override protected def afterAll() {
+    service.stop()
+  }
 
   val EXPECTED_GET_TIME_HEADER = "1509041057"
 
@@ -117,4 +145,40 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers {
     authHeaders.get(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME).get shouldBe EXPECTED_GET_MCC_AUTHENTICATION_HEADER
   }
 
+  it should "correctly send a customized content-type header" in {
+    service.stubFor(
+      post(urlPathEqualTo(s"/v1/test"))
+        .willReturn(aResponse().withStatus(HttpStatus.SC_OK))
+        .withHeader("Content-type", equalTo("application/json"))
+    )
+
+    val simpleNewUnsignedRequest =
+      NewUnsignedRequest
+        .fromStringBodyUtf8(
+          httpMethod = "POST",
+          uri = new URI(s"${service.baseUrl()}/v1/test"),
+          body = "",
+          headers = Map("Content-Type" -> ContentTypes.`application/json`.toString())
+        )
+
+    whenReady(HttpClient.call(signerV2.signRequest(simpleNewUnsignedRequest).toAkkaHttpRequest), timeout = Timeout(5 seconds)) { response =>
+      response.status shouldBe StatusCodes.OK
+    }
+  }
+
+  it should "correctly send the default content type (text/plain UTF-8) when content type not specified" in {
+    service.stubFor(
+      post(urlPathEqualTo(s"/v1/test"))
+        .willReturn(aResponse().withStatus(HttpStatus.SC_OK))
+        .withHeader("Content-type", equalTo(ContentTypes.`text/plain(UTF-8)`.toString()))
+    )
+
+    val simpleNewUnsignedRequest =
+      NewUnsignedRequest
+        .fromStringBodyUtf8(httpMethod = "POST", uri = new URI(s"${service.baseUrl()}/v1/test"), body = "", headers = Map())
+
+    whenReady(HttpClient.call(signerV2.signRequest(simpleNewUnsignedRequest).toAkkaHttpRequest), timeout = Timeout(5 seconds)) { response =>
+      response.status shouldBe StatusCodes.OK
+    }
+  }
 }
