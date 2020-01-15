@@ -26,6 +26,7 @@ jobs:
       script: 
         - .travis/deploy.sh
         - sbt mauth-proxy/ecr:push
+      if: tag IS NOT present
 stages:
   - test
   - release
