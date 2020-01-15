@@ -4,8 +4,9 @@ import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.mdsol.mauth.SignedRequest
 import com.mdsol.mauth.http.HttpVerbOps._
-import com.mdsol.mauth.models.{UnsignedRequest => NewUnsignedRequest, SignedRequest => NewSignedRequest}
+import com.mdsol.mauth.models.{SignedRequest => NewSignedRequest}
 
+import scala.collection.immutable
 import scala.language.implicitConversions
 
 object Implicits {
@@ -32,7 +33,10 @@ object Implicits {
       * Create an akka-http request from a [[com.mdsol.mauth.models.SignedRequest]]
       */
     def toAkkaHttpRequest: HttpRequest = {
-      val allHeaders = (signedRequest.req.headers ++ signedRequest.mauthHeaders).toList
+      val contentType: Option[String] = extractContentTypeFromHeaders(signedRequest.req.headers)
+      val headersWithoutContentType: Map[String, String] = removeContentTypeFromHeaders(signedRequest.req.headers)
+
+      val allHeaders: immutable.Seq[RawHeader] = (headersWithoutContentType ++ signedRequest.mauthHeaders).toList
         .map {
           case (name, value) =>
             RawHeader(name, value)
@@ -41,7 +45,7 @@ object Implicits {
       HttpRequest(
         method = signedRequest.req.httpMethod,
         uri = Uri(signedRequest.req.uri.toString),
-        entity = HttpEntity(signedRequest.req.body),
+        entity = getHttpEntity(contentType, signedRequest.req.body),
         headers = allHeaders
       )
     }
@@ -58,6 +62,17 @@ object Implicits {
 
   private def removeContentTypeFromHeaders(requestHeaders: Map[String, String]): Map[String, String] =
     requestHeaders.filterKeys(_ != headers.`Content-Type`.name)
+
+  private def getHttpEntity(contentTypeOptional: Option[String], entityBody: Array[Byte]) = {
+    contentTypeOptional match {
+      case Some(contentType) =>
+        ContentType.parse(contentType) match {
+          case Right(parsedContentType) => HttpEntity(parsedContentType, entityBody)
+          case _ => HttpEntity(DEFAULT_CONTENT_TYPE, entityBody)
+        }
+      case None => HttpEntity(DEFAULT_CONTENT_TYPE, entityBody)
+    }
+  }
 
   private def getHttpEntity(contentTypeOptional: Option[String], entityBody: String) = {
     contentTypeOptional match {

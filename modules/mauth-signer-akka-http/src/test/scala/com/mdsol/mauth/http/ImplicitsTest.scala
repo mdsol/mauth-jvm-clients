@@ -135,20 +135,14 @@ class ImplicitsTest extends AnyWordSpec with Matchers {
           RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, "mcc-time-value"),
           RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, "mcc-authentication-value"),
           RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, "x-mws-time-value"),
-          RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, "x-mws-authentication-value"),
-          RawHeader("Content-Type", "application/json")
+          RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, "x-mws-authentication-value")
         ).toString()
       )
     }
 
-    /* Failed as
-    Expected :text/plain; charset=UTF-8,
-    Actual   :application/octet-stream
-
-   "Generate a POST HttpRequest should created an entity with plain/text when no content type specified" in {
-      val signedRequest :NewSignedRequest =
-        NewSignedRequest(
-          NewUnsignedRequest.fromStringBodyUtf8( httpMethod = "POST", uri = new URI("/"), body = "", headers = Map.empty), mauthHeadersMap)
+    "Generate a POST HttpRequest should created an entity with plain/text when no content type specified" in {
+      val signedRequest: NewSignedRequest =
+        NewSignedRequest(NewUnsignedRequest.fromStringBodyUtf8(httpMethod = "POST", uri = new URI("/"), body = "", headers = Map.empty), mauthHeadersMap)
       NewSignedRequestOps(signedRequest).toAkkaHttpRequest.entity.contentType should be(ContentTypes.`text/plain(UTF-8)`)
     }
 
@@ -158,7 +152,6 @@ class ImplicitsTest extends AnyWordSpec with Matchers {
         NewSignedRequest(NewUnsignedRequest.fromStringBodyUtf8("POST", new URI("/"), "", headers), mauthHeaders = mauthHeadersMap)
       NewSignedRequestOps(signedRequest).toAkkaHttpRequest.entity.contentType should be(ContentTypes.`text/plain(UTF-8)`)
     }
-     */
 
     "Generate a POST HttpRequest should created a entity with the binary content type" in {
       val headers = Map("Content-Type" -> ContentTypes.`application/octet-stream`.toString())
