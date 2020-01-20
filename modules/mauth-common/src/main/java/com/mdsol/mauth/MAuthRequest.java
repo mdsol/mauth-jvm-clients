@@ -38,6 +38,8 @@ public class MAuthRequest {
   private final String resourcePath;
   private final String queryParameters;
   private final MAuthVersion mauthVersion;
+  private String xmwsSignature = null;
+  private String xmwsTime = null;
 
   /**
    * Create a Mauth request
@@ -126,6 +128,22 @@ public class MAuthRequest {
 
   public String getQueryParameters() {
     return queryParameters;
+  }
+
+  public String getXmwsSignature() {
+    return xmwsSignature;
+  }
+
+  public void setXmwsSignature(String xmwsSignature) {
+    this.xmwsSignature = xmwsSignature;
+  }
+
+  public String getXmwsTime() {
+    return xmwsTime;
+  }
+
+  public void setXmwsTime(String xmwsTime) {
+    this.xmwsTime = xmwsTime;
   }
 
   public MAuthVersion getMauthVersion() {
@@ -220,8 +238,17 @@ public class MAuthRequest {
           timeHeaderValue = mauthHeaders.get(X_MWS_TIME_HEADER_NAME);
         }
       }
-      return new MAuthRequest(authenticationHeaderValue, messagePayload, httpMethod,
-          timeHeaderValue, resourcePath, queryParameters);
+
+      MAuthRequest mAuthRequest = new MAuthRequest(authenticationHeaderValue, messagePayload,
+          httpMethod, timeHeaderValue, resourcePath, queryParameters);
+
+      if (mAuthRequest.getMauthVersion().equals(MAuthVersion.MWSV2)) {
+        mAuthRequest.setXmwsSignature(mauthHeaders.get(X_MWS_AUTHENTICATION_HEADER_NAME));
+        mAuthRequest.setXmwsTime(mauthHeaders.get(X_MWS_TIME_HEADER_NAME));
+      }
+
+      return mAuthRequest;
+
     }
   }
 }

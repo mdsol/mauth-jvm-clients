@@ -159,4 +159,27 @@ trait RequestAuthenticatorBaseSpec extends AnyFlatSpec with BeforeAndAfterAll wi
       .build
   }
 
+  val WRONG_CLIENT_REQUEST_SIGNATURE_V2: String =
+    """aa2ht0OkDx20yWlPvOQn1jdTFaT3rS//3t+yl0VqiTgqeMae7x24/UzfD2WQ
+      |Bk6o226eQVnCloRjGgq9iLqIIf1wrAFy4CjEHPVCwKOcfbpVQBJYLCyL3Ilz
+      |VX6oDmV1Ghukk29mIlgmHGhfHPwGf3vMPvgCQ42GsnAKpRrQ9T4L2IWMM9gk
+      |WRAFYDXE3igTM+mWBz3IRrJMLnC2440N/KFNmwh3mVCDxIx/3D4xGhhiGZwA
+      |udVbIHmOG045CTSlajxWSNCbClM3nBmAzZn+wRD3DvdvHvDMiAtfVpz7rNLq
+      |2rBY2KRNJmPBaAV5ss30FC146jfyg7b8I9fenyauaw==""".stripMargin
+  private val CLIENT_REQUEST_HEADERS2 = new java.util.HashMap[String, String]()
+  CLIENT_REQUEST_HEADERS2.put(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, CLIENT_REQUEST_AUTHENTICATION_HEADER)
+  CLIENT_REQUEST_HEADERS2.put(MAuthRequest.X_MWS_TIME_HEADER_NAME, CLIENT_X_MWS_TIME_HEADER_VALUE)
+  CLIENT_REQUEST_HEADERS2
+    .put(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, "MWSV2 " + EXISTING_CLIENT_APP_UUID.toString + ":" + WRONG_CLIENT_REQUEST_SIGNATURE_V2 + ";")
+  CLIENT_REQUEST_HEADERS2.put(MAuthRequest.MCC_TIME_HEADER_NAME, CLIENT_MCC_TIME_HEADER_VALUE)
+  def getRequestWithWrongV2Signature: MAuthRequest = {
+    MAuthRequest.Builder.get
+      .withHttpMethod(CLIENT_REQUEST_METHOD)
+      .withMauthHeaders(CLIENT_REQUEST_HEADERS2)
+      .withMessagePayload(CLIENT_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))
+      .withResourcePath(CLIENT_REQUEST_PATH)
+      .withQueryParameters("")
+      .build
+  }
+
 }

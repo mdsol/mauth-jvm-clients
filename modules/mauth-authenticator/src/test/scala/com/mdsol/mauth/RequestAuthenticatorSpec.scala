@@ -98,4 +98,18 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     authenticator.authenticate(getRequestWithBinaryBodyV1) shouldBe true
   }
 
+  it should "validate the request with the validated V1 headers and wrong V2 signature" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_MCC_TIME_HEADER_VALUE.toLong + 3)
+    (mockClientPublicKeyProvider.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))
+    authenticator.authenticate(getRequestWithWrongV2Signature) shouldBe true
+  }
+
+  it should "fail validating request with validated V1 headers and wrong V2 signature if V2 only is enabled" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_MCC_TIME_HEADER_VALUE.toLong + 3)
+    (mockClientPublicKeyProvider.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))
+    authenticatorV2.authenticate(getRequestWithWrongV2Signature) shouldBe false
+  }
+
 }

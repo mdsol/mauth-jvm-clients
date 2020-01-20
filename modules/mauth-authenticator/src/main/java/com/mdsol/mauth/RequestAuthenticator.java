@@ -91,8 +91,6 @@ public class RequestAuthenticator implements Authenticator {
 
   @Override
   public boolean authenticate(MAuthRequest mAuthRequest) {
-    final String msgFormat = "Mauth-client attempting to authenticate request from app with mauth app uuid %s using version %s.";
-    logger.info(String.format(msgFormat, mAuthRequest.getAppUUID(), mAuthRequest.getMauthVersion().getValue()));
 
     if (!(validateTime(mAuthRequest.getRequestTime()))) {
       final String message = "MAuth request validation failed because of timeout " + requestValidationTimeoutSeconds + "s";
@@ -108,7 +106,11 @@ public class RequestAuthenticator implements Authenticator {
 
     PublicKey clientPublicKey = clientPublicKeyProvider.getPublicKey(mAuthRequest.getAppUUID());
     if (mAuthRequest.getMauthVersion().equals(MAuthVersion.MWSV2)) {
-      return validateSignatureV2(mAuthRequest, clientPublicKey);
+      boolean isValidated = validateSignatureV2(mAuthRequest, clientPublicKey);
+      if (!isValidated && !v2OnlyAuthenticate) {
+        isValidated = fallbackValidateSignatureV1(mAuthRequest, clientPublicKey);
+      }
+      return isValidated;
     }
     else {
       return validateSignatureV1(mAuthRequest, clientPublicKey);
@@ -123,6 +125,8 @@ public class RequestAuthenticator implements Authenticator {
 
   // check signature for V1
   private boolean validateSignatureV1 (MAuthRequest mAuthRequest, PublicKey clientPublicKey ) {
+
+    logAuthenticationRequest(mAuthRequest);
 
     // Decrypt the signature with public key from requesting application.
     byte[] decryptedSignature = MAuthSignatureHelper.decryptSignature(clientPublicKey, mAuthRequest.getRequestSignature());
@@ -149,6 +153,8 @@ public class RequestAuthenticator implements Authenticator {
   // check signature for V2
   private boolean validateSignatureV2 (MAuthRequest mAuthRequest, PublicKey clientPublicKey ) {
 
+    logAuthenticationRequest(mAuthRequest);
+
     // Recreate the plain text signature, based on the incoming request parameters, and hash it.
     String unencryptedRequestString =
         MAuthSignatureHelper.generateStringToSignV2(
@@ -166,6 +172,30 @@ public class RequestAuthenticator implements Authenticator {
       logger.error(message, ex);
       throw new MAuthValidationException(message, ex);
     }
+  }
+
+  private boolean fallbackValidateSignatureV1(MAuthRequest mAuthRequest, PublicKey clientPublicKey) {
+    boolean isValidated = false;
+    if (mAuthRequest.getXmwsSignature() != null && mAuthRequest.getXmwsTime() != null) {
+      MAuthRequest mAuthRequestV1 = new MAuthRequest(
+          mAuthRequest.getXmwsSignature(),
+          mAuthRequest.getMessagePayload(),
+          mAuthRequest.getHttpMethod(),
+          mAuthRequest.getXmwsTime(),
+          mAuthRequest.getResourcePath(),
+          mAuthRequest.getQueryParameters()
+      );
+      isValidated = validateSignatureV1(mAuthRequestV1, clientPublicKey);
+      if (isValidated) {
+        logger.warn("Completed successful authentication attempt after fallback to V1");
+      }
+    }
+    return isValidated;
+  }
+
+  private void logAuthenticationRequest(MAuthRequest mAuthRequest) {
+    final String msgFormat = "Mauth-client attempting to authenticate request from app with mauth app uuid %s using version %s.";
+    logger.info(String.format(msgFormat, mAuthRequest.getAppUUID(), mAuthRequest.getMauthVersion().getValue()));
   }
 
 }

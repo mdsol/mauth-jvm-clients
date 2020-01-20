@@ -32,8 +32,6 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
     * @return True or false indicating if the request is valid or not with respect to mAuth.
     */
   override def authenticate(mAuthRequest: MAuthRequest)(implicit ex: ExecutionContext, requestValidationTimeout: Duration): Future[Boolean] = {
-    val msgFormat = "Mauth-client attempting to authenticate request from app with mauth app uuid %s using version %s."
-    logger.info(String.format(msgFormat, mAuthRequest.getAppUUID, mAuthRequest.getMauthVersion.getValue))
 
     val promise = Promise[Boolean]()
     if (!validateTime(mAuthRequest.getRequestTime)(requestValidationTimeout)) {
@@ -56,7 +54,11 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
               case MAuthVersion.MWS =>
                 validateSignatureV1(mAuthRequest, clientPublicKey)
               case MAuthVersion.MWSV2 =>
-                validateSignatureV2(mAuthRequest, clientPublicKey)
+                val isValidated = validateSignatureV2(mAuthRequest, clientPublicKey)
+                if (isValidated || v2OnlyAuthenticate)
+                  isValidated
+                else
+                  fallbackValidateSignatureV1(mAuthRequest, clientPublicKey)
             }
         }
       )
@@ -80,6 +82,7 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
 
   // check signature for V1
   private def validateSignatureV1(mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): Boolean = {
+    logAuthenticationRequest(mAuthRequest)
     val decryptedSignature = MAuthSignatureHelper.decryptSignature(clientPublicKey, mAuthRequest.getRequestSignature)
     // Recreate the plain text signature, based on the incoming request parameters, and hash it.
     try {
@@ -105,6 +108,7 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
 
   // check signature for V2
   private def validateSignatureV2(mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): Boolean = {
+    logAuthenticationRequest(mAuthRequest)
     // Recreate the plain text signature, based on the incoming request parameters, and hash it.
     val unencryptedRequestString = MAuthSignatureHelper.generateStringToSignV2(
       mAuthRequest.getAppUUID,
@@ -126,4 +130,29 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
     }
 
   }
+
+  private def fallbackValidateSignatureV1(mAuthRequest: MAuthRequest, clientPublicKey: PublicKey) = {
+    var isValidated = false
+    if (mAuthRequest.getXmwsSignature != null && mAuthRequest.getXmwsTime != null) {
+      val mAuthRequestV1 = new MAuthRequest(
+        mAuthRequest.getXmwsSignature,
+        mAuthRequest.getMessagePayload,
+        mAuthRequest.getHttpMethod,
+        mAuthRequest.getXmwsTime,
+        mAuthRequest.getResourcePath,
+        mAuthRequest.getQueryParameters
+      )
+      isValidated = validateSignatureV1(mAuthRequestV1, clientPublicKey)
+      if (isValidated) {
+        logger.warn("Completed successful authentication attempt after fallback to V1")
+      }
+    }
+    isValidated
+  }
+
+  private def logAuthenticationRequest(mAuthRequest: MAuthRequest): Unit = {
+    val msgFormat = "Mauth-client attempting to authenticate request from app with mauth app uuid %s using version %s."
+    logger.info(String.format(msgFormat, mAuthRequest.getAppUUID, mAuthRequest.getMauthVersion.getValue))
+  }
+
 }
