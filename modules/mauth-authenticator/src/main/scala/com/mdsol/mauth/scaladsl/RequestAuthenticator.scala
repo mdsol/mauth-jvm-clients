@@ -54,9 +54,11 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
               case MAuthVersion.MWS =>
                 validateSignatureV1(mAuthRequest, clientPublicKey)
               case MAuthVersion.MWSV2 =>
-                val isValidated = validateSignatureV2(mAuthRequest, clientPublicKey)
-                if (isValidated || v2OnlyAuthenticate)
-                  isValidated
+                val v2IsValidated = validateSignatureV2(mAuthRequest, clientPublicKey)
+                if (v2OnlyAuthenticate)
+                  v2IsValidated
+                else if (v2IsValidated)
+                  v2IsValidated
                 else
                   fallbackValidateSignatureV1(mAuthRequest, clientPublicKey)
             }

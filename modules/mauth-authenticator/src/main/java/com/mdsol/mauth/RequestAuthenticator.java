@@ -106,15 +106,21 @@ public class RequestAuthenticator implements Authenticator {
 
     PublicKey clientPublicKey = clientPublicKeyProvider.getPublicKey(mAuthRequest.getAppUUID());
     if (mAuthRequest.getMauthVersion().equals(MAuthVersion.MWSV2)) {
-      boolean isValidated = validateSignatureV2(mAuthRequest, clientPublicKey);
-      if (!isValidated && !v2OnlyAuthenticate) {
-        isValidated = fallbackValidateSignatureV1(mAuthRequest, clientPublicKey);
+      boolean v2IsValidated = validateSignatureV2(mAuthRequest, clientPublicKey);
+      if (v2OnlyAuthenticate) {
+        return v2IsValidated;
       }
-      return isValidated;
+      else if (v2IsValidated) {
+        return v2IsValidated;
+      }
+      else {
+        return fallbackValidateSignatureV1(mAuthRequest, clientPublicKey);
+      }
     }
     else {
       return validateSignatureV1(mAuthRequest, clientPublicKey);
     }
+
   }
 
   // Check epoch time is not older than specified interval.
