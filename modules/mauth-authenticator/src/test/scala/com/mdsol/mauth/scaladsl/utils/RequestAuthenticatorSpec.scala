@@ -126,6 +126,26 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     }
   }
 
+  it should "validate the request with the validated V1 headers and wrong V2 signature" in clientContext { (client) =>
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
+
+    whenReady(authenticator.authenticate(getRequestWithWrongV2Signature)) { validationResult =>
+      validationResult shouldBe true
+    }
+  }
+
+  it should "fail validating request with validated V1 headers and wrong V2 signature if V2 only is enabled" in clientContext { (client) =>
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider, true)
+
+    whenReady(authenticator.authenticate(getRequestWithWrongV2Signature)) { validationResult =>
+      validationResult shouldBe false
+    }
+  }
+
   private def clientContext(test: (ClientPublicKeyProvider) => Any): Unit = {
     val client: ClientPublicKeyProvider = mock[ClientPublicKeyProvider]
     (client.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(Future(Some(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))))
