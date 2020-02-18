@@ -34,6 +34,7 @@ lazy val `mauth-common` = (project in file("modules/mauth-common"))
     javaProjectSettings,
     publishSettings,
     name := "mauth-common",
+    dependencyOverrides += "commons-codec"% "commons-codec"% "1.13",
     libraryDependencies ++=
       Dependencies.compile(commonsCodec, commonsLang3, bouncyCastlePkix, slf4jApi, typeSafeConfig).map(withExclusions) ++
         Dependencies.test(scalaMock, scalaTest).map(withExclusions)
