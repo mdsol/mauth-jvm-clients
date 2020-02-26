@@ -23,10 +23,10 @@ jobs:
     - stage: test
       script: sbt scalafmtSbtCheck scalafmtCheckAll +test +mimaReportBinaryIssues
     - stage: release
-      script: 
+      script:
         - .travis/deploy.sh
         - sbt mauth-proxy/ecr:push
-      if: tag IS NOT present
+      if: tag IS NOT present AND type != pull_request
 stages:
   - test
   - release
