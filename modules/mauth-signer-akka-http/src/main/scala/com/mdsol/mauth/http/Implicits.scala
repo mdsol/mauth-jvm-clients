@@ -61,7 +61,7 @@ object Implicits {
     requestHeaders.get(headers.`Content-Type`.name)
 
   private def removeContentTypeFromHeaders(requestHeaders: Map[String, String]): Map[String, String] =
-    requestHeaders.filterKeys(_ != headers.`Content-Type`.name)
+    requestHeaders.filterKeys(_ != headers.`Content-Type`.name).toMap
 
   private def getHttpEntity(contentTypeOptional: Option[String], entityBody: Array[Byte]) = {
     contentTypeOptional match {

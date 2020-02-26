@@ -9,12 +9,12 @@ conflictManager := ConflictManager.strict
 val withExclusions: (ModuleID) => ModuleID = moduleId => moduleId.excludeAll(Dependencies.exclusions: _*)
 
 val javaProjectSettings = Seq(
-  crossScalaVersions := Seq(scala212),
+  crossScalaVersions := Seq(scala213),
   crossPaths := false
 )
 
 val scalaProjectSettings = Seq(
-  crossScalaVersions := Seq(scala212)
+  crossScalaVersions := Seq(scala212, scala213)
 )
 
 val currentBranch = Def.setting {
@@ -34,6 +34,7 @@ lazy val `mauth-common` = (project in file("modules/mauth-common"))
     javaProjectSettings,
     publishSettings,
     name := "mauth-common",
+    dependencyOverrides += "commons-codec" % "commons-codec" % "1.13",
     libraryDependencies ++=
       Dependencies.compile(commonsCodec, commonsLang3, bouncyCastlePkix, slf4jApi, typeSafeConfig).map(withExclusions) ++
         Dependencies.test(scalaMock, scalaTest).map(withExclusions)
@@ -157,7 +158,7 @@ lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
     // throwing java.lang.NoSuchMethodError. Overriding the dep to use v20 seems to work...for now...
     // (This is fine - mauth-proxy is only a helper utility devs/testers run locally)
     dependencyOverrides += "com.google.guava" % "guava" % "20.0",
-    crossScalaVersions := Seq(scala212), // This is an application so only need to be published once
+    crossScalaVersions := Seq(scala213), // This is an application so only need to be published once
     crossPaths := false,
     name := "mauth-proxy",
     libraryDependencies ++=

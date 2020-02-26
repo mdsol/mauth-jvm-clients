@@ -134,9 +134,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
   "extractMwsTimeHeader" should {
     lazy val route =
-      extractMwsTimeHeader { x ⇒
-        complete(x.toString)
-      }
+      extractMwsTimeHeader(x ⇒ complete(x.toString))
 
     "extract time from request" in {
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, "1234567")) ~> route ~> check {
@@ -161,9 +159,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
   "extractMAuthHeader" should {
     lazy val route =
-      extractMAuthHeader { x ⇒
-        complete(x.toString)
-      }
+      extractMAuthHeader(x ⇒ complete(x.toString))
 
     "extract Authentication Signature from request" in {
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
@@ -324,9 +320,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
   "extractLatestAuthenticationHeaders" should {
     lazy val route =
-      extractLatestAuthenticationHeaders(false) { x ⇒
-        complete(x.toString)
-      }
+      extractLatestAuthenticationHeaders(false)(x ⇒ complete(x.toString))
 
     "extract Authentication Signature from request" in {
       Get("/").withHeaders(
@@ -383,9 +377,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
   "extractLatestAuthenticationHeaders with V2 only enabled" should {
     lazy val route =
-      extractLatestAuthenticationHeaders(true) { x =>
-        complete(x.toString)
-      }
+      extractLatestAuthenticationHeaders(true)(x => complete(x.toString))
 
     "extract Authentication Signature from request with the both V1 and V2" in {
       Get("/").withHeaders(
