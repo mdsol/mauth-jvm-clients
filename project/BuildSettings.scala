@@ -11,6 +11,9 @@ import xerial.sbt.Sonatype.SonatypeKeys._
 import sbtrelease.ReleaseStateTransformations._
 import com.typesafe.tools.mima.plugin.MimaPlugin.autoImport._
 
+import scala.sys.process.{Process, ProcessLogger}
+import scala.util.Try
+
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
   val scala212 = "2.12.10"
@@ -69,13 +72,23 @@ object BuildSettings {
       }
     )
   )
-
   lazy val publishSettings = Seq(
-    mimaPreviousArtifacts := (if (crossPaths.value) { // Scala project
-                                Set(organization.value %% name.value % "1.0.16")
-                              } else {
-                                Set(organization.value % name.value % "1.0.16")
-                              }),
+    mimaPreviousArtifacts := {
+      execAndHandleEmptyOutput(Some(baseDirectory.value), "git describe --tags --abbrev=0 --match v[0-9]*") match {
+        case Some(latestTag) =>
+          val latestStableReleaseVersion = latestTag.replace("v", "").trim
+          if (crossPaths.value) { // Scala project
+            if (CrossVersion.partialVersion(scalaVersion.value).contains((2, 13))) {
+              Set.empty
+            } else {
+              Set(organization.value %% name.value % latestStableReleaseVersion)
+            }
+          } else {
+            Set(organization.value % name.value % latestStableReleaseVersion)
+          }
+        case None => Set.empty
+      }
+    },
     sonatypeProfileName := "com.mdsol",
     publishMavenStyle := true,
     licenses := Seq("MDSOL" -> url("https://github.com/mdsol/mauth-jvm-clients/blob/master/LICENSE.txt")),
@@ -90,7 +103,9 @@ object BuildSettings {
     ),
     sonatypeProjectHosting := Some(GitHubHosting("austek", "mauth-jvm-clients", "austek@mdsol.com")),
     publishTo := sonatypePublishToBundle.value,
+    releaseTagComment := s"Releasing ${(version in ThisBuild).value} [ci skip]",
     releaseCommitMessage := s"Setting version to ${(version in ThisBuild).value} [ci skip]",
+    releaseNextCommitMessage := s"Setting version to ${(version in ThisBuild).value} [ci skip]",
     releasePublishArtifactsAction := PgpKeys.publishSigned.value,
     releaseVersionBump := sbtrelease.Version.Bump.Bugfix,
     releaseCrossBuild := false, // true if you cross-build the project for multiple Scala versions
@@ -128,4 +143,16 @@ object BuildSettings {
         oldStrategy(x)
     }
   )
+
+  private def execAndHandleEmptyOutput(wd: Option[File], cmd: String): Option[String] =
+    Try(Process(cmd, wd) !! NoProcessLogger).toOption
+      .filter(_.trim.nonEmpty)
+}
+
+object NoProcessLogger extends ProcessLogger {
+  def info(s: => String): Unit = ()
+  def out(s: => String): Unit = ()
+  def error(s: => String): Unit = ()
+  def err(s: => String): Unit = ()
+  def buffer[T](f: => T): T = f
 }

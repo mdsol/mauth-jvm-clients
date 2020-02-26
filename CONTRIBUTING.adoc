@@ -1,11 +1,19 @@
 = Contributing
 
 . Clone this repo by executing in your workspace. Checkout `develop` branch
-
+[source,bash]
 ----
 $ git clone git@github.com:mdsol/mauth-jvm-clients.git
 $ cd mauth-jvm-clients
 $ git checkout develop
+----
+
+== Git Hooks
+Install desired hook(s)
+
+[source,bash]
+----
+dev-config/hooks/pre-commit-hook-install.sh # Run scalafmt for file on the commit
 ----
 
 == Continuous Integration Server (Travis)

@@ -28,9 +28,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
-    whenReady(authenticator.authenticate(getSimpleRequest)) { validationResult =>
-      validationResult shouldBe true
-    }
+    whenReady(authenticator.authenticate(getSimpleRequest))(validationResult => validationResult shouldBe true)
   }
 
   it should "authenticate a request with unicode chars in body" in clientContext { (client) =>
@@ -38,9 +36,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
-    whenReady(authenticator.authenticate(getRequestWithUnicodeCharactersInBody)) { validationResult =>
-      validationResult shouldBe true
-    }
+    whenReady(authenticator.authenticate(getRequestWithUnicodeCharactersInBody))(validationResult => validationResult shouldBe true)
   }
 
   it should "authenticate a request without any body" in clientContext { (client) =>
@@ -48,9 +44,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_NO_BODY_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
-    whenReady(authenticator.authenticate(getRequestWithoutMessageBody)) { validationResult =>
-      validationResult shouldBe true
-    }
+    whenReady(authenticator.authenticate(getRequestWithoutMessageBody))(validationResult => validationResult shouldBe true)
   }
 
   it should "not authenticate an invalid request" in clientContext { (client) =>
@@ -59,9 +53,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
     val invalidRequest = getSimpleRequestWithWrongSignature
 
-    whenReady(authenticator.authenticate(invalidRequest)) { validationResult =>
-      validationResult shouldBe false
-    }
+    whenReady(authenticator.authenticate(invalidRequest))(validationResult => validationResult shouldBe false)
   }
 
   it should "not authenticate a request after timeout period passed" in {
@@ -80,9 +72,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
-    whenReady(authenticator.authenticate(getSimpleRequestV2)) { validationResult =>
-      validationResult shouldBe true
-    }
+    whenReady(authenticator.authenticate(getSimpleRequestV2))(validationResult => validationResult shouldBe true)
   }
 
   it should "authenticate a valid request with V2 headers only if V2 only enabled" in clientContext { (client) =>
@@ -99,9 +89,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
-    whenReady(authenticator.authenticate(getRequestWithAllHeaders)) { validationResult =>
-      validationResult shouldBe true
-    }
+    whenReady(authenticator.authenticate(getRequestWithAllHeaders))(validationResult => validationResult shouldBe true)
   }
 
   it should "reject a request with V1 headers when V2 only is enabled" in {
@@ -121,9 +109,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_BINARY_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
-    whenReady(authenticator.authenticate(getRequestWithBinaryBodyV1)) { validationResult =>
-      validationResult shouldBe true
-    }
+    whenReady(authenticator.authenticate(getRequestWithBinaryBodyV1))(validationResult => validationResult shouldBe true)
   }
 
   it should "validate the request with the validated V1 headers and wrong V2 signature" in clientContext { (client) =>
@@ -131,9 +117,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
-    whenReady(authenticator.authenticate(getRequestWithWrongV2Signature)) { validationResult =>
-      validationResult shouldBe true
-    }
+    whenReady(authenticator.authenticate(getRequestWithWrongV2Signature))(validationResult => validationResult shouldBe true)
   }
 
   it should "fail validating request with validated V1 headers and wrong V2 signature if V2 only is enabled" in clientContext { (client) =>
@@ -141,9 +125,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider, true)
 
-    whenReady(authenticator.authenticate(getRequestWithWrongV2Signature)) { validationResult =>
-      validationResult shouldBe false
-    }
+    whenReady(authenticator.authenticate(getRequestWithWrongV2Signature))(validationResult => validationResult shouldBe false)
   }
 
   private def clientContext(test: (ClientPublicKeyProvider) => Any): Unit = {
