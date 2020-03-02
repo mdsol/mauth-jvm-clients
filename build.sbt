@@ -58,11 +58,7 @@ lazy val `mauth-signer` = (project in file("modules/mauth-signer"))
     javaProjectSettings,
     name := "mauth-signer",
     libraryDependencies ++=
-      Dependencies.test(scalaMock, scalaTest).map(withExclusions),
-    mimaBinaryIssueFilters ++= Seq(
-      // TODO: Remove after Mauth v2 is released
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("com.mdsol.mauth.Signer.generateRequestHeaders")
-    )
+      Dependencies.test(scalaMock, scalaTest).map(withExclusions)
   )
 
 lazy val `mauth-signer-apachehttp` = (project in file("modules/mauth-signer-apachehttp"))
@@ -92,12 +88,7 @@ lazy val `mauth-signer-akka-http` = (project in file("modules/mauth-signer-akka-
       Dependencies.provided(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.compile(scalaLogging).map(withExclusions) ++
         Dependencies.example(akkaHttp, akkaStream).map(withExclusions) ++
-        Dependencies.test(scalaMock, scalaTest, wiremock).map(withExclusions),
-    mimaBinaryIssueFilters ++= Seq(
-      // TODO: Remove after Mauth v2 is released
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("com.mdsol.mauth.RequestSigner.signRequest"),
-      ProblemFilters.exclude[MissingClassProblem]("com.mdsol.mauth.http.TraceHttpClient")
-    )
+        Dependencies.test(scalaMock, scalaTest, wiremock).map(withExclusions)
   )
 
 lazy val `mauth-authenticator` = (project in file("modules/mauth-authenticator"))
@@ -108,11 +99,7 @@ lazy val `mauth-authenticator` = (project in file("modules/mauth-authenticator")
     javaProjectSettings,
     name := "mauth-authenticator",
     libraryDependencies ++=
-      Dependencies.test(logbackClassic, scalaMock, scalaTest).map(withExclusions),
-    mimaBinaryIssueFilters ++= Seq(
-      // TODO: Remove after Mauth v2 is released
-      ProblemFilters.exclude[ReversedMissingMethodProblem]("com.mdsol.mauth.scaladsl.Authenticator.isV2OnlyAuthenticate")
-    )
+      Dependencies.test(logbackClassic, scalaMock, scalaTest).map(withExclusions)
   )
 
 lazy val `mauth-authenticator-apachehttp` = (project in file("modules/mauth-authenticator-apachehttp"))
@@ -137,12 +124,7 @@ lazy val `mauth-authenticator-akka-http` = (project in file("modules/mauth-authe
     libraryDependencies ++=
       Dependencies.provided(akkaHttp, akkaStream) ++
         Dependencies.compile(jacksonDataBind, scalaCache).map(withExclusions) ++
-        Dependencies.test(scalaTest, scalaMock, wiremock) ++ Dependencies.test(akkaHttpTestKit: _*).map(withExclusions),
-    mimaBinaryIssueFilters ++= Seq(
-      // TODO: Remove after Mauth v2 is released
-      ProblemFilters.exclude[DirectMissingMethodProblem]("com.mdsol.mauth.akka.http.utils.MAuthSignatureEngine.logger"),
-      ProblemFilters.exclude[MissingClassProblem]("com.mdsol.mauth.akka.http.TraceMauthPublicKeyProvider")
-    )
+        Dependencies.test(scalaTest, scalaMock, wiremock) ++ Dependencies.test(akkaHttpTestKit: _*).map(withExclusions)
   )
 
 lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
