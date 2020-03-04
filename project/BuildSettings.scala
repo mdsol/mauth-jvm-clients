@@ -45,7 +45,6 @@ object BuildSettings {
       "-language:postfixOps",
       "-unchecked",
       "-Xcheckinit",
-      //      "-Xfatal-warnings",
       "-Xlint:adapted-args",
       "-Xlint:constant",
       "-Xlint:delayedinit-select",

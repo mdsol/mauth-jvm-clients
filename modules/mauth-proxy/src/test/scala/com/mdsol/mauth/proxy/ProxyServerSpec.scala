@@ -22,21 +22,17 @@ class ProxyServerSpec extends AnyFlatSpec with Matchers with MockFactory with Be
   var service = new WireMockServer(wireMockConfig.dynamicPort)
   val proxyServer = new ProxyServer(new ProxyConfig(ConfigFactory.load.resolve))
 
-  override protected def beforeAll() {
+  override protected def beforeAll(): Unit =
     service.start()
-  }
 
-  override def beforeEach() {
+  override def beforeEach(): Unit =
     proxyServer.serve()
-  }
 
-  override def afterEach() {
+  override def afterEach(): Unit =
     proxyServer.stop()
-  }
 
-  override protected def afterAll() {
+  override protected def afterAll(): Unit =
     service.stop()
-  }
 
   it should "correctly modify request to add MAuth headers" in {
     service.stubFor(

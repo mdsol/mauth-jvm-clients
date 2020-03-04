@@ -65,9 +65,10 @@ public class MAuthSignatureHelper {
    * @return byte[]
    *   httpMethod + "\n" + resourceUrl + "\n" + requestBody + "\n" + app_uuid + "\n" + epochTime
    *
+   * @throws IOException When failed to write to ByteArrayOutputStream
    */
   @Deprecated
-  public static byte[] generateUnencryptedSignature(UUID appUUID, String httpMethod, String resourceUrl, byte[] requestBody, String epochTime) throws IOException{
+  public static byte[] generateUnencryptedSignature(UUID appUUID, String httpMethod, String resourceUrl, byte[] requestBody, String epochTime) throws IOException {
     logger.debug("Generating byte[] to sign for V1");
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     String part1 = httpMethod + "\n" + resourceUrl + "\n";
@@ -89,7 +90,7 @@ public class MAuthSignatureHelper {
    * @return String
    *   httpMethod + "\n" + resourcePath + "\n" + requestBody_digest + "\n" + app_uuid + "\n" + epochTime + "\n" + encoded_queryParameters
    *
-   * @throws MAuthSigningException
+   * @throws MAuthSigningException when generating Unencrypted Signature errors
    */
   public static String generateStringToSignV2(UUID appUUID, String httpMethod, String resourcePath,
       String queryParameters, byte[] requestBody, String epochTime) throws MAuthSigningException{
