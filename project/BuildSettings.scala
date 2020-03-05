@@ -45,7 +45,6 @@ object BuildSettings {
       "-language:postfixOps",
       "-unchecked",
       "-Xcheckinit",
-      //      "-Xfatal-warnings",
       "-Xlint:adapted-args",
       "-Xlint:constant",
       "-Xlint:delayedinit-select",
@@ -76,13 +75,13 @@ object BuildSettings {
     mimaPreviousArtifacts := {
       execAndHandleEmptyOutput(Some(baseDirectory.value), "git describe --tags --abbrev=0 --match v[0-9]*") match {
         case Some(latestTag) =>
-          val latestStableReleaseVersion = latestTag.replace("v", "").trim
-          if (crossPaths.value) { // Scala project
-            if (CrossVersion.partialVersion(scalaVersion.value).contains((2, 13))) {
-              Set.empty
-            } else {
-              Set(organization.value %% name.value % latestStableReleaseVersion)
-            }
+          val latestStableReleaseVersion = latestTag.replaceAll("^v", "").trim
+          val versionMajor: Option[Long] = VersionNumber(version.value)._1
+          val latestVersionMajor: Long = VersionNumber(latestStableReleaseVersion)._1.getOrElse(0)
+          if (versionMajor.exists(_ > latestVersionMajor)) {
+            Set.empty
+          } else if (crossPaths.value) { // Scala project
+            Set(organization.value %% name.value % latestStableReleaseVersion)
           } else {
             Set(organization.value % name.value % latestStableReleaseVersion)
           }

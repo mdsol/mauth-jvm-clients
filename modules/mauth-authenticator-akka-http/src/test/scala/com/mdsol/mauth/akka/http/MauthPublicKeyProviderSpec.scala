@@ -4,10 +4,9 @@ import java.net.URI
 import java.security.Security
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
+import com.mdsol.mauth.models.{SignedRequest, UnsignedRequest}
 import com.mdsol.mauth.test.utils.{FakeMAuthServer, PortFinder}
 import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequest, MAuthRequestSigner}
-import com.mdsol.mauth.models.{SignedRequest, UnsignedRequest}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
@@ -16,7 +15,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Right
 
 class MauthPublicKeyProviderSpec
     extends AnyFlatSpec
@@ -28,7 +26,6 @@ class MauthPublicKeyProviderSpec
     with MockFactory {
 
   implicit val system: ActorSystem = ActorSystem()
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
   private val EXPECTED_TIME_HEADER_VALUE = "1444672125"
   private val EXPECTED_AUTHENTICATION_HEADER_VALUE = "MWS 92a1869e-c80d-4f06-8775-6c4ebb0758e0:lTMYNWPaG4..."
   private val MAUTH_PORT = PortFinder.findFreePort()
@@ -42,18 +39,16 @@ class MauthPublicKeyProviderSpec
     MAuthRequest.X_MWS_TIME_HEADER_NAME -> EXPECTED_TIME_HEADER_VALUE
   )
 
-  override def beforeAll() {
+  override def beforeAll(): Unit = {
     FakeMAuthServer.start(MAUTH_PORT)
     Security.addProvider(new BouncyCastleProvider)
   }
 
-  override def beforeEach() {
+  override def beforeEach(): Unit =
     FakeMAuthServer.resetMappings()
-  }
 
-  override def afterAll() {
+  override def afterAll(): Unit =
     FakeMAuthServer.stop()
-  }
 
   private def getRequestUrlPath(clientAppId: String) = String.format(MAUTH_URL_PATH + SECURITY_TOKENS_PATH, clientAppId)
 

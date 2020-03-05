@@ -28,7 +28,6 @@ class MyController extends MAuthDirectives {
     val authConfig = new AuthenticatorConfiguration(typeSafeConfig);
 
     implicit val system: ActorSystem = ActorSystem()
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
     implicit val publicKeyProvider: ClientPublicKeyProvider = new MauthPublicKeyProvider(authConfig, MAuthRequestSigner(singerConfiguration))
     implicit val timeout: FiniteDuration = 10 seconds
     implicit val requestValidationTimeout: Duration = authConfig.getTimeToLive seconds

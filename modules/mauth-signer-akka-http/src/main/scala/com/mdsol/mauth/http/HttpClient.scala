@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, Sink}
 import akka.util.ByteString
 import com.mdsol.mauth.SignedRequest
@@ -29,7 +29,7 @@ trait HttpClient extends LazyLogging {
   def call[T](
     request: HttpRequest,
     flow: Flow[ByteString, T, NotUsed]
-  )(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer): Future[T] = {
+  )(implicit ec: ExecutionContext, system: ActorSystem, materializer: Materializer): Future[T] = {
     val start = System.currentTimeMillis()
     call(request).flatMap { response =>
       val elapsed = System.currentTimeMillis() - start
@@ -54,7 +54,7 @@ trait HttpClient extends LazyLogging {
   def call[T](
     request: SignedRequest,
     flow: Flow[ByteString, T, NotUsed]
-  )(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer): Future[T] =
+  )(implicit ec: ExecutionContext, system: ActorSystem, materializer: Materializer): Future[T] =
     call[T](fromSignedRequestToHttpRequest(request), flow)
 
   /**
@@ -66,7 +66,7 @@ trait HttpClient extends LazyLogging {
     * @param materializer The ActorMaterialise used for this call
     * @return The Response
     */
-  def call(request: HttpRequest)(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer): Future[HttpResponse] = {
+  def call(request: HttpRequest)(implicit ec: ExecutionContext, system: ActorSystem, materializer: Materializer): Future[HttpResponse] = {
     logger.debug(s"HTTP CLIENT CALL : ${request.uri}")
     Http().singleRequest(request)
   }
@@ -80,7 +80,7 @@ trait HttpClient extends LazyLogging {
     * @param materializer The ActorMaterialise used for this call
     * @return The Response
     */
-  def call(request: SignedRequest)(implicit ec: ExecutionContext, system: ActorSystem, materializer: ActorMaterializer): Future[HttpResponse] =
+  def call(request: SignedRequest)(implicit ec: ExecutionContext, system: ActorSystem, materializer: Materializer): Future[HttpResponse] =
     call(fromSignedRequestToHttpRequest(request))
 
 }

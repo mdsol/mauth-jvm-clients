@@ -2,14 +2,13 @@ package com.mdsol.mauth
 
 import java.net.URI
 
-import com.mdsol.mauth.http.HttpClient
-import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
+import com.mdsol.mauth.http.HttpClient
 import com.mdsol.mauth.http.Implicits._
-import scala.concurrent.duration._
+import com.typesafe.config.ConfigFactory
 
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 
 /**
   * Example how to sign requests using Akka HttpClient
@@ -21,7 +20,6 @@ object MauthRequestSignerExample {
 
   def main(args: Array[String]): Unit = {
     implicit val system: ActorSystem = ActorSystem()
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
     implicit val ec: ExecutionContext = system.dispatcher
 
     val configuration = new SignerConfiguration(ConfigFactory.load())
@@ -30,9 +28,7 @@ object MauthRequestSignerExample {
 
     val signedRequest = MAuthRequestSigner(configuration).signRequest(models.UnsignedRequest(httpMethod, uri, body = Array.empty, headers = Map.empty))
     Await.result(
-      HttpClient.call(signedRequest.toAkkaHttpRequest).map { response =>
-        println(s"response code: ${response._1.value}, response: ${response._3.toString}")
-      },
+      HttpClient.call(signedRequest.toAkkaHttpRequest).map(response => println(s"response code: ${response._1.value}, response: ${response._3.toString}")),
       10.seconds
     )
   }
