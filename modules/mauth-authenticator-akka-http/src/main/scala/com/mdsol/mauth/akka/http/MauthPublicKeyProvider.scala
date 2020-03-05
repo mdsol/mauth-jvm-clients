@@ -7,7 +7,7 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mdsol.mauth.http.HttpClient
 import com.mdsol.mauth.models.UnsignedRequest
@@ -28,7 +28,7 @@ import scala.util.{Failure, Success, Try}
 class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner)(
   implicit ec: ExecutionContext,
   system: ActorSystem,
-  materializer: ActorMaterializer
+  materializer: Materializer
 ) extends ClientPublicKeyProvider
     with StrictLogging {
 

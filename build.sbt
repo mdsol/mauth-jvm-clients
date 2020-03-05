@@ -2,7 +2,6 @@ import BuildSettings._
 import Dependencies._
 import ExampleTesting._
 import com.amazonaws.regions.{Region, Regions}
-import com.typesafe.tools.mima.core.{DirectMissingMethodProblem, MissingClassProblem, ProblemFilters, ReversedMissingMethodProblem}
 
 conflictManager := ConflictManager.strict
 
@@ -10,7 +9,8 @@ val withExclusions: (ModuleID) => ModuleID = moduleId => moduleId.excludeAll(Dep
 
 val javaProjectSettings = Seq(
   crossScalaVersions := Seq(scala213),
-  crossPaths := false
+  crossPaths := false,
+  autoScalaLibrary := false
 )
 
 val scalaProjectSettings = Seq(
@@ -92,12 +92,22 @@ lazy val `mauth-signer-akka-http` = (project in file("modules/mauth-signer-akka-
   )
 
 lazy val `mauth-authenticator` = (project in file("modules/mauth-authenticator"))
-  .dependsOn(`mauth-common`, `mauth-test-utils` % "test")
+  .dependsOn(`mauth-common`)
   .settings(
     basicSettings,
     publishSettings,
     javaProjectSettings,
-    name := "mauth-authenticator",
+    name := "mauth-authenticator"
+  )
+
+lazy val `mauth-authenticator-scala` = (project in file("modules/mauth-authenticator-scala"))
+  .dependsOn(`mauth-authenticator`, `mauth-test-utils` % "test")
+  .settings(
+    basicSettings,
+    publishSettings,
+    scalaProjectSettings,
+    mimaPreviousArtifacts := Set.empty, // TODO: remove after release
+    name := "mauth-authenticator-scala",
     libraryDependencies ++=
       Dependencies.test(logbackClassic, scalaMock, scalaTest).map(withExclusions)
   )
@@ -115,7 +125,7 @@ lazy val `mauth-authenticator-apachehttp` = (project in file("modules/mauth-auth
   )
 
 lazy val `mauth-authenticator-akka-http` = (project in file("modules/mauth-authenticator-akka-http"))
-  .dependsOn(`mauth-authenticator`, `mauth-signer-akka-http`, `mauth-test-utils` % "test")
+  .dependsOn(`mauth-authenticator-scala`, `mauth-signer-akka-http`, `mauth-test-utils` % "test")
   .settings(
     basicSettings,
     publishSettings,
@@ -174,6 +184,7 @@ lazy val `mauth-proxy` = (project in file("modules/mauth-proxy"))
 lazy val `mauth-jvm-clients` = (project in file("."))
   .aggregate(
     `mauth-authenticator`,
+    `mauth-authenticator-scala`,
     `mauth-authenticator-akka-http`,
     `mauth-authenticator-apachehttp`,
     `mauth-common`,
@@ -186,6 +197,7 @@ lazy val `mauth-jvm-clients` = (project in file("."))
   .settings(
     basicSettings,
     publishSettings,
-    publishArtifact := false,
+    crossScalaVersions := Nil,
+    publish / skip := false,
     mimaPreviousArtifacts := Set.empty
   )

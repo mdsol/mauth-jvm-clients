@@ -5,7 +5,7 @@ import java.util
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
-import com.mdsol.mauth.MAuthRequest.{MCC_AUTHENTICATION_HEADER_NAME, MCC_TIME_HEADER_NAME, X_MWS_AUTHENTICATION_HEADER_NAME, X_MWS_TIME_HEADER_NAME}
+import com.mdsol.mauth.MAuthRequest._
 import com.mdsol.mauth.exception.HttpClientPublicKeyProviderException
 import com.mdsol.mauth.test.utils.{FakeMAuthServer, PortFinder}
 import com.mdsol.mauth.utils.ClientPublicKeyProvider
@@ -26,18 +26,16 @@ class HttpClientPublicKeyProviderSpec extends AnyFlatSpec with Matchers with Moc
   private val SECURITY_TOKENS_PATH: String = "/security_tokens/%s.json"
   private val timeToLive = 300L
 
-  override protected def beforeAll() {
+  override protected def beforeAll(): Unit = {
     FakeMAuthServer.start(port)
     Security.addProvider(new BouncyCastleProvider)
   }
 
-  override protected def beforeEach() {
+  override protected def beforeEach(): Unit =
     FakeMAuthServer.resetMappings()
-  }
 
-  override protected def afterAll() {
+  override protected def afterAll(): Unit =
     FakeMAuthServer.stop()
-  }
 
   private def getClientWithMockedSigner: HttpClientPublicKeyProvider = {
     val configuration: AuthenticatorConfiguration = getMAuthConfiguration
