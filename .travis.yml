@@ -21,7 +21,7 @@ before_install:
 jobs:
   include:
     - stage: test
-      script: sbt scalafmtSbtCheck scalafmtCheckAll +test +mimaReportBinaryIssues
+      script: sbt scalafmtSbtCheck scalafmtCheckAll +mimaReportBinaryIssues +test
     - stage: release
       script:
         - .travis/deploy.sh
