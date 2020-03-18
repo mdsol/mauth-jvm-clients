@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Address deprecation warnings, silence
 - Use sbt-smartrelease plugin
 
+### Remove
+- unused `sbt-mima-plugin`, `scalastyle-sbt-plugin` plugins
+
 ## [3.0.0]
 ### Added
 - Add cross compilation for 2.12 and 2.13

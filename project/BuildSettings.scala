@@ -32,7 +32,7 @@ object BuildSettings {
     // Avoid issues such as java.lang.IllegalAccessError: tried to access method org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey
     // By running tests in a separate JVM
     Test / fork := true,
-    scalacOptions ++= commonScalacOptions ++ {
+    scalacOptions ++= commonScalacOptions ++ silencerOptions ++ {
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, 12)) => scalacOptionsFor212
         case Some((2, 13)) => scalacOptionsFor213
@@ -47,6 +47,16 @@ object BuildSettings {
         Opts.resolver.sonatypeStaging
       }
     )
+  )
+
+  private lazy val silencerOptions = Seq(
+    "-P:silencer:checkUnused",
+    "-P:silencer:globalFilters=since 2.13.0;" +
+      ".*(Uns|S)ignedRequest.*;" +
+      ".*in class (DefaultSigner|MAuthRequestSigner|MAuthSignatureHelper) is deprecated.*;" +
+      ".*X_MWS_(AUTHENTICATION|TIME)_HEADER_NAME.*;" +
+      ".*extract(MwsTime|MAuth)Header.*",
+    "-P:silencer:pathFilters=target/.*"
   )
 
   private lazy val commonScalacOptions = Seq(
@@ -76,14 +86,7 @@ object BuildSettings {
     "-Xlint:poly-implicit-overload",
     "-Xlint:private-shadow",
     "-Xlint:stars-align",
-    "-Xlint:type-parameter-shadow",
-    "-P:silencer:checkUnused",
-    "-P:silencer:globalFilters=since 2.13.0;" +
-      ".*(Uns|S)ignedRequest.*;" +
-      ".*in class (DefaultSigner|MAuthRequestSigner|MAuthSignatureHelper) is deprecated.*;" +
-      ".*X_MWS_(AUTHENTICATION|TIME)_HEADER_NAME.*;" +
-      ".*extract(MwsTime|MAuth)Header.*",
-    "-P:silencer:pathFilters=target/.*"
+    "-Xlint:type-parameter-shadow"
   )
 
   // See https://tpolecat.github.io/2017/04/25/scalac-flags.html
