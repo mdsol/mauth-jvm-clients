@@ -7,7 +7,6 @@ import com.mdsol.mauth.http.HttpVerbOps._
 import com.mdsol.mauth.models.{SignedRequest => NewSignedRequest}
 
 import scala.collection.immutable
-import scala.language.implicitConversions
 
 object Implicits {
 

@@ -5,7 +5,7 @@ import com.amazonaws.regions.{Region, Regions}
 
 conflictManager := ConflictManager.strict
 
-val withExclusions: (ModuleID) => ModuleID = moduleId => moduleId.excludeAll(Dependencies.exclusions: _*)
+val withExclusions: ModuleID => ModuleID = moduleId => moduleId.excludeAll(Dependencies.exclusions: _*)
 
 val javaProjectSettings = Seq(
   crossScalaVersions := Seq(scala213),
@@ -106,7 +106,6 @@ lazy val `mauth-authenticator-scala` = (project in file("modules/mauth-authentic
     basicSettings,
     publishSettings,
     scalaProjectSettings,
-    mimaPreviousArtifacts := Set.empty, // TODO: remove after release
     name := "mauth-authenticator-scala",
     libraryDependencies ++=
       Dependencies.test(logbackClassic, scalaMock, scalaTest).map(withExclusions)

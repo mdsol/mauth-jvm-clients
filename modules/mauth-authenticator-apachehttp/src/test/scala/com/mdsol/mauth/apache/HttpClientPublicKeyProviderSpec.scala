@@ -29,6 +29,7 @@ class HttpClientPublicKeyProviderSpec extends AnyFlatSpec with Matchers with Moc
   override protected def beforeAll(): Unit = {
     FakeMAuthServer.start(port)
     Security.addProvider(new BouncyCastleProvider)
+    ()
   }
 
   override protected def beforeEach(): Unit =

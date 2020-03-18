@@ -2,7 +2,6 @@ package com.mdsol.mauth
 
 import java.nio.charset.StandardCharsets
 import java.util.UUID
-import java.util.Map
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -25,7 +24,7 @@ class MAuthRequestSpec extends AnyFlatSpec with Matchers {
   private val CLIENT_REQUEST_METHOD = "POST"
   private val CLIENT_REQUEST_PATH = "/resource/path"
   private val CLIENT_REQUEST_PAYLOAD = "message here".getBytes(StandardCharsets.UTF_8)
-  private val CLIENT_REQUEST_QUERY_PARAMETERS = "param1=value1&param2=value2";
+  private val CLIENT_REQUEST_QUERY_PARAMETERS = "param1=value1&param2=value2"
 
   private val CLIENT_REQUEST_HEADERS_V1 = new java.util.HashMap[String, String]()
   CLIENT_REQUEST_HEADERS_V1.put(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, CLIENT_REQUEST_AUTHENTICATION_HEADER)

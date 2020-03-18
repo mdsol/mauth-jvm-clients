@@ -22,7 +22,6 @@ import com.mdsol.mauth.http.Implicits._
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
 class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner)(

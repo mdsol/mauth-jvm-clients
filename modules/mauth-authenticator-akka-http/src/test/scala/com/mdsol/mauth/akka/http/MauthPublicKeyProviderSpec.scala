@@ -42,6 +42,7 @@ class MauthPublicKeyProviderSpec
   override def beforeAll(): Unit = {
     FakeMAuthServer.start(MAUTH_PORT)
     Security.addProvider(new BouncyCastleProvider)
+    ()
   }
 
   override def beforeEach(): Unit =

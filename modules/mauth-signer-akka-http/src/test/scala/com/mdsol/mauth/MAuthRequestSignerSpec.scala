@@ -22,7 +22,6 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers with HttpClient with BeforeAndAfterAll with ScalaFutures {
@@ -78,7 +77,7 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers with HttpClient w
        |8usr5qas/uzNEDajAqpjqOaO4m3j+4juXt0QrdBvj3sgStD6ozOJrfhyeSWvFp3d9SBx8tPkPrqv6z5ewQliaSOaI
        |20yir4+RStwj6P7j/5/ZlDRMBEFBiFuAyAWMAbKnefRwK+0yUqO9pEBQx43YqBzs+Xb9sTM0hKd5IohAW8O8xj1coB
        |YP/NGRvhM5Z+VMXnbRXwkqUlEXIDvZ3fKjPNGEQxo+m9oFH1dLI8oGI9xoC9P3liwUqY5h+g+hSQ4KLIfDm0qvLQ==""".stripMargin.replaceAll("\n", "")
-  val EXPECTED_GET_MCC_AUTHENTICATION_HEADER =
+  val EXPECTED_GET_MCC_AUTHENTICATION_HEADER: String =
     s"""MWSV2 $testUUID:n5+io+SgpPMgatLarleDkX18r1ZVBtp7YWgu3yeP0k/P8otp4ThEtBJ6Du3b2Pet+7xlkfK90
        |RXrcwiKA0SS8vpPX8nCtLa92hE3G1e0A41Cn00MuasVwV7JlkQeffJH8qQjvapwRsQ9dbFTPOktS4u0fm/7L9hI6k
        |m99lqCP72i0tP7vGCst4Gc1OewGMR+60FUNR7eN66z8wbeXxX5gzMNGpppP/3P2YROGkONlsxbd1UxrEN62r6yQBF
