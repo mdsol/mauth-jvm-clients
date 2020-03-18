@@ -1,23 +1,9 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
-setup_git() {
-    git config --global user.email "${GIT_USER_EMAIL}"
-    git config --global user.name "${GIT_USER_NAME}"
-}
+git config --global user.email "${GIT_USER_EMAIL}"
+git config --global user.name "${GIT_USER_NAME}"
+openssl aes-256-cbc -K "$encrypted_ff550e95c537_key" -iv "$encrypted_ff550e95c537_iv" -in .travis/secret-key.asc.enc -out .travis/secret-key.asc -d
+echo $PGP_PASSPHRASE | gpg --passphrase-fd 0 --batch --yes --import .travis/secret-key.asc
 
-decrypt_private_key() {
-  openssl aes-256-cbc -K "$encrypted_ff550e95c537_key" -iv "$encrypted_ff550e95c537_iv" -in .travis/secret-key.asc.enc -out .travis/secret-key.asc -d
-  echo $PGP_PASSPHRASE | gpg --passphrase-fd 0 --batch --yes --import .travis/secret-key.asc
-}
-
-if [[ ${TRAVIS_PULL_REQUEST} == false && -z "$TRAVIS_TAG" ]] ; then
-    decrypt_private_key
-    if [[ ${TRAVIS_BRANCH} == master ]] ; then
-        setup_git
-        git checkout master
-        sbt 'release cross with-defaults skip-tests'
-    elif [[ ${TRAVIS_BRANCH} == develop ]]; then
-        sbt +publishSigned
-    fi
-fi
+sbt 'release cross with-defaults' updateChangelogAndPushOnLatestMaster mauth-proxy/ecr:push

@@ -21,12 +21,12 @@ before_install:
 jobs:
   include:
     - stage: test
-      script: sbt scalafmtSbtCheck scalafmtCheckAll +mimaReportBinaryIssues +test
+      script: sbt scalafmtSbtCheck scalafmtCheckAll +test:compile suggestNextVersionAcrossAllProjects +test
+
     - stage: release
-      script:
-        - .travis/deploy.sh
-        - sbt mauth-proxy/ecr:push
-      if: tag IS NOT present AND type != pull_request
+      script: .travis/deploy.sh
+      if: tag IS present
+
 stages:
   - test
   - release

@@ -198,5 +198,6 @@ lazy val `mauth-jvm-clients` = (project in file("."))
     publishSettings,
     crossScalaVersions := Nil,
     publish / skip := false,
-    mimaPreviousArtifacts := Set.empty
+    mimaPreviousArtifacts := Set.empty,
+    smartReleaseAggregateProjectSettings
   )
