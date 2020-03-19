@@ -132,22 +132,6 @@ object BuildSettings {
   )
 
   lazy val publishSettings = Seq(
-    mimaPreviousArtifacts := {
-      execAndHandleEmptyOutput(Some(baseDirectory.value), "git describe --tags --abbrev=0 --match v[0-9]*") match {
-        case Some(latestTag) =>
-          val latestStableReleaseVersion = latestTag.replaceAll("^v", "").trim
-          val versionMajor: Option[Long] = VersionNumber(version.value)._1
-          val latestVersionMajor: Long = VersionNumber(latestStableReleaseVersion)._1.getOrElse(0)
-          if (versionMajor.exists(_ > latestVersionMajor)) {
-            Set.empty
-          } else if (crossPaths.value) { // Scala project
-            Set(organization.value %% name.value % latestStableReleaseVersion)
-          } else {
-            Set(organization.value % name.value % latestStableReleaseVersion)
-          }
-        case None => Set.empty
-      }
-    },
     sonatypeProfileName := "com.mdsol",
     publishMavenStyle := true,
     licenses := Seq("MDSOL" -> url("https://github.com/mdsol/mauth-jvm-clients/blob/master/LICENSE.txt")),
@@ -204,16 +188,4 @@ object BuildSettings {
       releaseStepCommand("sonatypeBundleRelease")
     )
   }
-
-  private def execAndHandleEmptyOutput(wd: Option[File], cmd: String): Option[String] =
-    Try(Process(cmd, wd) !! NoProcessLogger).toOption
-      .filter(_.trim.nonEmpty)
-}
-
-object NoProcessLogger extends ProcessLogger {
-  def info(s: => String): Unit = ()
-  def out(s: => String): Unit = ()
-  def error(s: => String): Unit = ()
-  def err(s: => String): Unit = ()
-  def buffer[T](f: => T): T = f
 }
