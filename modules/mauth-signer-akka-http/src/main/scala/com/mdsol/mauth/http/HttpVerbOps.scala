@@ -2,8 +2,6 @@ package com.mdsol.mauth.http
 
 import akka.http.scaladsl.model.{HttpMethod, HttpMethods}
 
-import scala.language.implicitConversions
-
 object HttpVerbOps {
 
   /**

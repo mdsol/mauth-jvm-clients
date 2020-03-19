@@ -18,7 +18,7 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
   private val testUUID = UUID.fromString("2a6790ab-f6c6-45be-86fc-9e9be76ec12a")
   private val TEST_REQUEST_BODY: String = "Request Body"
   private val TEST_REQUEST_PARAMS: String = "key2=data2&key1=data1"
-  private val AUTHENTICATION_HEADER_PATTERN_V2: String = "MWSV2 $testUUID:[^;]*;"
+  private val AUTHENTICATION_HEADER_PATTERN_V2: String = s"MWSV2 $testUUID:[^;]*;"
 
   private val mockEpochTimeProvider = mock[EpochTimeProvider]
   private val mAuthRequestSigner = new DefaultSigner(testUUID, FixturesLoader.getPrivateKey, mockEpochTimeProvider)
@@ -92,7 +92,7 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
          |tKVsZ29Qu3ZktDThdUeQnD4qt6LoGVkzru/ynJddeLinQB0m0ixjYRFiTr3
          |YOGg==;""".stripMargin.replaceAll("\n", "")
     val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeaders("POST", "/", TEST_REQUEST_BODY.getBytes, "").asScala.toMap
-    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches (AUTHENTICATION_HEADER_PATTERN_V2)
+    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches AUTHENTICATION_HEADER_PATTERN_V2
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_POST_AUTHENTICATION_HEADER
   }
 
@@ -108,7 +108,7 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
          |Hqu5G+5/6DiTt4W2iTEkC9BUV/OObdNNbr72hN1Z5qHo/X8qZ7NMSRPyZPA
          |xe6A==;""".stripMargin.replaceAll("\n", "")
     val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeaders("GET", "/", "".getBytes, TEST_REQUEST_PARAMS).asScala.toMap
-    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches (AUTHENTICATION_HEADER_PATTERN_V2)
+    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches AUTHENTICATION_HEADER_PATTERN_V2
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_GET_AUTHENTICATION_HEADER
   }
 
@@ -142,7 +142,7 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
   it should "generated headers for binary payload for both V1 and V2 if V2 only is disabled" in {
     //noinspection ConvertibleToMethodValue
     val CLIENT_REQUEST_BINARY_APP_UUID = "5ff4257e-9c16-11e0-b048-0026bbfffe5e"
-    val CLIENT_REQUEST_BINARY_EPOCH_TIME = 1309891855
+    val CLIENT_REQUEST_BINARY_EPOCH_TIME: Long = 1309891855L
     val CLIENT_REQUEST_BINARY_PATH = "/v1/pictures"
     val CLIENT_REQUEST_QUERY_PARAMETERS = "key=-_.~ !@#$%^*()+{}|:\"'`<>?&∞=v&キ=v&0=v&a=v&a=b&a=c&a=a&k=&k=v"
     val mAuthSigner = new DefaultSigner(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID), FixturesLoader.getPrivateKey2, mockEpochTimeProvider, false)

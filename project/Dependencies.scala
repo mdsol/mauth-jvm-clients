@@ -6,6 +6,7 @@ object Dependencies extends DependencyUtils {
     val akka = "2.6.3"
     val akkaHttp = "10.1.11"
     val logback = "1.2.3"
+    val silencer: String = "1.6.0"
   }
 
   val akkaHttp: ModuleID = "com.typesafe.akka"                 %% "akka-http"        % Version.akkaHttp
@@ -35,6 +36,11 @@ object Dependencies extends DependencyUtils {
   val scalaMock: ModuleID = "org.scalamock"         %% "scalamock" % "4.4.0"
   val scalaTest: ModuleID = "org.scalatest"         %% "scalatest" % "3.1.1"
   val wiremock: ModuleID = "com.github.tomakehurst" % "wiremock"   % "2.26.0"
+
+  val silencer = Seq(
+    compilerPlugin("com.github.ghik" % "silencer-plugin" % Version.silencer cross CrossVersion.full),
+    "com.github.ghik" % "silencer-lib" % Version.silencer % Provided cross CrossVersion.full
+  )
 
   // Dependency Conflict Resolution
   val exclusions = Seq()

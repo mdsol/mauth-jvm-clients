@@ -21,7 +21,6 @@ import org.scalatest.wordspec.AnyWordSpec
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.language.postfixOps
 
 class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteTest with MAuthDirectives with Directives with Inside with MockFactory {
 
@@ -37,8 +36,6 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
   private val authHeader: String = s"$authPrefix $appUuid:$signature"
   private val timeHeader: Long = 1509041057L
 
-  private val requestParams: String = "key2=data2&key1=data1"
-  private val timeHeaderV2 = 1509041057L
   private val authPrefixV2: String = "MWSV2"
   val signatureV2: String =
     s"""h0MJYf5/zlX9VqqchANLr7XUln0RydMV4msZSXzLq2sbr3X+TGeJ60K9ZSlSuRrzyHbzzwuZABA
@@ -55,7 +52,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
   private val authenticatorV2: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider, v2OnlyAuthenticate = true)
 
   "authenticate" should {
-    lazy val route: Route = authenticate(executor, authenticator, timeout, requestValidationTimeout).apply(complete(HttpResponse()))
+    lazy val route: Route = authenticate(authenticator, timeout, requestValidationTimeout).apply(complete(HttpResponse()))
     val publicKey = MAuthKeysHelper.getPublicKeyFromString(FixturesLoader.getPublicKey)
 
     "pass successfully authenticated request" in {
@@ -116,7 +113,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString)) ~> route ~> check {
         inside(rejection) {
-          case MissingHeaderRejection(headerName) ⇒ headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Authentication`.name
+          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Authentication`.name
         }
       }
     }
@@ -134,7 +131,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
   "extractMwsTimeHeader" should {
     lazy val route =
-      extractMwsTimeHeader(x ⇒ complete(x.toString))
+      extractMwsTimeHeader(x => complete(x.toString))
 
     "extract time from request" in {
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, "1234567")) ~> route ~> check {
@@ -144,7 +141,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
     "reject with a MalformedHeaderRejection if supplied with bad format" in {
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, "xyz")) ~> route ~> check {
-        inside(rejection) { case MalformedHeaderRejection("x-mws-time", "x-mws-time header supplied with bad format: [xyz]", None) ⇒ }
+        inside(rejection) { case MalformedHeaderRejection("x-mws-time", "x-mws-time header supplied with bad format: [xyz]", None) => }
       }
     }
 
@@ -159,7 +156,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
   "extractMAuthHeader" should {
     lazy val route =
-      extractMAuthHeader(x ⇒ complete(x.toString))
+      extractMAuthHeader(x => complete(x.toString))
 
     "extract Authentication Signature from request" in {
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
@@ -210,7 +207,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
   }
 
   "authenticate when v2OnlyAuthenticate = true" should {
-    lazy val route: Route = authenticate(executor, authenticatorV2, timeout, requestValidationTimeout).apply(complete(HttpResponse()))
+    lazy val route: Route = authenticate(authenticatorV2, timeout, requestValidationTimeout).apply(complete(HttpResponse()))
     val publicKey = MAuthKeysHelper.getPublicKeyFromString(FixturesLoader.getPublicKey)
 
     "pass successfully authenticated request with both v1 and v2 headers, with V2 headers taking precedence" in {
@@ -320,7 +317,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
   "extractLatestAuthenticationHeaders" should {
     lazy val route =
-      extractLatestAuthenticationHeaders(false)(x ⇒ complete(x.toString))
+      extractLatestAuthenticationHeaders(false)(x => complete(x.toString))
 
     "extract Authentication Signature from request" in {
       Get("/").withHeaders(
