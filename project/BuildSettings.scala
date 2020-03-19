@@ -1,15 +1,15 @@
 import java.util
 
 import com.jsuereth.sbtpgp.SbtPgp.autoImport._
+import com.typesafe.tools.mima.plugin.MimaPlugin.autoImport._
 import sbt.Keys._
 import sbt.{url, _}
 import sbtassembly.AssemblyKeys._
 import sbtassembly.{MergeStrategy, PathList}
 import sbtrelease.ReleasePlugin.autoImport._
-import xerial.sbt.Sonatype._
+import smartrelease.SmartReleasePlugin.ReleaseSteps
 import xerial.sbt.Sonatype.SonatypeKeys._
-import sbtrelease.ReleaseStateTransformations._
-import com.typesafe.tools.mima.plugin.MimaPlugin.autoImport._
+import xerial.sbt.Sonatype._
 
 import scala.sys.process.{Process, ProcessLogger}
 import scala.util.Try
@@ -168,19 +168,7 @@ object BuildSettings {
     releasePublishArtifactsAction := PgpKeys.publishSigned.value,
     releaseVersionBump := sbtrelease.Version.Bump.Bugfix,
     releaseCrossBuild := false, // true if you cross-build the project for multiple Scala versions
-    releaseProcess := Seq[ReleaseStep](
-      checkSnapshotDependencies,
-      inquireVersions,
-      runClean,
-      setReleaseVersion,
-      commitReleaseVersion,
-      tagRelease,
-      releaseStepCommandAndRemaining("+publishSigned"),
-      releaseStepCommand("sonatypeBundleRelease"),
-      setNextVersion,
-      commitNextVersion,
-      pushChanges
-    ),
+    releaseProcess := smartReleaseDefaultSteps,
     credentials += Credentials(
       "GnuPG Key ID",
       "pgp",
@@ -202,6 +190,20 @@ object BuildSettings {
         oldStrategy(x)
     }
   )
+
+  val smartReleaseDefaultSteps: Seq[ReleaseStep] = {
+    import sbtrelease.ReleaseStateTransformations._
+    Seq(
+      checkSnapshotDependencies,
+      ReleaseSteps.checkCurrentVersionIsValidReleaseVersion,
+      ReleaseSteps.checkReleaseVersionStep,
+      ReleaseSteps.fetchAllFromOrigin,
+      ReleaseSteps.checkThisCommitExistOnMaster,
+      runClean,
+      releaseStepCommandAndRemaining("+publishSigned"),
+      releaseStepCommand("sonatypeBundleRelease")
+    )
+  }
 
   private def execAndHandleEmptyOutput(wd: Option[File], cmd: String): Option[String] =
     Try(Process(cmd, wd) !! NoProcessLogger).toOption
