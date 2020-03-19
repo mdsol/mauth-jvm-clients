@@ -70,8 +70,9 @@ trait RequestAuthenticatorBaseSpec extends AnyFlatSpec with BeforeAndAfterAll wi
   CLIENT_REQUEST_HEADERS.put(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
   CLIENT_REQUEST_HEADERS.put(MAuthRequest.MCC_TIME_HEADER_NAME, CLIENT_MCC_TIME_HEADER_VALUE)
 
-  override protected def beforeAll() {
+  override protected def beforeAll(): Unit = {
     Security.addProvider(new BouncyCastleProvider)
+    ()
   }
 
   def getSimpleRequest: MAuthRequest = {

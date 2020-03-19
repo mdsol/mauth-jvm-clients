@@ -18,9 +18,9 @@ class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFac
 
   private val TEST_EPOCH_TIME = 1424700000L
   private val testUUID = UUID.fromString("2a6790ab-f6c6-45be-86fc-9e9be76ec12a")
-  private val AUTHENTICATION_HEADER_PATTERN_V2 = "MWSV2 $testUUID:[^;]*;"
+  private val AUTHENTICATION_HEADER_PATTERN_V2 = s"MWSV2 $testUUID:[^;]*;"
   private val TEST_REQUEST_BODY = "Request Body"
-  private var privateKeyString = FixturesLoader.getPrivateKey
+  private val privateKeyString = FixturesLoader.getPrivateKey
   private val mockEpochTimeProvider = mock[EpochTimeProvider]
   private val mAuthRequestSigner = new HttpClientRequestSigner(testUUID, privateKeyString, mockEpochTimeProvider)
   private val mAuthRequestSignerV2 = new HttpClientRequestSigner(testUUID, privateKeyString, mockEpochTimeProvider, true)
