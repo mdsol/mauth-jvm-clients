@@ -82,7 +82,7 @@ public class HttpClientRequestSigner extends DefaultSigner {
       queryParams.append(param.getName()).append('=').append(param.getValue());
     }
 
-    Map<String, String> mauthHeaders = generateRequestHeaders(httpVerb, request.getURI().getPath(), body, queryParams.toString());
+    Map<String, String> mauthHeaders = generateRequestHeaders(httpVerb, request.getURI().getRawPath(), body, queryParams.toString());
     for (String key : mauthHeaders.keySet()) {
       request.addHeader(key, mauthHeaders.get(key));
     }
