@@ -44,16 +44,26 @@ trait MAuthDirectives extends StrictLogging {
           extractRequest.flatMap { req =>
             val isAuthed: Directive[Unit] = req.entity match {
               case entity: HttpEntity.Strict =>
+                val mAuthRequest: MAuthRequest = new MAuthRequest(
+                  mauthHeaderValues.authenticator,
+                  entity.data.toArray[Byte],
+                  HttpVerbOps.httpVerb(req.method),
+                  mauthHeaderValues.time.toString,
+                  req.uri.path.toString,
+                  getQueryString(req)
+                )
+                if (!authenticator.isV2OnlyAuthenticate) {
+                  // store V1 headers for fallback to V1 authentication if V2 failed
+                  val xmwsAuthenticationHeader = extractRequestHeader(req, MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME)
+                  val xmwsTimeHeader = extractRequestHeader(req, MAuthRequest.X_MWS_TIME_HEADER_NAME)
+                  if (xmwsAuthenticationHeader.nonEmpty && xmwsTimeHeader.nonEmpty) {
+                    mAuthRequest.setXmwsSignature(xmwsAuthenticationHeader)
+                    mAuthRequest.setXmwsTime(xmwsTimeHeader)
+                  }
+                }
                 onComplete(
                   authenticator.authenticate(
-                    new MAuthRequest(
-                      mauthHeaderValues.authenticator,
-                      entity.data.toArray[Byte],
-                      HttpVerbOps.httpVerb(req.method),
-                      mauthHeaderValues.time.toString,
-                      req.uri.path.toString,
-                      getQueryString(req)
-                    )
+                    mAuthRequest
                   )(ec, requestValidationTimeout)
                 ).flatMap[Unit] {
                   case Success(true) => pass

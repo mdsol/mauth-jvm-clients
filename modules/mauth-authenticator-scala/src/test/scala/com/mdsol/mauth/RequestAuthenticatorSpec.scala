@@ -91,11 +91,20 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
 
   it should "validate a valid request with binary body for V1" in {
     //noinspection ConvertibleToMethodValue
-    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_BINARY_VALUE.toLong + 3)
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE.toLong + 3)
     (mockClientPublicKeyProvider.getPublicKey _)
       .expects(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID))
       .returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY2))
     authenticator.authenticate(getRequestWithBinaryBodyV1) shouldBe true
+  }
+
+  it should "validate a valid request with binary body for V2" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE.toLong + 5)
+    (mockClientPublicKeyProvider.getPublicKey _)
+      .expects(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID))
+      .returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY2))
+    authenticator.authenticate(getRequestWithBinaryBodyV2) shouldBe true
   }
 
   it should "validate the request with the validated V1 headers and wrong V2 signature" in {

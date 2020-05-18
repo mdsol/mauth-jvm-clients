@@ -24,11 +24,11 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
   private val TEST_PRIVATE_KEY = getPrivateKeyFromString(FixturesLoader.getPrivateKey2)
 
   // the same test data with ruby and python
-  private val CLIENT_APP_UUID_V2 = "5ff4257e-9c16-11e0-b048-0026bbfffe5e"
-  private val CLIENT_REQUEST_METHOD_V2 = "PUT"
-  private val CLIENT_REQUEST_PATH_V2 = "/v1/pictures"
-  private val CLIENT_REQUEST_QUERY_PARAMETERS_V2 = "key=-_.~ !@#$%^*()+{}|:\"'`<>?&∞=v&キ=v&0=v&a=v&a=b&a=c&a=a&k=&k=v"
-  private val TEST_EPOCH_TIME_V2 = "1309891855"
+  private val CLIENT_APP_UUID_V2 = FixturesLoader.APP_UUID_V2
+  private val CLIENT_REQUEST_METHOD_V2 = FixturesLoader.REQUEST_METHOD_V2
+  private val CLIENT_REQUEST_PATH_V2 = FixturesLoader.REQUEST_PATH_V2
+  private val CLIENT_REQUEST_QUERY_PARAMETERS_V2 = FixturesLoader.REQUEST_QUERY_PARAMETERS_V2
+  private val TEST_EPOCH_TIME_V2 = FixturesLoader.EPOCH_TIME_V2
 
   behavior of "MAuthSignatureHelper"
 
@@ -89,8 +89,8 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "correctly encode query string with special chars" in {
-    val queryString = "key=-_.~ !@#$%^*()+{}|:\"'`<>?"
-    val expectedString = "key=-_.~%20%21%40%23%24%25%5E%2A%28%29%2B%7B%7D%7C%3A%22%27%60%3C%3E%3F"
+    val queryString = "key=-_.~!@#$%^*()+{}|:\"'`<>?"
+    val expectedString = "key=-_.~%21%40%23%24%25%5E%2A%28%29%20%7B%7D%7C%3A%22%27%60%3C%3E%3F"
     MAuthSignatureHelper.generateEncryptedQueryParams(queryString) shouldBe expectedString
   }
 
@@ -149,12 +149,7 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
       FixturesLoader.getBinaryFileBody,
       TEST_EPOCH_TIME_V2
     )
-    val expectedString = ("GpZIRB8RIxlfsjcROBElMEwa0r7jr632GkBe+R8lOv72vVV7bFMbJwQUHYm6vL/N" +
-      "KC7g4lJwvWcF60lllIUGwv/KWUOQwerqo5yCNoNumxjgDKjq7ILl8iFxsrV9LdvxwGyEBEwAPKzoTmW9xrad" +
-      "xmjn4ZZVMnQKEMns6iViBkwaAW2alp4ZtVfJIZHRRyiuFnITWH1PniyG0kI4Li16kY25VfmzfNkdAi0Cnl27" +
-      "Cy1+DtAl1zVnz6ObMAdtmsEtplvlqsRCRsdd37VfuUxUlolNpr5brjzTwXksScUjX80/HMnui5ZlFORGjHeb" +
-      "eZG5QVCouZPKBWTWsELGx1iyaw==").stripMargin.replaceAll("\n", "")
-    MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe expectedString
+    MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe FixturesLoader.SIGNATURE_V2_BINARY
   }
 
   it should "correctly generate signature with empty body for V2" in {
@@ -166,12 +161,55 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
       Array.empty,
       TEST_EPOCH_TIME_V2
     )
-    val expectedString = ("jDB6fhwUA11ZSLb2W4ueS4l9hsguqmgcRez58kUo25iuMT5Uj9wWz+coHSpOd39B0" +
-      "cNW5D5UY6nWifw4RJIv/q8MdqS43WVgnCDSrNsSxpQ/ic6U3I3151S69PzSRZ+aR/I5A85Q9FgWB6wDNf4iX/" +
-      "BmZopfd5XjsLEyDymTRYedmB4DmONlTrsjVPs1DS2xY5xQyxIcxEUpVGDfTNroRTu5REBTttWbUB7BRXhKCc2" +
-      "pfRnUYPBo4Fa7nM8lI7J1/jUasMMLelr6hvcc6t21RCHhf4p9VlpokUOdN8slXU/kkC+OMUE04I021AUnZSpd" +
-      "hd/IoVR1JJDancBRzWA2HQ==").stripMargin.replaceAll("\n", "")
-    MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe expectedString
+    MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe FixturesLoader.SIGNATURE_V2_EMPTY
   }
 
+  it should "normalize path: correctly generate signature for V2" in {
+    val pathList = Array("/./v1/pictures", "/v1//pictures")
+    for (resourcePath <- pathList) {
+      val testString = MAuthSignatureHelper.generateStringToSignV2(
+        UUID.fromString(CLIENT_APP_UUID_V2),
+        CLIENT_REQUEST_METHOD_V2,
+        resourcePath,
+        CLIENT_REQUEST_QUERY_PARAMETERS_V2,
+        FixturesLoader.getBinaryFileBody,
+        TEST_EPOCH_TIME_V2
+      )
+      MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe FixturesLoader.SIGNATURE_V2_BINARY
+    }
+  }
+
+  it should "correctly normalize paths" in {
+    // define of test cases: testString, expectedString
+    val testCases = Array(
+      Array("/example/sample", "/example/sample"),
+      Array("/example/sample/..", "/example/"),
+      Array("/example/sample/../..", "/"),
+      Array("/example/sample/../../../..", "/"),
+      Array("/example//sample/", "/example/sample/"),
+      Array("//example///sample/", "/example/sample/"),
+      Array("/example//./.", "/example/"),
+      Array("/./example/./.", "/example/"),
+      Array("/%2a%80", "/%2A%80"),
+      Array("/example/", "/example/")
+    )
+    for (i <- 0 to testCases.length - 1) {
+      MAuthSignatureHelper.normalizePath(testCases(i)(0)) shouldBe testCases(i)(1)
+    }
+  }
+
+  it should "correctly encode, sort query parameters" in {
+    // define of test cases: testString, expectedString
+    val testCases = Array(
+      Array("k=%7E", "k=~"),
+      Array("k=%20", "k=%20"),
+      Array("k=&k=v", "k=&k=v"),
+      Array("k=%7E&k=~&k=%40&k=a", "k=%40&k=a&k=~&k=~"),
+      Array("a=b&a=c&a=a", "a=a&a=b&a=c"),
+      Array("", "")
+    )
+    for (i <- 0 to testCases.length - 1) {
+      MAuthSignatureHelper.generateEncryptedQueryParams(testCases(i)(0)) shouldBe testCases(i)(1)
+    }
+  }
 }
