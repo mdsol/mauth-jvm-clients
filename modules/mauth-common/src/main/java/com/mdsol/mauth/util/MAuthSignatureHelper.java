@@ -3,6 +3,7 @@ package com.mdsol.mauth.util;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.tuple.Pair;
 import org.bouncycastle.crypto.CryptoException;
 
 import org.bouncycastle.crypto.InvalidCipherTextException;
@@ -20,15 +21,15 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.security.*;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.regex.*;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class MAuthSignatureHelper {
 
   private static final Logger logger = LoggerFactory.getLogger(MAuthSignatureHelper.class);
+  private static final Pattern PATTERN_HEX_LOWCASE = Pattern.compile("%[a-f0-9]{2}");
 
   /**
    * Generate string_to_sign for Mauth V1 protocol
@@ -218,45 +219,17 @@ public class MAuthSignatureHelper {
     if (encodedQuery == null || encodedQuery.isEmpty())
       return "";
 
-    String[] params = decodeAndSortQueryParameters(encodedQuery);
-
-    StringBuilder encryptedQueryParams = new StringBuilder();
-    for (String param : params) {
-      int idx = param.indexOf("=");
-      if (idx > 0) {
-        String name = param.substring(0,idx);
-        String value = idx < param.length()-1 ? param.substring(idx+1) : "";
-        if (encryptedQueryParams.length() > 0) {
-          encryptedQueryParams.append('&');
-        }
-        encryptedQueryParams.append(urlEncodeValue(name)).append('=').append(urlEncodeValue(value));
-      }
-    }
-
-    return encryptedQueryParams.toString();
-  }
-
-  /**
-   * decode a query string and sort the string formatted as decodedKey=decodedValue
-   * @param encodedQuery a url-encoded string
-   * @return sorted decoded query parameters
-   */
-  private static String[] decodeAndSortQueryParameters(String encodedQuery) {
-    String[] params = encodedQuery.split("&");
-    List<String> list = new ArrayList<String>();
-
-    for (String param : params) {
-      String [] keyPair = param.split("=");
-      if (keyPair.length > 0) {
-        String name = keyPair[0];
-        String value = keyPair.length > 1 ? keyPair[1] : "";
-        list.add(urlDecodeValue(name) + "=" + urlDecodeValue(value));
-      }
-    }
-    String[] decodedParams = list.toArray(new String[0]);
-    Arrays.sort(decodedParams);
-
-    return decodedParams;
+    return Arrays.stream(encodedQuery.split("&"))
+        .filter(s -> !s.isEmpty())
+        .map(keyValStr -> {
+          String[] split = keyValStr.split("=");
+          String key = split[0];
+          String value = split.length > 1 ? split[1] : "";
+          return Pair.of(urlDecodeValue(key), urlDecodeValue(value));
+        })
+        .sorted()
+        .map(keyVal -> urlEncodeValue(keyVal.getKey()) + "=" + urlEncodeValue(keyVal.getValue()))
+        .collect(Collectors.joining("&"));
   }
 
   /**
@@ -291,8 +264,8 @@ public class MAuthSignatureHelper {
     if (encodedValue == null || encodedValue.isEmpty())
       return encodedValue;
 
-    String data = encodedValue.replaceAll("%(?![0-9a-fA-F]{2})", "%25").replaceAll("\\+", " ");
     try {
+      String data = encodedValue.replaceAll("%(?![0-9a-fA-F]{2})", "%25").replaceAll("\\+", " ");
       return URLDecoder.decode(data, StandardCharsets.UTF_8.toString());
     } catch (UnsupportedEncodingException ex) {
       throw new RuntimeException(ex.getCause());
@@ -309,8 +282,7 @@ public class MAuthSignatureHelper {
       return "";
 
     //Normalize percent encoding to uppercase i.e. %cf%80 => %CF%80
-    Pattern pattern = Pattern.compile("%[a-f0-9]{2}");
-    Matcher matcher = pattern.matcher(encodedPath);
+    Matcher matcher = PATTERN_HEX_LOWCASE.matcher(encodedPath);
     StringBuffer result = new StringBuffer();
     while (matcher.find()) {
       matcher.appendReplacement(result, matcher.group().toUpperCase());

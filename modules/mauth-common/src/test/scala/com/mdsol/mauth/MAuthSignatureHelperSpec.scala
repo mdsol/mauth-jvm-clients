@@ -89,8 +89,8 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "correctly encode query string with special chars" in {
-    val queryString = "key=-_.~!@#$%^*()+{}|:\"'`<>?"
-    val expectedString = "key=-_.~%21%40%23%24%25%5E%2A%28%29%20%7B%7D%7C%3A%22%27%60%3C%3E%3F"
+    val queryString = "key2=asdf+f&key=%21%40%23"
+    val expectedString = "key=%21%40%23&key2=asdf%20f"
     MAuthSignatureHelper.generateEncryptedQueryParams(queryString) shouldBe expectedString
   }
 
