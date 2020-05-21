@@ -118,6 +118,44 @@ class ProxyServerSpec extends AnyFlatSpec with Matchers with MockFactory with Be
     response.getStatusLine.getStatusCode shouldBe HttpStatus.SC_OK
   }
 
+  it should "POST - Fail if proxy responds with 404" in {
+    service.stubFor(
+      post(urlEqualTo("/my/failure_resource?k=v"))
+        .withHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, containing("MWS "))
+        .withHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, matching(".*"))
+        .withHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, containing("MWSV2 "))
+        .withHeader(MAuthRequest.MCC_TIME_HEADER_NAME, matching(".*"))
+        .willReturn(notFound)
+    )
+
+    val proxy = new HttpHost("localhost", proxyServer.getPort)
+    val routePlanner = new DefaultProxyRoutePlanner(proxy)
+    val httpClient = HttpClients.custom.setRoutePlanner(routePlanner).build
+    val request = new HttpPost(BASE_URL + ":" + service.port + "/my/failure_resource?k=v")
+
+    val response = httpClient.execute(request)
+    response.getStatusLine.getStatusCode shouldBe HttpStatus.SC_NOT_FOUND
+  }
+
+  it should "PATCH - Fail if proxy responds with 404" in {
+    service.stubFor(
+      patch(urlEqualTo("/my/failure_resource?k=v"))
+        .withHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, containing("MWS "))
+        .withHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, matching(".*"))
+        .withHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, containing("MWSV2 "))
+        .withHeader(MAuthRequest.MCC_TIME_HEADER_NAME, matching(".*"))
+        .willReturn(notFound)
+    )
+
+    val proxy = new HttpHost("localhost", proxyServer.getPort)
+    val routePlanner = new DefaultProxyRoutePlanner(proxy)
+    val httpClient = HttpClients.custom.setRoutePlanner(routePlanner).build
+    val request = new HttpPatch(BASE_URL + ":" + service.port + "/my/failure_resource?k=v")
+
+    val response = httpClient.execute(request)
+    response.getStatusLine.getStatusCode shouldBe HttpStatus.SC_NOT_FOUND
+  }
+
   private def execute(proxyServerPort: Int, verb: String): CloseableHttpResponse = {
     val proxy = new HttpHost("localhost", proxyServerPort)
     val routePlanner = new DefaultProxyRoutePlanner(proxy)
