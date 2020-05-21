@@ -137,6 +137,20 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers with HttpClient w
     authHeaders(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_GET_MCC_AUTHENTICATION_HEADER
   }
 
+  it should "add authentication header to a request for V2 with the encoded-normalize path" in {
+    val TEST_UUID = FixturesLoader.APP_UUID_V2
+    val EXPECTED_SIGNATURE_V2 = FixturesLoader.SIGNATURE_NORMALIZE_PATH_V2
+    val EXPECTED_AUTHENTICATION_HEADER = s"""MWSV2 $TEST_UUID:$EXPECTED_SIGNATURE_V2;"""
+    val eTimeProvider: EpochTimeProvider = new EpochTimeProvider() { override def inSeconds(): Long = FixturesLoader.EPOCH_TIME_V2.toLong }
+    val newSigner: MAuthRequestSigner = MAuthRequestSigner(UUID.fromString(TEST_UUID), FixturesLoader.getPrivateKey2, eTimeProvider, v2OnlySignRequests = true)
+
+    newSigner
+      .signRequest(
+        NewUnsignedRequest.fromStringBodyUtf8(httpMethod = "GET", uri = new URI(FixturesLoader.REQUEST_NORMALIZE_PATH), body = "", headers = Map.empty)
+      )
+      .mauthHeaders(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTHENTICATION_HEADER
+  }
+
   it should "correctly send a customized content-type header" in {
     service.stubFor(
       post(urlPathEqualTo(s"/v1/test"))

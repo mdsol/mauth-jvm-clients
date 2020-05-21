@@ -30,8 +30,8 @@ class MAuthHttpRequestSigner {
     String uriString = request.getUri();
     try {
       URI uri = new URI(uriString);
-      uriString = uri.getPath();
-      queryString = uri.getQuery();
+      uriString = uri.getRawPath();
+      queryString = uri.getRawQuery();
     } catch (URISyntaxException e) {
       logger.error("Couldn't get request uri", e);
     }

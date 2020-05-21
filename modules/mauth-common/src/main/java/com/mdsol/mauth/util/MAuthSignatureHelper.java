@@ -3,6 +3,7 @@ package com.mdsol.mauth.util;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.tuple.Pair;
 import org.bouncycastle.crypto.CryptoException;
 
 import org.bouncycastle.crypto.InvalidCipherTextException;
@@ -12,19 +13,23 @@ import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.security.*;
 import java.util.Arrays;
+import java.util.regex.*;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class MAuthSignatureHelper {
 
   private static final Logger logger = LoggerFactory.getLogger(MAuthSignatureHelper.class);
+  private static final Pattern PATTERN_HEX_LOWCASE = Pattern.compile("%[a-f0-9]{2}");
 
   /**
    * Generate string_to_sign for Mauth V1 protocol
@@ -88,24 +93,20 @@ public class MAuthSignatureHelper {
    * @param requestBody: request body byte[]
    * @param epochTime: current seconds since Epoch
    * @return String
-   *   httpMethod + "\n" + resourcePath + "\n" + requestBody_digest + "\n" + app_uuid + "\n" + epochTime + "\n" + encoded_queryParameters
+   *   httpMethod + "\n" + normalized_resourcePath + "\n" + requestBody_digest + "\n" + app_uuid + "\n" + epochTime + "\n" + encoded_queryParameters
    *
    * @throws MAuthSigningException when generating Unencrypted Signature errors
    */
   public static String generateStringToSignV2(UUID appUUID, String httpMethod, String resourcePath,
-      String queryParameters, byte[] requestBody, String epochTime) throws MAuthSigningException{
+                                              String queryParameters, byte[] requestBody, String epochTime) throws MAuthSigningException{
     logger.debug("Generating String to sign for V2");
 
     String bodyDigest;
     String encryptedQueryParams;
-    try {
-      bodyDigest = getHexEncodedDigestedString(requestBody);
-      encryptedQueryParams = generateEncryptedQueryParams(queryParameters);
-    } catch (IOException e) {
-      logger.error("Error generating Unencrypted Signature", e);
-      throw new MAuthSigningException(e);
-    }
-    return httpMethod.toUpperCase() + "\n" + resourcePath + "\n" + bodyDigest + "\n"
+    bodyDigest = getHexEncodedDigestedString(requestBody);
+    encryptedQueryParams = generateEncryptedQueryParams(queryParameters);
+
+    return httpMethod.toUpperCase() + "\n" + normalizePath(resourcePath) + "\n" + bodyDigest + "\n"
         + appUUID.toString() + "\n" + epochTime + "\n" + encryptedQueryParams;
   }
 
@@ -206,37 +207,37 @@ public class MAuthSignatureHelper {
     }
   }
 
-  public static String generateEncryptedQueryParams(String query) throws IOException {
+  /**
+   * generate the query parameters for Mauth V2
+   * @param encodedQuery the encoded query string
+   * @return the sorted-encoded string
+   *
+   * See https://learn.mdsol.com/display/CA/Building+an+mAuth-Authenticated+API
+   */
+  public static String generateEncryptedQueryParams(String encodedQuery) {
 
-    if (query == null || query.isEmpty())
+    if (encodedQuery == null || encodedQuery.isEmpty())
       return "";
 
-    StringBuilder encryptedQueryParams = new StringBuilder();
-
-    String[] params = query.split("&");
-    Arrays.sort(params);
-    for (String param : params)
-    {
-      String [] keyPair = param.split("=");
-      if (keyPair.length > 0) {
-        String name = param.split("=")[0];
-        String value = keyPair.length > 1 ? param.split("=")[1] : "";
-        if (encryptedQueryParams.length() > 0) {
-          encryptedQueryParams.append('&');
-        }
-        encryptedQueryParams.append(urlEncodeValue(name)).append('=').append(urlEncodeValue(value));
-      }
-    }
-
-    return encryptedQueryParams.toString();
+    return Arrays.stream(encodedQuery.split("&"))
+        .filter(s -> !s.isEmpty())
+        .map(keyValStr -> {
+          String[] split = keyValStr.split("=");
+          String key = split[0];
+          String value = split.length > 1 ? split[1] : "";
+          return Pair.of(urlDecodeValue(key), urlDecodeValue(value));
+        })
+        .sorted()
+        .map(keyVal -> urlEncodeValue(keyVal.getKey()) + "=" + urlEncodeValue(keyVal.getValue()))
+        .collect(Collectors.joining("&"));
   }
 
   /**
-   * encode a string value using `UTF-8` encoding scheme
+   * encode a string using `UTF-8` encoding scheme
    * @param value
-   * @return encoded String
+   * @return the encoded String
    *
-   * See https://stackoverflow.com/questions/10786042/java-url-encoding-of-query-string-parameters
+   * See https://stackoverflow.com/questions/13060034/what-is-correct-oauth-percent-encoding
    */
   private static String urlEncodeValue(String value) {
     if (value == null ||  value.isEmpty())
@@ -244,13 +245,56 @@ public class MAuthSignatureHelper {
 
     try {
       String encodedValue = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
-      encodedValue = encodedValue.replace("+", "%20");
-      encodedValue = encodedValue.replace("%7E", "~");
-      encodedValue = encodedValue.replace("*", "%2A");
+      // OAuth encodes some characters differently
+      encodedValue = encodedValue.replace("+", "%20").replace("%7E", "~").replace("*", "%2A");
       return encodedValue;
     } catch (UnsupportedEncodingException ex) {
       throw new RuntimeException(ex.getCause());
     }
+  }
+
+  /**
+   * decode a string using `UTF-8` scheme
+   * @param encodedValue
+   * @return the decoded String
+   *
+   * See https://docs.oracle.com/javase/8/docs/api/java/net/URLDecoder.html
+   */
+  private static String urlDecodeValue(String encodedValue) {
+    if (encodedValue == null || encodedValue.isEmpty())
+      return encodedValue;
+
+    try {
+      String data = encodedValue.replaceAll("%(?![0-9a-fA-F]{2})", "%25").replaceAll("\\+", " ");
+      return URLDecoder.decode(data, StandardCharsets.UTF_8.toString());
+    } catch (UnsupportedEncodingException ex) {
+      throw new RuntimeException(ex.getCause());
+    }
+  }
+
+  /**
+   * normalize  url-encoded path string
+   * @param encodedPath
+   * @return the normalized string of path
+   */
+  public static String normalizePath(String encodedPath) {
+    if (encodedPath == null || encodedPath.isEmpty())
+      return "";
+
+    //Normalize percent encoding to uppercase i.e. %cf%80 => %CF%80
+    Matcher matcher = PATTERN_HEX_LOWCASE.matcher(encodedPath);
+    StringBuffer result = new StringBuffer();
+    while (matcher.find()) {
+      matcher.appendReplacement(result, matcher.group().toUpperCase());
+    }
+    matcher.appendTail(result);
+
+    String normalizedPath = Paths.get(result.toString()).normalize().toString();
+    if(!normalizedPath.endsWith("/") &&
+        (encodedPath.endsWith("/") || encodedPath.endsWith("/.")|| encodedPath.endsWith("/.."))) {
+      normalizedPath = normalizedPath.concat("/");
+    }
+    return normalizedPath;
   }
 
   /**

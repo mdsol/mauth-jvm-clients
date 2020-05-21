@@ -6,7 +6,7 @@ import java.security.Security
 import com.mdsol.mauth.test.utils.FakeMAuthServer.EXISTING_CLIENT_APP_UUID
 import com.mdsol.mauth.test.utils.FixturesLoader
 import com.mdsol.mauth.util.EpochTimeProvider
-import org.apache.http.client.methods.{HttpGet, HttpPost, HttpPut}
+import org.apache.http.client.methods.{HttpGet, HttpPost}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
@@ -138,25 +138,30 @@ trait RequestAuthenticatorBaseSpec extends AnyFlatSpec with BeforeAndAfterAll wi
       .build
   }
 
-  val CLIENT_REQUEST_BINARY_APP_UUID = "5ff4257e-9c16-11e0-b048-0026bbfffe5e"
-  val CLIENT_X_MWS_TIME_HEADER_BINARY_VALUE = "1309891855"
-  val CLIENT_REQUEST_BINARY_PATH = "/v1/pictures"
+  val CLIENT_REQUEST_BINARY_APP_UUID = FixturesLoader.APP_UUID_V2
+  val CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE = FixturesLoader.EPOCH_TIME_V2
   val PUBLIC_KEY2: String = FixturesLoader.getPublicKey2
-  val CLIENT_REQUEST_SIGNATURE_BINARY_V1: String =
-    ("hDKYDRnzPFL2gzsru4zn7c7E7KpEvexeF4F5IR+puDxYXrMmuT2/fETZty5NkG" +
-      "GTZQ1nI6BTYGQGsU/73TkEAm7SvbJZcB2duLSCn8H5D0S1cafory1gnL1TpMP" +
-      "BlY8J/lq/Mht2E17eYw+P87FcpvDShINzy8GxWHqfquBqO8ml4XtirVEtAlI0" +
-      "xlkAsKkVq4nj7rKZUMS85mzogjUAJn3WgpGCNXVU+EK+qElW5QXk3I9uozByZ" +
-      "hwBcYt5Cnlg15o99+53wKzMMmdvFmVjA1DeUaSO7LMIuw4ZNLVdDcHJx7ZSpA" +
-      "KZ/EA34u1fYNECFcw5CSKOjdlU7JFr4o8Phw==").stripMargin
-  val CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER: String = "MWS " + CLIENT_REQUEST_BINARY_APP_UUID + ":" + CLIENT_REQUEST_SIGNATURE_BINARY_V1
+  val CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER_V1: String = "MWS " + FixturesLoader.APP_UUID_V2 + ":" + FixturesLoader.SIGNATURE_V1_BINARY
   def getRequestWithBinaryBodyV1: MAuthRequest = {
     MAuthRequest.Builder.get
-      .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER)
-      .withTimeHeaderValue(CLIENT_X_MWS_TIME_HEADER_BINARY_VALUE)
-      .withHttpMethod(HttpPut.METHOD_NAME)
+      .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER_V1)
+      .withTimeHeaderValue(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE)
+      .withHttpMethod(FixturesLoader.REQUEST_METHOD_V2)
       .withMessagePayload(FixturesLoader.getBinaryFileBody)
-      .withResourcePath(CLIENT_REQUEST_BINARY_PATH)
+      .withResourcePath(FixturesLoader.REQUEST_PATH_V2)
+      .withQueryParameters(FixturesLoader.REQUEST_QUERY_PARAMETERS_V2)
+      .build
+  }
+
+  val CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER_V2: String = "MWSV2 " + CLIENT_REQUEST_BINARY_APP_UUID + ":" + FixturesLoader.SIGNATURE_V2_BINARY
+  def getRequestWithBinaryBodyV2: MAuthRequest = {
+    MAuthRequest.Builder.get
+      .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER_V2)
+      .withTimeHeaderValue(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE)
+      .withHttpMethod(FixturesLoader.REQUEST_METHOD_V2)
+      .withMessagePayload(FixturesLoader.getBinaryFileBody)
+      .withResourcePath(FixturesLoader.REQUEST_PATH_V2)
+      .withQueryParameters(FixturesLoader.REQUEST_QUERY_PARAMETERS_V2)
       .build
   }
 

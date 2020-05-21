@@ -108,4 +108,20 @@ class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFac
     get.getFirstHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME).getValue shouldBe String.valueOf(TEST_EPOCH_TIME)
     get.getFirstHeader(MAuthRequest.MCC_TIME_HEADER_NAME).getValue shouldBe String.valueOf(TEST_EPOCH_TIME)
   }
+
+  it should "sign requests adds expected headers for V2 with the encoded-normalize path" in {
+    //noinspection ConvertibleToMethodValue
+    val TEST_UUID = FixturesLoader.APP_UUID_V2
+    val request_time = FixturesLoader.EPOCH_TIME_V2.toLong
+    val EXPECTED_SIGNATURE_V2 = FixturesLoader.SIGNATURE_NORMALIZE_PATH_V2
+    val EXPECTED_AUTHENTICATION_HEADER = s"""MWSV2 $TEST_UUID:$EXPECTED_SIGNATURE_V2;"""
+
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(request_time)
+    val mAuthSigner = new HttpClientRequestSigner(UUID.fromString(TEST_UUID), FixturesLoader.getPrivateKey2, mockEpochTimeProvider, true)
+
+    val get = new HttpGet("http://mauth.imedidata.com" + FixturesLoader.REQUEST_NORMALIZE_PATH)
+    mAuthSigner.signRequest(get)
+    get.getFirstHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME).getValue shouldBe EXPECTED_AUTHENTICATION_HEADER
+    get.getFirstHeader(MAuthRequest.MCC_TIME_HEADER_NAME).getValue shouldBe String.valueOf(request_time)
+  }
 }
