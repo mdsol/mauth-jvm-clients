@@ -36,3 +36,12 @@ To release
 . Change version number to match release without `-SNAPSHOT`. e.g. `2016.1.1`
 . Push
 . Go to https://github.com/mdsol/mauth-jvm-clients/releases[Releases] tab on github and tag with the version number
+
+
+== Running mauth-protocol-test-suite
+
+To run the mauth-protocol-test-suite clone the latest test suite onto your machine and place it in the same parent directory as this repo (or supply the ENV var `TEST_SUITE_RELATIVE_PATH` with the path to the test suite relative to this repo). Then run:
+
+----
+sbt "test:testOnly *ProtocolSuiteSpec"
+----
