@@ -167,7 +167,7 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers with HttpClient w
           headers = Map("Content-Type" -> ContentTypes.`application/json`.toString())
         )
 
-    whenReady(HttpClient.call(signerV2.signRequest(simpleNewUnsignedRequest).toAkkaHttpRequest), timeout = Timeout(5 seconds)) { response =>
+    whenReady(HttpClient.call(signerV2.signRequest(simpleNewUnsignedRequest).toAkkaHttpRequest), timeout = Timeout(5.seconds)) { response =>
       response.status shouldBe StatusCodes.OK
     }
   }
@@ -183,7 +183,7 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers with HttpClient w
       NewUnsignedRequest
         .fromStringBodyUtf8(httpMethod = "POST", uri = new URI(s"${service.baseUrl()}/v1/test"), body = "", headers = Map())
 
-    whenReady(HttpClient.call(signerV2.signRequest(simpleNewUnsignedRequest).toAkkaHttpRequest), timeout = Timeout(5 seconds)) { response =>
+    whenReady(HttpClient.call(signerV2.signRequest(simpleNewUnsignedRequest).toAkkaHttpRequest), timeout = Timeout(5.seconds)) { response =>
       response.status shouldBe StatusCodes.OK
     }
   }

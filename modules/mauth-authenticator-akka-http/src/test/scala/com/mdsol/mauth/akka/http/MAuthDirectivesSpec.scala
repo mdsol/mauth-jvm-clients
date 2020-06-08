@@ -42,8 +42,8 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
   private val authPrefixV2: String = "MWSV2"
   private val authHeaderV2: String = s"$authPrefixV2 $appUuid:$signatureV2"
 
-  private implicit val timeout: FiniteDuration = 30 seconds
-  private implicit val requestValidationTimeout: Duration = 10 seconds
+  private implicit val timeout: FiniteDuration = 30.seconds
+  private implicit val requestValidationTimeout: Duration = 10.seconds
   private val client = mock[ClientPublicKeyProvider]
   private val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
   private val authenticator: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider)

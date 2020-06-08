@@ -18,7 +18,7 @@ import scala.concurrent.duration._
 
 class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBaseSpec with Matchers with ScalaFutures with MockFactory {
 
-  private implicit val requestValidationTimeout: Duration = 10 seconds
+  private implicit val requestValidationTimeout: Duration = 10.seconds
 
   behavior of "RequestAuthenticator Scala"
 
