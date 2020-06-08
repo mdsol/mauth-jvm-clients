@@ -40,7 +40,7 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
     * @param appUUID , UUID of the application for which we want to retrieve its public key.
     * @return { @link PublicKey} registered in MAuth for the application with given appUUID.
     */
-  override def getPublicKey(appUUID: UUID): Future[Option[PublicKey]] = memoizeF(Some(configuration.getTimeToLive seconds)) {
+  override def getPublicKey(appUUID: UUID): Future[Option[PublicKey]] = memoizeF(Some(configuration.getTimeToLive.seconds)) {
     val signedRequest = signer.signRequest(UnsignedRequest.noBody("GET", new URI(configuration.getBaseUrl + getRequestUrlPath(appUUID)), headers = Map.empty))
     retrievePublicKey()(HttpClient.call(signedRequest.toAkkaHttpRequest))
   }
