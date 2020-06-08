@@ -21,12 +21,17 @@ before_install:
 jobs:
   include:
     - stage: test
-      script: sbt scalafmtSbtCheck scalafmtCheckAll +test:compile +suggestNextVersionAcrossAllProjects +test
+      name: Test
+      script: sbt scalafmtSbtCheck scalafmtCheckAll
+
+    - stage: test
+      name: Format check
+      script: sbt +test:compile +suggestNextVersionAcrossAllProjects +test
 
     - stage: release
       script: .travis/deploy.sh
       if: tag IS present
 
 stages:
-  - test
+  - Test
   - release

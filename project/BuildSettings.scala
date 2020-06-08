@@ -55,6 +55,10 @@ object BuildSettings {
     "-P:silencer:pathFilters=target/.*"
   )
 
+  lazy val noPublishSettings = Seq(
+    publish / skip := true
+  )
+
   lazy val publishSettings = Seq(
     sonatypeProfileName := "com.mdsol",
     publishMavenStyle := true,

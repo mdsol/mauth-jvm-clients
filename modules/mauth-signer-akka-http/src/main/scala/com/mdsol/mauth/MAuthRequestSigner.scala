@@ -81,7 +81,8 @@ class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvide
   }
 
   override def signRequest(request: NewUnsignedRequest): NewSignedRequest = {
-    val headers = generateRequestHeaders(request.httpMethod, request.uri.getRawPath, request.body, request.uri.getRawQuery).asScala.toMap
+    val javaUri = request.uri
+    val headers = SignerUtils.signWithUri(this, request.httpMethod, javaUri, request.body).asScala.toMap
     NewSignedRequest(
       request,
       headers

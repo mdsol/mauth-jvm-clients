@@ -43,7 +43,7 @@ lazy val `mauth-common` = (project in file("modules/mauth-common"))
 lazy val `mauth-test-utils` = (project in file("modules/mauth-test-utils"))
   .settings(
     basicSettings,
-    publishSettings,
+    noPublishSettings,
     javaProjectSettings,
     name := "mauth-test-utils",
     libraryDependencies ++=
@@ -89,6 +89,20 @@ lazy val `mauth-signer-akka-http` = (project in file("modules/mauth-signer-akka-
         Dependencies.compile(scalaLogging).map(withExclusions) ++
         Dependencies.example(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.test(scalaMock, scalaTest, wiremock).map(withExclusions)
+  )
+
+lazy val `mauth-signer-sttp` = (project in file("modules/mauth-signer-sttp"))
+  .dependsOn(`mauth-signer`, `mauth-test-utils` % "test")
+  .settings(
+    basicSettings,
+    publishSettings,
+    scalaProjectSettings,
+    name := "mauth-signer-sttp",
+    libraryDependencies ++=
+      Dependencies.compile(catsEffect, akkaHttp, akkaStream, scalaLibCompat, sttp, scalaLogging).map(withExclusions) ++
+        Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions),
+    // TODO remove once published
+    mimaPreviousArtifacts := Set.empty
   )
 
 lazy val `mauth-authenticator` = (project in file("modules/mauth-authenticator"))
@@ -190,6 +204,7 @@ lazy val `mauth-jvm-clients` = (project in file("."))
     `mauth-proxy`,
     `mauth-signer`,
     `mauth-signer-akka-http`,
+    `mauth-signer-sttp`,
     `mauth-signer-apachehttp`,
     `mauth-test-utils`
   )
