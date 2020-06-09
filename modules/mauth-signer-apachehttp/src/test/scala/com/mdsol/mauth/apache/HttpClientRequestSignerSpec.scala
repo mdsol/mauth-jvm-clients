@@ -4,7 +4,7 @@ import java.security.Security
 import java.util.UUID
 
 import com.mdsol.mauth.MAuthRequest
-import com.mdsol.mauth.test.utils.FixturesLoader
+import com.mdsol.mauth.test.utils.TestFixtures
 import com.mdsol.mauth.util.EpochTimeProvider
 import org.apache.http.client.methods.{HttpGet, HttpPost}
 import org.apache.http.entity.StringEntity
@@ -20,7 +20,7 @@ class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFac
   private val testUUID = UUID.fromString("2a6790ab-f6c6-45be-86fc-9e9be76ec12a")
   private val AUTHENTICATION_HEADER_PATTERN_V2 = s"MWSV2 $testUUID:[^;]*;"
   private val TEST_REQUEST_BODY = "Request Body"
-  private val privateKeyString = FixturesLoader.getPrivateKey
+  private val privateKeyString = TestFixtures.PRIVATE_KEY_1
   private val mockEpochTimeProvider = mock[EpochTimeProvider]
   private val mAuthRequestSigner = new HttpClientRequestSigner(testUUID, privateKeyString, mockEpochTimeProvider)
   private val mAuthRequestSignerV2 = new HttpClientRequestSigner(testUUID, privateKeyString, mockEpochTimeProvider, true)
@@ -111,15 +111,15 @@ class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFac
 
   it should "sign requests adds expected headers for V2 with the encoded-normalize path" in {
     //noinspection ConvertibleToMethodValue
-    val TEST_UUID = FixturesLoader.APP_UUID_V2
-    val request_time = FixturesLoader.EPOCH_TIME_V2.toLong
-    val EXPECTED_SIGNATURE_V2 = FixturesLoader.SIGNATURE_NORMALIZE_PATH_V2
+    val TEST_UUID = TestFixtures.APP_UUID_V2
+    val request_time = TestFixtures.EPOCH_TIME.toLong
+    val EXPECTED_SIGNATURE_V2 = TestFixtures.SIGNATURE_NORMALIZE_PATH_V2
     val EXPECTED_AUTHENTICATION_HEADER = s"""MWSV2 $TEST_UUID:$EXPECTED_SIGNATURE_V2;"""
 
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(request_time)
-    val mAuthSigner = new HttpClientRequestSigner(UUID.fromString(TEST_UUID), FixturesLoader.getPrivateKey2, mockEpochTimeProvider, true)
+    val mAuthSigner = new HttpClientRequestSigner(UUID.fromString(TEST_UUID), TestFixtures.PRIVATE_KEY_2, mockEpochTimeProvider, true)
 
-    val get = new HttpGet("http://mauth.imedidata.com" + FixturesLoader.REQUEST_NORMALIZE_PATH)
+    val get = new HttpGet("http://mauth.imedidata.com" + TestFixtures.REQUEST_NORMALIZE_PATH)
     mAuthSigner.signRequest(get)
     get.getFirstHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME).getValue shouldBe EXPECTED_AUTHENTICATION_HEADER
     get.getFirstHeader(MAuthRequest.MCC_TIME_HEADER_NAME).getValue shouldBe String.valueOf(request_time)

@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets
 import java.security.Security
 import java.util.UUID
 
-import com.mdsol.mauth.test.utils.FixturesLoader
+import com.mdsol.mauth.test.utils.TestFixtures
 import com.mdsol.mauth.util.MAuthKeysHelper.{getPrivateKeyFromString, getPublicKeyFromString}
 import com.mdsol.mauth.util.MAuthSignatureHelper
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -21,14 +21,14 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
   private val CLIENT_REQUEST_PAYLOAD = "message here"
   private val CLIENT_REQUEST_QUERY_PARAMETERS = "key1=value1&key2=value2"
   private val TEST_EPOCH_TIME = 1424700000L
-  private val TEST_PRIVATE_KEY = getPrivateKeyFromString(FixturesLoader.getPrivateKey2)
+  private val TEST_PRIVATE_KEY = getPrivateKeyFromString(TestFixtures.PRIVATE_KEY_2)
 
   // the same test data with ruby and python
-  private val CLIENT_APP_UUID_V2 = FixturesLoader.APP_UUID_V2
-  private val CLIENT_REQUEST_METHOD_V2 = FixturesLoader.REQUEST_METHOD_V2
-  private val CLIENT_REQUEST_PATH_V2 = FixturesLoader.REQUEST_PATH_V2
-  private val CLIENT_REQUEST_QUERY_PARAMETERS_V2 = FixturesLoader.REQUEST_QUERY_PARAMETERS_V2
-  private val TEST_EPOCH_TIME_V2 = FixturesLoader.EPOCH_TIME_V2
+  private val CLIENT_APP_UUID_V2 = TestFixtures.APP_UUID_V2
+  private val CLIENT_REQUEST_METHOD_V2 = TestFixtures.REQUEST_METHOD_V2
+  private val CLIENT_REQUEST_PATH_V2 = TestFixtures.REQUEST_PATH_V2
+  private val CLIENT_REQUEST_QUERY_PARAMETERS_V2 = TestFixtures.REQUEST_QUERY_PARAMETERS_V2
+  private val TEST_EPOCH_TIME_V2 = TestFixtures.EPOCH_TIME
 
   behavior of "MAuthSignatureHelper"
 
@@ -136,8 +136,8 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
 
   it should "verify signature for V2" in {
     val testString = "Hello world"
-    val signString = MAuthSignatureHelper.encryptSignatureRSA(getPrivateKeyFromString(FixturesLoader.getPrivateKey), testString)
-    MAuthSignatureHelper.verifyRSA(testString, signString, getPublicKeyFromString(FixturesLoader.getPublicKey)) shouldBe true
+    val signString = MAuthSignatureHelper.encryptSignatureRSA(getPrivateKeyFromString(TestFixtures.PRIVATE_KEY_1), testString)
+    MAuthSignatureHelper.verifyRSA(testString, signString, getPublicKeyFromString(TestFixtures.PUBLIC_KEY_1)) shouldBe true
   }
 
   it should "correctly generate signature of binary body for V2" in {
@@ -146,10 +146,10 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
       CLIENT_REQUEST_METHOD_V2,
       CLIENT_REQUEST_PATH_V2,
       CLIENT_REQUEST_QUERY_PARAMETERS_V2,
-      FixturesLoader.getBinaryFileBody,
+      TestFixtures.BINARY_FILE_BODY,
       TEST_EPOCH_TIME_V2
     )
-    MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe FixturesLoader.SIGNATURE_V2_BINARY
+    MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe TestFixtures.SIGNATURE_V2_BINARY
   }
 
   it should "correctly generate signature with empty body for V2" in {
@@ -161,7 +161,7 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
       Array.empty,
       TEST_EPOCH_TIME_V2
     )
-    MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe FixturesLoader.SIGNATURE_V2_EMPTY
+    MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe TestFixtures.SIGNATURE_V2_EMPTY
   }
 
   it should "normalize path: correctly generate signature for V2" in {
@@ -172,10 +172,10 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
         CLIENT_REQUEST_METHOD_V2,
         resourcePath,
         CLIENT_REQUEST_QUERY_PARAMETERS_V2,
-        FixturesLoader.getBinaryFileBody,
+        TestFixtures.BINARY_FILE_BODY,
         TEST_EPOCH_TIME_V2
       )
-      MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe FixturesLoader.SIGNATURE_V2_BINARY
+      MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe TestFixtures.SIGNATURE_V2_BINARY
     }
   }
 

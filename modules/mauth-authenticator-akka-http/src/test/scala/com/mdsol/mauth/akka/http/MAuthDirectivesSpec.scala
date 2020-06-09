@@ -11,7 +11,7 @@ import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.http.{`X-MWS-Authentication`, `X-MWS-Time`}
 import com.mdsol.mauth.scaladsl.RequestAuthenticator
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
-import com.mdsol.mauth.test.utils.FixturesLoader
+import com.mdsol.mauth.test.utils.TestFixtures
 import com.mdsol.mauth.util.{EpochTimeProvider, MAuthKeysHelper}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
@@ -51,7 +51,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
   "authenticate" should {
     lazy val route: Route = authenticate(authenticator, timeout, requestValidationTimeout).apply(complete(HttpResponse()))
-    val publicKey = MAuthKeysHelper.getPublicKeyFromString(FixturesLoader.getPublicKey)
+    val publicKey = MAuthKeysHelper.getPublicKeyFromString(TestFixtures.PUBLIC_KEY_1)
 
     "pass successfully authenticated request" in {
       (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
@@ -228,7 +228,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
   "authenticate when v2OnlyAuthenticate = true" should {
     lazy val route: Route = authenticate(authenticatorV2, timeout, requestValidationTimeout).apply(complete(HttpResponse()))
-    val publicKey = MAuthKeysHelper.getPublicKeyFromString(FixturesLoader.getPublicKey)
+    val publicKey = MAuthKeysHelper.getPublicKeyFromString(TestFixtures.PUBLIC_KEY_1)
 
     "pass successfully authenticated request with both v1 and v2 headers, with V2 headers taking precedence" in {
       (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))

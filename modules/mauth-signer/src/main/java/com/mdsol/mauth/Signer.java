@@ -34,7 +34,7 @@ public interface Signer {
    * @param httpVerb The HTTP verb of the request, e.g. GET, POST, etc.
    * @param requestPath The path of the request, not including protocol, host or query parameters.
    * @param requestPayload The payload of the request
-   * @param queryParameters The query parameters
+   * @param queryParameters The query parameters (URL-encoded)
    * @return MAuth headers which should be appended to the request before sending.
    * @throws MAuthSigningException when request cannot be signed
    */
