@@ -99,6 +99,23 @@ lazy val `mauth-signer-sttp` = (project in file("modules/mauth-signer-sttp"))
     scalaProjectSettings,
     name := "mauth-signer-sttp",
     libraryDependencies ++=
+      Dependencies.compile(scalaLibCompat, sttp, scalaLogging).map(withExclusions) ++
+        Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions),
+    // TODO remove once published
+    mimaPreviousArtifacts := Set.empty
+  )
+
+// A separate module to sign and send sttp request using akka-http backend
+// This keeps mauth-signer-sttp free of dependencies like akka and cats-effect in turn helps reduce dependency footprint
+// of our client libraries (which will only need to depend on mauth-signer-sttp)
+lazy val `mauth-sender-sttp-akka-http` = (project in file("modules/mauth-sender-sttp-akka-http"))
+  .dependsOn(`mauth-signer-sttp`, `mauth-test-utils` % "test")
+  .settings(
+    basicSettings,
+    publishSettings,
+    scalaProjectSettings,
+    name := "mauth-sender-sttp-akka-http",
+    libraryDependencies ++=
       Dependencies.compile(catsEffect, akkaHttp, akkaStream, scalaLibCompat, sttp, scalaLogging).map(withExclusions) ++
         Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions),
     // TODO remove once published
@@ -206,6 +223,7 @@ lazy val `mauth-jvm-clients` = (project in file("."))
     `mauth-signer-akka-http`,
     `mauth-signer-sttp`,
     `mauth-signer-apachehttp`,
+    `mauth-sender-sttp-akka-http`,
     `mauth-test-utils`
   )
   .settings(
