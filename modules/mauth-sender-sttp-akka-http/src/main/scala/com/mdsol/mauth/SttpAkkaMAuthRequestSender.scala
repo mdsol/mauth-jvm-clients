@@ -15,7 +15,7 @@ class SttpAkkaMAuthRequestSender(
   override def send[T](request: Request[T, Nothing]): IO[Response[T]] =
     IO.fromFuture(
       IO(
-        signer.signSttpRequest(request).send()(sttpBackend, implicitly)
+        sttpBackend.send(signer.signSttpRequest(request))
       )
     )(contextShift)
 }
