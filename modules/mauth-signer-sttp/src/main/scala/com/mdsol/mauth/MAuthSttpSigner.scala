@@ -17,8 +17,8 @@ trait MAuthSttpSigner {
 /** Sign an sttp request by adding MAuth headers to the request */
 class MAuthSttpSignerImpl(signer: Signer) extends MAuthSttpSigner {
 
-  def this(appUuid: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider, v2OnlySignRequest: Boolean = false) = {
-    this(new DefaultSigner(appUuid, privateKey, epochTimeProvider, v2OnlySignRequest))
+  def this(appUuid: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider, signVersions: java.util.List[MAuthVersion]) = {
+    this(new DefaultSigner(appUuid, privateKey, epochTimeProvider, signVersions))
   }
 
   def signSttpRequest[T](request: Request[T, Nothing]): Request[T, Nothing] = {

@@ -85,7 +85,7 @@ class SttpAkkaMAuthRequestSenderSpec extends AsyncWordSpec with BeforeAndAfter w
       UUID.fromString(APP_UUID_V2),
       getPrivateKeyFromString(TestFixtures.PRIVATE_KEY_2),
       epochTimeProvider,
-      false
+      SignerConfiguration.ALL_SIGN_VERSIONS
     )
   }
 

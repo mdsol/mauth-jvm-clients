@@ -2,10 +2,10 @@ package com.mdsol.mauth
 
 import java.net.URI
 import java.security.PrivateKey
-import java.util.UUID
-import scala.collection.JavaConverters._
-import models.{UnsignedRequest => NewUnsignedRequest, SignedRequest => NewSignedRequest}
+import java.util.{List, UUID}
 
+import scala.collection.JavaConverters._
+import models.{SignedRequest => NewSignedRequest, UnsignedRequest => NewUnsignedRequest}
 import com.mdsol.mauth.util.{CurrentEpochTimeProvider, EpochTimeProvider, MAuthKeysHelper}
 
 import scala.util.{Failure, Success, Try}
@@ -41,12 +41,12 @@ trait RequestSigner {
   def signRequest(request: NewUnsignedRequest): NewSignedRequest
 }
 
-class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider, v2OnlySignRequests: Boolean)
-    extends DefaultSigner(appUUID, privateKey, epochTimeProvider, v2OnlySignRequests)
+class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider, signVersions: List[MAuthVersion])
+    extends DefaultSigner(appUUID, privateKey, epochTimeProvider, signVersions)
     with RequestSigner {
 
   def this(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider) =
-    this(appUUID, privateKey, epochTimeProvider, v2OnlySignRequests = false)
+    this(appUUID, privateKey, epochTimeProvider, SignerConfiguration.DEFAULT_SIGN_VERSION)
 
   def this(appUUID: UUID, privateKey: PrivateKey) = this(appUUID, privateKey, new CurrentEpochTimeProvider)
 
@@ -57,8 +57,8 @@ class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvide
   def this(appUUID: UUID, privateKey: String, epochTimeProvider: EpochTimeProvider) =
     this(appUUID, MAuthKeysHelper.getPrivateKeyFromString(privateKey), epochTimeProvider)
 
-  def this(appUUID: UUID, privateKey: String, epochTimeProvider: EpochTimeProvider, v2OnlySignRequests: Boolean) =
-    this(appUUID, MAuthKeysHelper.getPrivateKeyFromString(privateKey), epochTimeProvider, v2OnlySignRequests)
+  def this(appUUID: UUID, privateKey: String, epochTimeProvider: EpochTimeProvider, signVersions: List[MAuthVersion]) =
+    this(appUUID, MAuthKeysHelper.getPrivateKeyFromString(privateKey), epochTimeProvider, signVersions)
 
   /**
     * Sign a request specification and return the desired header signatures
@@ -103,9 +103,9 @@ object MAuthRequestSigner {
   def apply(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider): MAuthRequestSigner =
     new MAuthRequestSigner(appUUID, privateKey, epochTimeProvider)
 
-  def apply(appUUID: UUID, privateKey: String, epochTimeProvider: EpochTimeProvider, v2OnlySignRequests: Boolean): MAuthRequestSigner =
-    new MAuthRequestSigner(appUUID, privateKey, epochTimeProvider, v2OnlySignRequests)
+  def apply(appUUID: UUID, privateKey: String, epochTimeProvider: EpochTimeProvider, signVersions: List[MAuthVersion]): MAuthRequestSigner =
+    new MAuthRequestSigner(appUUID, privateKey, epochTimeProvider, signVersions)
 
-  def apply(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider, v2OnlySignRequests: Boolean): MAuthRequestSigner =
-    new MAuthRequestSigner(appUUID, privateKey, epochTimeProvider, v2OnlySignRequests)
+  def apply(appUUID: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider, signVersions: List[MAuthVersion]): MAuthRequestSigner =
+    new MAuthRequestSigner(appUUID, privateKey, epochTimeProvider, signVersions)
 }
