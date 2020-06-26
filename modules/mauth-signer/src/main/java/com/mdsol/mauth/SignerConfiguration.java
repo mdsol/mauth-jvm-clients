@@ -64,7 +64,7 @@ public class SignerConfiguration implements MAuthConfiguration {
   static public List<MAuthVersion> getSignVersions(String signVersionsStr) {
     List<MAuthVersion> signVersions = new ArrayList();
     List<String> unrecognizedVersions = new ArrayList();
-    List<String> versionList = Arrays.asList(signVersionsStr.trim().toLowerCase().split(","));
+    List<String> versionList = Arrays.asList(signVersionsStr.toLowerCase().split(","));
     versionList.forEach(e -> {
       switch (e.trim()) {
         case "v1":
