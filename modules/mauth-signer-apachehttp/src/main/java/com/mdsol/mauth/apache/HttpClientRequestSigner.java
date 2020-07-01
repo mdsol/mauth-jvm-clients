@@ -1,6 +1,7 @@
 package com.mdsol.mauth.apache;
 
 import com.mdsol.mauth.DefaultSigner;
+import com.mdsol.mauth.MAuthVersion;
 import com.mdsol.mauth.SignerConfiguration;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import com.mdsol.mauth.util.CurrentEpochTimeProvider;
@@ -16,6 +17,7 @@ import org.apache.http.util.EntityUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -41,8 +43,8 @@ public class HttpClientRequestSigner extends DefaultSigner {
     super(appUUID, privateKey, epochTimeProvider);
   }
 
-  public HttpClientRequestSigner(UUID appUUID, String privateKey, EpochTimeProvider epochTimeProvider, boolean v2OnlySignRequests) {
-    super(appUUID, privateKey, epochTimeProvider, v2OnlySignRequests);
+  public HttpClientRequestSigner(UUID appUUID, String privateKey, EpochTimeProvider epochTimeProvider, List<MAuthVersion> signVersions) {
+    super(appUUID, privateKey, epochTimeProvider, signVersions);
   }
 
   /**

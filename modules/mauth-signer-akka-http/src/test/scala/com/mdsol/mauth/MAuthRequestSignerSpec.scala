@@ -36,14 +36,22 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers with HttpClient w
   val signer: MAuthRequestSigner = new MAuthRequestSigner(
     UUID.fromString(APP_UUID_1),
     PRIVATE_KEY_1,
-    CONST_EPOCH_TIME_PROVIDER
+    CONST_EPOCH_TIME_PROVIDER,
+    SignerConfiguration.ALL_SIGN_VERSIONS
   )
 
   val signerV2: MAuthRequestSigner = new MAuthRequestSigner(
     UUID.fromString(APP_UUID_1),
     PRIVATE_KEY_1,
     CONST_EPOCH_TIME_PROVIDER,
-    v2OnlySignRequests = true
+    java.util.Arrays.asList[MAuthVersion](MAuthVersion.MWSV2)
+  )
+
+  val signerV1: MAuthRequestSigner = new MAuthRequestSigner(
+    UUID.fromString(APP_UUID_1),
+    PRIVATE_KEY_1,
+    CONST_EPOCH_TIME_PROVIDER,
+    java.util.Arrays.asList[MAuthVersion](MAuthVersion.MWS)
   )
 
   override protected def beforeAll(): Unit =
@@ -111,7 +119,8 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers with HttpClient w
     val EXPECTED_SIGNATURE_V2 = SIGNATURE_NORMALIZE_PATH_V2
     val EXPECTED_AUTHENTICATION_HEADER = s"""MWSV2 $TEST_UUID:$EXPECTED_SIGNATURE_V2;"""
     val eTimeProvider: EpochTimeProvider = new EpochTimeProvider() { override def inSeconds(): Long = EPOCH_TIME.toLong }
-    val newSigner: MAuthRequestSigner = MAuthRequestSigner(UUID.fromString(TEST_UUID), PRIVATE_KEY_2, eTimeProvider, v2OnlySignRequests = true)
+    val newSigner: MAuthRequestSigner =
+      MAuthRequestSigner(UUID.fromString(TEST_UUID), PRIVATE_KEY_2, eTimeProvider, java.util.Arrays.asList(MAuthVersion.MWSV2))
 
     newSigner
       .signRequest(
@@ -156,4 +165,12 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers with HttpClient w
       response.status shouldBe StatusCodes.OK
     }
   }
+
+  "MAuthRequestSigner with V1 only required" should "add mauth headers to a request for V1 only " in {
+    val authHeaders = signerV1.signRequest(simpleNewUnsignedRequest).mauthHeaders
+    authHeaders.size shouldEqual 2
+    authHeaders(MAuthRequest.X_MWS_TIME_HEADER_NAME) shouldBe EXPECTED_TIME_HEADER_1
+    authHeaders(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTH_NO_BODY_V1
+  }
+
 }

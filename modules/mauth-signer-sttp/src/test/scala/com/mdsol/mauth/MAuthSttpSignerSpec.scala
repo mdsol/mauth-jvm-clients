@@ -72,7 +72,7 @@ class MAuthSttpSignerSpec extends AnyWordSpec with Matchers {
           appUuid = UUID.fromString(APP_UUID_V2),
           privateKey = getPrivateKeyFromString(PRIVATE_KEY_2),
           epochTimeProvider = epochTimeProvider,
-          v2OnlySignRequest = true
+          signVersions = java.util.Arrays.asList(MAuthVersion.MWSV2)
         )
         val req = basicRequest.get(Uri(new URI(s"http://host.com$REQUEST_NORMALIZE_PATH"))).body("")
         val signedReq = signer.signSttpRequest(req)
@@ -83,6 +83,17 @@ class MAuthSttpSignerSpec extends AnyWordSpec with Matchers {
 
     }
 
+    "When v1 only is set" should {
+      "add v1 authentication and time header only to the request (no v2 headers)" in {
+        val signedReq = v1OnlySigner.signSttpRequest(emptyPathNoBodyReq)
+        signedReq.getV1TimeHeaderValue shouldBe Some(EXPECTED_TIME_HEADER_1)
+        signedReq.getV1AuthHeaderValue shouldBe Some(EXPECTED_AUTH_NO_BODY_V1)
+
+        signedReq.getV2TimeHeaderValue shouldBe None
+        signedReq.getV2AuthHeaderValue shouldBe None
+      }
+    }
+
   }
 
   lazy val CONST_EPOCH_TIME_PROVIDER: EpochTimeProvider = new EpochTimeProvider() { override def inSeconds(): Long = EXPECTED_TIME_HEADER_1.toLong }
@@ -91,14 +102,21 @@ class MAuthSttpSignerSpec extends AnyWordSpec with Matchers {
     appUuid = UUID.fromString(APP_UUID_1),
     privateKey = getPrivateKeyFromString(PRIVATE_KEY_1),
     epochTimeProvider = CONST_EPOCH_TIME_PROVIDER,
-    v2OnlySignRequest = false
+    signVersions = SignerConfiguration.ALL_SIGN_VERSIONS
   )
 
   lazy val v2OnlySigner = new MAuthSttpSignerImpl(
     appUuid = UUID.fromString(APP_UUID_1),
     privateKey = getPrivateKeyFromString(PRIVATE_KEY_1),
     epochTimeProvider = CONST_EPOCH_TIME_PROVIDER,
-    v2OnlySignRequest = true
+    signVersions = java.util.Arrays.asList(MAuthVersion.MWSV2)
+  )
+
+  lazy val v1OnlySigner = new MAuthSttpSignerImpl(
+    appUuid = UUID.fromString(APP_UUID_1),
+    privateKey = getPrivateKeyFromString(PRIVATE_KEY_1),
+    epochTimeProvider = CONST_EPOCH_TIME_PROVIDER,
+    signVersions = java.util.Arrays.asList(MAuthVersion.MWS)
   )
 
 }
