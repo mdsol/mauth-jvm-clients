@@ -211,4 +211,12 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches AUTHENTICATION_HEADER_PATTERN_V2
     headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe String.valueOf(TEST_EPOCH_TIME)
   }
+
+  it should "be default sign version" in {
+    val expected_sign_versions = SignerConfiguration.DEFAULT_SIGN_VERSION
+    SignerConfiguration.getSignVersions(null) shouldBe expected_sign_versions
+    SignerConfiguration.getSignVersions("") shouldBe expected_sign_versions
+    SignerConfiguration.getSignVersions("v10, v20, v30") shouldBe expected_sign_versions
+  }
+
 }
