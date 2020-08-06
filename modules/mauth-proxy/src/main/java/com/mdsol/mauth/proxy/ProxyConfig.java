@@ -66,22 +66,25 @@ public class ProxyConfig {
   static public List<MAuthVersion> getSignVersions(String signVersionsStr) {
     List<MAuthVersion> signVersions = new ArrayList();
     List<String> unrecognizedVersions = new ArrayList();
-    List<String> versionList = Arrays.asList(signVersionsStr.toLowerCase().split(","));
-    versionList.forEach(e -> {
-      switch (e.trim()) {
-        case "v1":
-          signVersions.add(MAuthVersion.MWS);
-          break;
-        case "v2":
-          signVersions.add(MAuthVersion.MWSV2);
-          break;
-        default:
-          unrecognizedVersions.add(e.trim());
-          break;
-      }
-    });
+    if (signVersionsStr != null) {
+      List<String> versionList = Arrays.asList(signVersionsStr.toLowerCase().split(","));
+      versionList.forEach(e -> {
+        switch (e.trim()) {
+          case "v1":
+            signVersions.add(MAuthVersion.MWS);
+            break;
+          case "v2":
+            signVersions.add(MAuthVersion.MWSV2);
+            break;
+          default:
+            unrecognizedVersions.add(e.trim());
+            break;
+        }
+      });
+    }
+
     if (signVersions.isEmpty())
-      signVersions.add(MAuthVersion.MWSV2);
+      signVersions.add(MAuthVersion.MWS);
 
     if (!unrecognizedVersions.isEmpty())
       logger.warn("unrecognized versions to sign requests: " + unrecognizedVersions.toString());

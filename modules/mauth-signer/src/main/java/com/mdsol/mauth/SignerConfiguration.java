@@ -19,7 +19,7 @@ public class SignerConfiguration implements MAuthConfiguration {
   public static final String MAUTH_SIGN_VERSIONS = MAUTH_SECTION_HEADER + ".sign_versions";
 
   public static final List<MAuthVersion> ALL_SIGN_VERSIONS = Arrays.asList(MAuthVersion.values());
-  public static final List<MAuthVersion> DEFAULT_SIGN_VERSION = Arrays.asList(MAuthVersion.MWSV2);
+  public static final List<MAuthVersion> DEFAULT_SIGN_VERSION = Arrays.asList(MAuthVersion.MWS);
 
   private final UUID appUUID;
   private final transient String privateKey;
@@ -64,24 +64,26 @@ public class SignerConfiguration implements MAuthConfiguration {
   static public List<MAuthVersion> getSignVersions(String signVersionsStr) {
     List<MAuthVersion> signVersions = new ArrayList();
     List<String> unrecognizedVersions = new ArrayList();
-    List<String> versionList = Arrays.asList(signVersionsStr.toLowerCase().split(","));
-    versionList.forEach(e -> {
-      switch (e.trim()) {
-        case "v1":
-          signVersions.add(MAuthVersion.MWS);
-          break;
-        case "v2":
-          signVersions.add(MAuthVersion.MWSV2);
-          break;
-        default:
-          unrecognizedVersions.add(e.trim());
-          break;
-      }
-    });
+    if (signVersionsStr != null) {
+      List<String> versionList = Arrays.asList(signVersionsStr.toLowerCase().split(","));
+      versionList.forEach(e -> {
+        switch (e.trim()) {
+          case "v1":
+            signVersions.add(MAuthVersion.MWS);
+            break;
+          case "v2":
+            signVersions.add(MAuthVersion.MWSV2);
+            break;
+          default:
+            unrecognizedVersions.add(e.trim());
+            break;
+        }
+      });
+    }
 
-    if (signVersions.isEmpty()) return DEFAULT_SIGN_VERSION;
+    if (signVersions.isEmpty()) signVersions.addAll(DEFAULT_SIGN_VERSION);
 
-    if (!unrecognizedVersions.isEmpty())
+    if (unrecognizedVersions.size() > 0)
       logger.warn("unrecognized versions to sign requests: " + unrecognizedVersions.toString());
 
     logger.info("Protocol versions to sign requests: " + signVersions.toString());
