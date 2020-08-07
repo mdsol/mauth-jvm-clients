@@ -7,12 +7,15 @@ This is an implementation of Medidata Authentication Client Signer to sign the H
 . Configuration
 
 ** MAuth uses https://github.com/typesafehub/config[Typesafe Config].
- Create `application.conf` on your classpath with the following content. The mauth_sign_requests option can be set to sign outgoing requests with Comma-separated protocol versions to sign requests. the default is v1. If the both v1 and v2 specified, the client sign requests with both x-mws-xxxxx and mcc-xxxxx headers
+ Create `application.conf` on your classpath with the following content. The sign_versions option can be set to sign outgoing requests with Comma-separated protocol versions to sign requests. the default is v1. If the both v1 and v2 specified, the client sign requests with both x-mws-xxxxx and mcc-xxxxx headers
 
 ----
 app {
     uuid: "aaaa-bbbbb-ccccc-ddddd-eeeee"
     private_key: "avasdfasdfadf"
+}
+mauth {
+    sign_versions: "v1,v2"
 }
 ----
 
