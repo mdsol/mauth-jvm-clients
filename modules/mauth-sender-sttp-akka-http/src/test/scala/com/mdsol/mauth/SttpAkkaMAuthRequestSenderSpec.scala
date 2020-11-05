@@ -47,15 +47,13 @@ class SttpAkkaMAuthRequestSenderSpec extends AsyncWordSpec with BeforeAndAfter w
     requestSender
       .send(req)
       .map { _ =>
-        inside(getRecordedRequests()) {
-          case List(r) => {
-            r.getHeader("content-type") shouldBe "application/json"
-            r.getHeader(TIME_HEADER_V1) shouldBe EPOCH_TIME
-            r.getHeader(AUTH_HEADER_V1) shouldBe s"MWS $APP_UUID_V2:$SIGNATURE_NORMALIZE_PATH_V1"
+        inside(getRecordedRequests()) { case List(r) =>
+          r.getHeader("content-type") shouldBe "application/json"
+          r.getHeader(TIME_HEADER_V1) shouldBe EPOCH_TIME
+          r.getHeader(AUTH_HEADER_V1) shouldBe s"MWS $APP_UUID_V2:$SIGNATURE_NORMALIZE_PATH_V1"
 
-            r.getHeader(TIME_HEADER_V2) shouldBe EPOCH_TIME
-            r.getHeader(AUTH_HEADER_V2) shouldBe s"MWSV2 $APP_UUID_V2:$SIGNATURE_NORMALIZE_PATH_V2;"
-          }
+          r.getHeader(TIME_HEADER_V2) shouldBe EPOCH_TIME
+          r.getHeader(AUTH_HEADER_V2) shouldBe s"MWSV2 $APP_UUID_V2:$SIGNATURE_NORMALIZE_PATH_V2;"
         }
       }
       .unsafeToFuture()
@@ -67,10 +65,8 @@ class SttpAkkaMAuthRequestSenderSpec extends AsyncWordSpec with BeforeAndAfter w
     requestSender
       .send(req)
       .map { _ =>
-        inside(getRecordedRequests()) {
-          case List(r) => {
-            r.getHeader("content-type") shouldBe "text/plain; charset=UTF-8"
-          }
+        inside(getRecordedRequests()) { case List(r) =>
+          r.getHeader("content-type") shouldBe "text/plain; charset=UTF-8"
         }
       }
       .unsafeToFuture()

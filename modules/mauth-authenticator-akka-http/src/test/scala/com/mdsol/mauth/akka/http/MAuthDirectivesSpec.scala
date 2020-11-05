@@ -103,7 +103,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
     }
 
     "reject if request validation timeout passed" in {
-      (client.getPublicKey _).expects(*).never
+      (client.getPublicKey _).expects(*).never()
       //noinspection ConvertibleToMethodValue
       (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
@@ -129,21 +129,21 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
     }
 
     "reject if Authentication header is missing" in {
-      (client.getPublicKey _).expects(appUuid).never
+      (client.getPublicKey _).expects(appUuid).never()
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString)) ~> route ~> check {
-        inside(rejection) {
-          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Authentication`.name
+        inside(rejection) { case MissingHeaderRejection(headerName) =>
+          headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Authentication`.name
         }
       }
     }
 
     "reject if Time header is missing" in {
-      (client.getPublicKey _).expects(appUuid).never
+      (client.getPublicKey _).expects(appUuid).never()
 
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
-        inside(rejection) {
-          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Time`.name
+        inside(rejection) { case MissingHeaderRejection(headerName) =>
+          headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Time`.name
         }
       }
     }
@@ -167,8 +167,8 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
     "reject with a MissingHeaderRejection if header is missing" in {
       Get() ~> route ~> check {
-        inside(rejection) {
-          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Time`.name
+        inside(rejection) { case MissingHeaderRejection(headerName) =>
+          headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Time`.name
         }
       }
     }
@@ -187,10 +187,9 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
     "reject with a MalformedHeaderRejection if Authentication is missing the Prefix MWS" in {
       val wrongHeader = s" $appUuid:$signature"
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, wrongHeader)) ~> route ~> check {
-        inside(rejection) {
-          case MalformedHeaderRejection(actualHeader, actualMsg, _) =>
-            actualHeader shouldBe "x-mws-authentication"
-            actualMsg shouldBe s"x-mws-authentication header supplied with bad format: [$wrongHeader]"
+        inside(rejection) { case MalformedHeaderRejection(actualHeader, actualMsg, _) =>
+          actualHeader shouldBe "x-mws-authentication"
+          actualMsg shouldBe s"x-mws-authentication header supplied with bad format: [$wrongHeader]"
         }
       }
     }
@@ -198,10 +197,9 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
     "reject with a MalformedHeaderRejection if Authentication is missing the App UUID" in {
       val wrongHeader = s"$authPrefix :$signature"
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, wrongHeader)) ~> route ~> check {
-        inside(rejection) {
-          case MalformedHeaderRejection(actualHeader, actualMsg, _) =>
-            actualHeader shouldBe "x-mws-authentication"
-            actualMsg shouldBe s"x-mws-authentication header supplied with bad format: [$wrongHeader]"
+        inside(rejection) { case MalformedHeaderRejection(actualHeader, actualMsg, _) =>
+          actualHeader shouldBe "x-mws-authentication"
+          actualMsg shouldBe s"x-mws-authentication header supplied with bad format: [$wrongHeader]"
         }
       }
     }
@@ -209,18 +207,17 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
     "reject with a MalformedHeaderRejection if Authentication is missing the signature" in {
       val wrongHeader = s"$authPrefix $appUuid:"
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, wrongHeader)) ~> route ~> check {
-        inside(rejection) {
-          case MalformedHeaderRejection(actualHeader, actualMsg, _) =>
-            actualHeader shouldBe "x-mws-authentication"
-            actualMsg shouldBe s"x-mws-authentication header supplied with bad format: [$wrongHeader]"
+        inside(rejection) { case MalformedHeaderRejection(actualHeader, actualMsg, _) =>
+          actualHeader shouldBe "x-mws-authentication"
+          actualMsg shouldBe s"x-mws-authentication header supplied with bad format: [$wrongHeader]"
         }
       }
     }
 
     "reject with a MissingHeaderRejection if header is missing" in {
       Get() ~> route ~> check {
-        inside(rejection) {
-          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Authentication`.name
+        inside(rejection) { case MissingHeaderRejection(headerName) =>
+          headerName.replaceAll("_", "-").toLowerCase shouldEqual `X-MWS-Authentication`.name
         }
       }
     }
@@ -271,7 +268,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
     }
 
     "reject if request validation timeout passed" in {
-      (client.getPublicKey _).expects(*).never
+      (client.getPublicKey _).expects(*).never()
       //noinspection ConvertibleToMethodValue
       (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
@@ -301,34 +298,34 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
     }
 
     "reject if Authentication header is missing" in {
-      (client.getPublicKey _).expects(appUuid).never
+      (client.getPublicKey _).expects(appUuid).never()
 
       Get().withHeaders(RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString)) ~> route ~> check {
-        inside(rejection) {
-          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
+        inside(rejection) { case MissingHeaderRejection(headerName) =>
+          headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
         }
       }
     }
 
     "reject if Time header is missing" in {
-      (client.getPublicKey _).expects(appUuid).never
+      (client.getPublicKey _).expects(appUuid).never()
 
       Get().withHeaders(RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2)) ~> route ~> check {
-        inside(rejection) {
-          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
+        inside(rejection) { case MissingHeaderRejection(headerName) =>
+          headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
         }
       }
     }
 
     "reject if only v1 headers provided" in {
-      (client.getPublicKey _).expects(appUuid).never
+      (client.getPublicKey _).expects(appUuid).never()
 
       Get().withHeaders(
         RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
       ) ~> route ~> check {
-        inside(rejection) {
-          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
+        inside(rejection) { case MissingHeaderRejection(headerName) =>
+          headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
         }
       }
     }
@@ -363,8 +360,8 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
       Get("/").withHeaders(
         RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString)
       ) ~> route ~> check {
-        inside(rejection) {
-          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME
+        inside(rejection) { case MissingHeaderRejection(headerName) =>
+          headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME
         }
       }
     }
@@ -373,8 +370,8 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
       Get("/").withHeaders(
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
       ) ~> route ~> check {
-        inside(rejection) {
-          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_TIME_HEADER_NAME
+        inside(rejection) { case MissingHeaderRejection(headerName) =>
+          headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_TIME_HEADER_NAME
         }
       }
     }
@@ -384,8 +381,8 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader),
         RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString)
       ) ~> route ~> check {
-        inside(rejection) {
-          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_TIME_HEADER_NAME
+        inside(rejection) { case MissingHeaderRejection(headerName) =>
+          headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.X_MWS_TIME_HEADER_NAME
         }
       }
     }
@@ -421,8 +418,8 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
         RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString),
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
       ) ~> route ~> check {
-        inside(rejection) {
-          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
+        inside(rejection) { case MissingHeaderRejection(headerName) =>
+          headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
         }
       }
     }
@@ -432,8 +429,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
         RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2),
         RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, "xyz")
       ) ~> route ~> check {
-        inside(rejection) {
-          case MalformedHeaderRejection("mcc-time", "mcc-time header supplied with bad format: [xyz]", None) =>
+        inside(rejection) { case MalformedHeaderRejection("mcc-time", "mcc-time header supplied with bad format: [xyz]", None) =>
         }
       }
     }
@@ -443,8 +439,8 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
         RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, timeHeader.toString),
         RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)
       ) ~> route ~> check {
-        inside(rejection) {
-          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
+        inside(rejection) { case MissingHeaderRejection(headerName) =>
+          headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
         }
       }
     }
@@ -453,8 +449,8 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
       Get("/").withHeaders(
         RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2)
       ) ~> route ~> check {
-        inside(rejection) {
-          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
+        inside(rejection) { case MissingHeaderRejection(headerName) =>
+          headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
         }
       }
     }
@@ -464,8 +460,8 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
         RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, authHeaderV2),
         RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, timeHeader.toString)
       ) ~> route ~> check {
-        inside(rejection) {
-          case MissingHeaderRejection(headerName) => headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
+        inside(rejection) { case MissingHeaderRejection(headerName) =>
+          headerName.replaceAll("_", "-").toLowerCase shouldEqual MAuthRequest.MCC_TIME_HEADER_NAME
         }
       }
     }

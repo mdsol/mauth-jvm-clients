@@ -13,21 +13,18 @@ import org.bouncycastle.crypto.encodings.PKCS1Encoding
 import org.bouncycastle.crypto.engines.RSAEngine
 import org.bouncycastle.crypto.util.PublicKeyFactory
 
-/**
-  * Signature engine for MAuth Specification. Currently only String
+/** Signature engine for MAuth Specification. Currently only String
   * bodies (entities) are supported in MAuth
   */
 private[mauth] object MAuthSignatureEngine extends StrictLogging {
 
-  /**
-    * Get the timestamp in MAuth standard format
+  /** Get the timestamp in MAuth standard format
     *
     * @return Whole seconds since the epoch
     */
   def getEpochTime: String = (System.currentTimeMillis() / 1000).toString
 
-  /**
-    * Create a signature based on the supplied request parameters
+  /** Create a signature based on the supplied request parameters
     *
     * @param appUUID     The UUID of the application (client) using the API
     * @param httpMethod  The HTTP verb of the request
@@ -41,8 +38,7 @@ private[mauth] object MAuthSignatureEngine extends StrictLogging {
     signature
   }
 
-  /**
-    * Decrypt a message digest using the public key of the third party
+  /** Decrypt a message digest using the public key of the third party
     *
     * @param encDigestBase64 Base 64 encoded encrypted digest
     * @param publicKey       The public key used to decrypt the digest
@@ -65,8 +61,7 @@ private[mauth] object MAuthSignatureEngine extends StrictLogging {
     }
   }
 
-  /**
-    * Convenience method for server side digest authentication
+  /** Convenience method for server side digest authentication
     *
     * @param base64Header    Base 64 value taken directly from the authentication header (minus prefix and UUID)
     * @param signatureString The signature String from the buildSignature method
@@ -75,15 +70,14 @@ private[mauth] object MAuthSignatureEngine extends StrictLogging {
   def compareDigests(base64Header: String, key: PublicKey, signatureString: String): Boolean = {
     decryptFromBase64(base64Header, key) match {
       case Left(CryptoError(msg, Some(e))) => logger.debug(msg + " : " + e.getMessage, e); false
-      case Left(CryptoError(msg, None)) => logger.debug(msg); false
+      case Left(CryptoError(msg, None))    => logger.debug(msg); false
       case Right(headerDigest: Array[Byte]) =>
         val newDigest = asHex(getDigest(signatureString))
         java.util.Arrays.equals(newDigest.getBytes("UTF-8"), headerDigest)
     }
   }
 
-  /**
-    * Convert a plaintext request signature into a hex encoded digest String
+  /** Convert a plaintext request signature into a hex encoded digest String
     *
     * @param signature String to be digested
     * @return Hex encoded digest string
@@ -93,8 +87,7 @@ private[mauth] object MAuthSignatureEngine extends StrictLogging {
     messageDigest.digest(signature.getBytes(StandardCharsets.UTF_8))
   }
 
-  /**
-    * Convenience method
+  /** Convenience method
     *
     * @param array bytes to be converted to hex
     * @return
@@ -102,8 +95,7 @@ private[mauth] object MAuthSignatureEngine extends StrictLogging {
   def asHex(array: Array[Byte]): String =
     Hex.encodeHexString(array)
 
-  /**
-    * Convenience method
+  /** Convenience method
     *
     * @param array characters to be converted to bytes
     * @return

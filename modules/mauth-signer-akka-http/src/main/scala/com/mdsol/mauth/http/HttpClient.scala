@@ -15,8 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait HttpClient extends LazyLogging {
 
-  /**
-    * Generic call using Akka Http using the supplied HttpRequest
+  /** Generic call using Akka Http using the supplied HttpRequest
     *
     * @param request      The HttpRequest to satisfy
     * @param flow         The Stream Flow that determines the response processing and return type of the request
@@ -40,8 +39,7 @@ trait HttpClient extends LazyLogging {
     }
   }
 
-  /**
-    * Generic call using Akka Http using the supplied HttpRequest
+  /** Generic call using Akka Http using the supplied HttpRequest
     *
     * @param request      The Signed HttpRequest to satisfy
     * @param flow         The Stream Flow that determines the response processing and return type of the request
@@ -57,8 +55,7 @@ trait HttpClient extends LazyLogging {
   )(implicit ec: ExecutionContext, system: ActorSystem, materializer: Materializer): Future[T] =
     call[T](fromSignedRequestToHttpRequest(request), flow)
 
-  /**
-    * Raw Http Call semantics reproduced here for convenience
+  /** Raw Http Call semantics reproduced here for convenience
     *
     * @param request      The Http Request
     * @param system       The ActorSystem to use
@@ -69,10 +66,7 @@ trait HttpClient extends LazyLogging {
     Http().singleRequest(request)
   }
 
-  /**
-    *
-    *
-    * @param request      The Signed Http Request
+  /** @param request      The Signed Http Request
     * @param system       The ActorSystem to use
     * @return The Response
     */

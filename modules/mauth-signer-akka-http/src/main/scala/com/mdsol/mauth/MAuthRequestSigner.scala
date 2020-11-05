@@ -10,8 +10,7 @@ import com.mdsol.mauth.util.{CurrentEpochTimeProvider, EpochTimeProvider, MAuthK
 
 import scala.util.{Failure, Success, Try}
 
-/**
-  * Library agnostic representation of the data required for a request signing
+/** Library agnostic representation of the data required for a request signing
   *
   * @param httpMethod The HTTP verb of this API call
   * @param uri        The URI of the API call , (host name and port not included)
@@ -20,8 +19,7 @@ import scala.util.{Failure, Success, Try}
 @deprecated("Use com.mdsol.mauth.models.UnsignedRequest", "3.0.0")
 case class UnsignedRequest(httpMethod: String = "GET", uri: URI, body: Option[String] = None, headers: Map[String, String] = Map.empty)
 
-/**
-  * Library agnostic representation of a signed request, including header data for V1 or V2
+/** Library agnostic representation of a signed request, including header data for V1 or V2
   *
   * @note it includes V2 headers only if V2 only is enabled, otherwise it includes the both V1 and V2 headers
   *
@@ -60,8 +58,7 @@ class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvide
   def this(appUUID: UUID, privateKey: String, epochTimeProvider: EpochTimeProvider, signVersions: List[MAuthVersion]) =
     this(appUUID, MAuthKeysHelper.getPrivateKeyFromString(privateKey), epochTimeProvider, signVersions)
 
-  /**
-    * Sign a request specification and return the desired header signatures
+  /** Sign a request specification and return the desired header signatures
     *
     * @param request The request to sign
     * @return A signed API request or an Error
@@ -70,7 +67,7 @@ class MAuthRequestSigner(appUUID: UUID, privateKey: PrivateKey, epochTimeProvide
   override def signRequest(request: UnsignedRequest): Either[Throwable, SignedRequest] = {
     val body = request.body match {
       case Some(entityBody) => entityBody
-      case None => ""
+      case None             => ""
     }
 
     Try(generateRequestHeaders(request.httpMethod, request.uri.getPath, body)) match {

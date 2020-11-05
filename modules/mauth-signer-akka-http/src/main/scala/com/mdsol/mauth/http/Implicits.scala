@@ -14,7 +14,7 @@ object Implicits {
 
   implicit def fromSignedRequestToHttpRequest(sr: SignedRequest): HttpRequest = {
     val entityBody: String = sr.req.body match {
-      case None => ""
+      case None            => ""
       case Some(s: String) => s
     }
     val contentType: Option[String] = extractContentTypeFromHeaders(sr.req.headers)
@@ -28,17 +28,15 @@ object Implicits {
 
   implicit class NewSignedRequestOps(val signedRequest: NewSignedRequest) extends AnyVal {
 
-    /**
-      * Create an akka-http request from a [[com.mdsol.mauth.models.SignedRequest]]
+    /** Create an akka-http request from a [[com.mdsol.mauth.models.SignedRequest]]
       */
     def toAkkaHttpRequest: HttpRequest = {
       val contentType: Option[String] = extractContentTypeFromHeaders(signedRequest.req.headers)
       val headersWithoutContentType: Map[String, String] = removeContentTypeFromHeaders(signedRequest.req.headers)
 
       val allHeaders: immutable.Seq[RawHeader] = (headersWithoutContentType ++ signedRequest.mauthHeaders).toList
-        .map {
-          case (name, value) =>
-            RawHeader(name, value)
+        .map { case (name, value) =>
+          RawHeader(name, value)
         }
 
       HttpRequest(
@@ -67,7 +65,7 @@ object Implicits {
       case Some(contentType) =>
         ContentType.parse(contentType) match {
           case Right(parsedContentType) => HttpEntity(parsedContentType, entityBody)
-          case _ => HttpEntity(DEFAULT_CONTENT_TYPE, entityBody)
+          case _                        => HttpEntity(DEFAULT_CONTENT_TYPE, entityBody)
         }
       case None => HttpEntity(DEFAULT_CONTENT_TYPE, entityBody)
     }
@@ -80,7 +78,7 @@ object Implicits {
           case Right(parsedContentType) =>
             parsedContentType match {
               case nonBinary: ContentType.NonBinary => HttpEntity(nonBinary, entityBody)
-              case binary => HttpEntity(binary, entityBody.getBytes)
+              case binary                           => HttpEntity(binary, entityBody.getBytes)
             }
           case _ => HttpEntity(DEFAULT_CONTENT_TYPE, entityBody)
         }

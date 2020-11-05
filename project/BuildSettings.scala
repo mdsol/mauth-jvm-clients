@@ -12,8 +12,8 @@ import xerial.sbt.Sonatype._
 
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
-  val scala212 = "2.12.11"
-  val scala213 = "2.13.2"
+  val scala212 = "2.12.12"
+  val scala213 = "2.13.3"
 
   lazy val basicSettings = Seq(
     homepage := Some(new URL("https://github.com/mdsol/mauth-jvm-clients")),
@@ -93,8 +93,8 @@ object BuildSettings {
     mainClass in assembly := Some("com.mdsol.mauth.proxy.ProxyServer"),
     assemblyJarName in assembly := s"mauth-proxy-${version.value}.jar",
     assemblyMergeStrategy in assembly := {
-      case "logback.xml" => MergeStrategy.first
-      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+      case "logback.xml"                        => MergeStrategy.first
+      case PathList("META-INF", xs @ _*)        => MergeStrategy.discard
       case x if x.endsWith("module-info.class") => MergeStrategy.discard
       case x =>
         val oldStrategy = (assemblyMergeStrategy in assembly).value

@@ -12,8 +12,7 @@ final case class UnsignedRequest(
 
 object UnsignedRequest {
 
-  /**
-    * Create an unsigned request from a string body. The body bytes derived will be the
+  /** Create an unsigned request from a string body. The body bytes derived will be the
     * UTF-8 encoded bytes of the body.
     */
   def fromStringBodyUtf8(
