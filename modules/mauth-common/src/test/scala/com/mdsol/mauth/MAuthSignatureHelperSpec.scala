@@ -193,9 +193,8 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
       Array("/%2a%80", "/%2A%80"),
       Array("/example/", "/example/")
     )
-    for (i <- 0 to testCases.length - 1) {
+    for (i <- 0 to testCases.length - 1)
       MAuthSignatureHelper.normalizePath(testCases(i)(0)) shouldBe testCases(i)(1)
-    }
   }
 
   it should "correctly encode, sort query parameters" in {
@@ -208,8 +207,7 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
       Array("a=b&a=c&a=a", "a=a&a=b&a=c"),
       Array("", "")
     )
-    for (i <- 0 to testCases.length - 1) {
+    for (i <- 0 to testCases.length - 1)
       MAuthSignatureHelper.generateEncryptedQueryParams(testCases(i)(0)) shouldBe testCases(i)(1)
-    }
   }
 }

@@ -27,8 +27,7 @@ case object MdsolAuthFailedRejection extends AuthorizationFailedRejection with R
 
 trait MAuthDirectives extends StrictLogging {
 
-  /**
-    * Directive to wrap all routes that require MAuth authentication check.
+  /** Directive to wrap all routes that require MAuth authentication check.
     * Should only be used once per route branch, as any HttpEntity is forced
     * to be strict, and serialised into the request.
     *
@@ -67,7 +66,7 @@ trait MAuthDirectives extends StrictLogging {
                   )(ec, requestValidationTimeout)
                 ).flatMap[Unit] {
                   case Success(true) => pass
-                  case _ => reject(MdsolAuthFailedRejection)
+                  case _             => reject(MdsolAuthFailedRejection)
                 }
               case _ =>
                 logger.error(s"MAUTH: Non-Strict Entity in Request")
@@ -82,8 +81,7 @@ trait MAuthDirectives extends StrictLogging {
   @deprecated("This method is for Mauth V1 protocol only", "3.0.0")
   val extractMwsAuthenticationHeader: Directive1[String] = headerValueByName(`X-MWS-Authentication`.name)
 
-  /**
-    * Extracts the detail information of the HTTP request header X-MWS-Authentication
+  /** Extracts the detail information of the HTTP request header X-MWS-Authentication
     *
     * @return Directive1[AuthHeaderDetail] of Mauth V1 protocol
     *         If invalidated, the request is rejected with a MalformedHeaderRejection.
@@ -101,8 +99,7 @@ trait MAuthDirectives extends StrictLogging {
       }
     }
 
-  /**
-    * Extracts the validated value of the HTTP request header X-MWS-Time
+  /** Extracts the validated value of the HTTP request header X-MWS-Time
     *
     * @return Directive1[Long] of Mauth V1 protocol
     *         If invalidated, the request is rejected with a MalformedHeaderRejection.
@@ -126,9 +123,8 @@ trait MAuthDirectives extends StrictLogging {
     if (str.startsWith("MWS ")) {
       str.replaceFirst("MWS ", "").split(":").toList match {
         case List(uuid, hash) =>
-          try {
-            Some(AuthHeaderDetail(UUID.fromString(uuid), hash))
-          } catch {
+          try Some(AuthHeaderDetail(UUID.fromString(uuid), hash))
+          catch {
             case NonFatal(e) =>
               logger.error(s"Bad format for UUID in authentication header: $str", e)
               None
@@ -152,8 +148,7 @@ trait MAuthDirectives extends StrictLogging {
     request.getHeader(headerName).map[String](f).orElse("")
   }
 
-  /**
-    * Extracts the authentication header value of the HTTP request header for latest version of Mauth
+  /** Extracts the authentication header value of the HTTP request header for latest version of Mauth
     *
     * @param v2OnlyAuthenticate
     *        the flag to specify if Mauth V2 only authenticate or not.

@@ -7,8 +7,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait Authenticator {
 
-  /**
-    * Performs the validation of an incoming HTTP request.
+  /** Performs the validation of an incoming HTTP request.
     *
     * The validation process consists of recreating the mAuth hashed signature from the request data
     * and comparing it to the decrypted hash signature from the mAuth header.
@@ -18,8 +17,7 @@ trait Authenticator {
     */
   def authenticate(mAuthRequest: MAuthRequest)(implicit ex: ExecutionContext, requestValidationTimeout: Duration): Future[Boolean]
 
-  /**
-    * check if mauth v2 only authenticate is enabled or not
+  /** check if mauth v2 only authenticate is enabled or not
     * @return True or false identifying if mauth v2 only is enabled or not.
     */
   def isV2OnlyAuthenticate: Boolean

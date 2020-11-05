@@ -26,8 +26,8 @@ class MAuthSttpSignerImpl(signer: Signer) extends MAuthSttpSigner {
       case NoBody => Array.empty[Byte]
       case body: BasicRequestBody =>
         body match {
-          case strBody: StringBody => strBody.s.getBytes(StandardCharsets.UTF_8)
-          case ByteArrayBody(bytes, _) => bytes
+          case strBody: StringBody           => strBody.s.getBytes(StandardCharsets.UTF_8)
+          case ByteArrayBody(bytes, _)       => bytes
           case ByteBufferBody(byteBuffer, _) => byteBuffer.array()
           // $COVERAGE-OFF$
           case _: InputStreamBody =>
@@ -51,9 +51,8 @@ class MAuthSttpSignerImpl(signer: Signer) extends MAuthSttpSigner {
         bodyBytes
       )
       .asScala
-      .map {
-        case (k, v) =>
-          Header(k, v)
+      .map { case (k, v) =>
+        Header(k, v)
       }
       .toList
     request.headers(mauthHeaders: _*)

@@ -24,8 +24,8 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
-class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner)(
-  implicit ec: ExecutionContext,
+class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner)(implicit
+  ec: ExecutionContext,
   system: ActorSystem,
   materializer: Materializer
 ) extends ClientPublicKeyProvider
@@ -34,8 +34,7 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
   implicit val guavaCache: GuavaCache[Option[PublicKey]] = GuavaCache[Option[PublicKey]]
   protected val mapper = new ObjectMapper
 
-  /**
-    * Returns the associated public key for a given application UUID.
+  /** Returns the associated public key for a given application UUID.
     *
     * @param appUUID , UUID of the application for which we want to retrieve its public key.
     * @return { @link PublicKey} registered in MAuth for the application with given appUUID.
@@ -64,16 +63,14 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
               promise.success(None)
             }
           }
-          .recover {
-            case error =>
-              logger.error("Request to get MAuth public key couldn't be signed", error)
-              promise.success(None)
+          .recover { case error =>
+            logger.error("Request to get MAuth public key couldn't be signed", error)
+            promise.success(None)
           }
       }
-      .recover {
-        case error =>
-          logger.error("Request to get MAuth public key couldn't be completed", error)
-          promise.success(None)
+      .recover { case error =>
+        logger.error("Request to get MAuth public key couldn't be completed", error)
+        promise.success(None)
       }
     promise.future
   }

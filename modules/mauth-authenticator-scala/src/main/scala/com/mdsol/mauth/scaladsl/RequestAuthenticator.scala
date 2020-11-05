@@ -22,8 +22,7 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
   def this(publicKeyProvider: ClientPublicKeyProvider, epochTimeProvider: EpochTimeProvider) =
     this(publicKeyProvider, epochTimeProvider, false)
 
-  /**
-    * Performs the validation of an incoming HTTP request.
+  /** Performs the validation of an incoming HTTP request.
     *
     * The validation process consists of recreating the mAuth hashed signature from the request data
     * and comparing it to the decrypted hash signature from the mAuth header.
@@ -68,8 +67,7 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
     promise.future
   }
 
-  /**
-    * check if mauth v2 only authenticate is enabled or not
+  /** check if mauth v2 only authenticate is enabled or not
     * @return True or false identifying if v2 only authenticate is enabled or not.
     */
   override val isV2OnlyAuthenticate: Boolean = v2OnlyAuthenticate
@@ -122,9 +120,8 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
     )
 
     // Compare the decrypted signature and the recreated signature hashes.
-    try {
-      MAuthSignatureHelper.verifyRSA(unencryptedRequestString, mAuthRequest.getRequestSignature, clientPublicKey)
-    } catch {
+    try MAuthSignatureHelper.verifyRSA(unencryptedRequestString, mAuthRequest.getRequestSignature, clientPublicKey)
+    catch {
       case ex: Exception =>
         val message = "MAuth request validation failed for V2."
         logger.error(message, ex)

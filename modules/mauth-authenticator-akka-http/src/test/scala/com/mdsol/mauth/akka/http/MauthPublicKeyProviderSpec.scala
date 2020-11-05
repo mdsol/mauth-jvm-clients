@@ -96,7 +96,7 @@ class MauthPublicKeyProviderSpec
 
     whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) {
       case Some(_) => fail("returned a public key, expected None")
-      case None =>
+      case None    =>
     }
   }
 

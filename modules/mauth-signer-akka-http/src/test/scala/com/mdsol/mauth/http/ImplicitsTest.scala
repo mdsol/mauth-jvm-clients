@@ -13,7 +13,7 @@ import org.scalatest.wordspec.AnyWordSpec
 
 class ImplicitsTest extends AnyWordSpec with Matchers {
 
-  val EMPTY_BODY = "".getBytes(StandardCharsets.UTF_8)
+  val EMPTY_BODY: Array[Byte] = "".getBytes(StandardCharsets.UTF_8)
 
   val mauthHeadersMap = Map(
     MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> "",
@@ -56,23 +56,23 @@ class ImplicitsTest extends AnyWordSpec with Matchers {
     "Generate a POST HttpRequest should created an entity with the application/json content type" +
       " and remove content type from headers" in {
 
-      val headers = Map("Content-Type" -> ContentTypes.`application/json`.toString(), "custom_header" -> "custom_value")
-      val signedRequest = SignedRequest(
-        UnsignedRequest(httpMethod = "POST", uri = new URI("/"), headers = headers, body = Some("Request body")),
-        "x-mws-authentication-value",
-        "x-mws-time-value"
-      )
+        val headers = Map("Content-Type" -> ContentTypes.`application/json`.toString(), "custom_header" -> "custom_value")
+        val signedRequest = SignedRequest(
+          UnsignedRequest(httpMethod = "POST", uri = new URI("/"), headers = headers, body = Some("Request body")),
+          "x-mws-authentication-value",
+          "x-mws-time-value"
+        )
 
-      val request = fromSignedRequestToHttpRequest(signedRequest)
-      request.entity should be(HttpEntity(ContentTypes.`application/json`, "Request body"))
-      request.headers.toString() should be(
-        List(
-          RawHeader("custom_header", "custom_value"),
-          RawHeader("x-mws-authentication", "x-mws-authentication-value"),
-          RawHeader("x-mws-time", "x-mws-time-value")
-        ).toString()
-      )
-    }
+        val request = fromSignedRequestToHttpRequest(signedRequest)
+        request.entity should be(HttpEntity(ContentTypes.`application/json`, "Request body"))
+        request.headers.toString() should be(
+          List(
+            RawHeader("custom_header", "custom_value"),
+            RawHeader("x-mws-authentication", "x-mws-authentication-value"),
+            RawHeader("x-mws-time", "x-mws-time-value")
+          ).toString()
+        )
+      }
 
     "Generate a POST HttpRequest should created an entity with plain/text when no content type specified" in {
       val signedRequest = SignedRequest(UnsignedRequest(httpMethod = "POST", uri = new URI("/"), headers = Map.empty, body = Some("")), "", "")
@@ -122,23 +122,23 @@ class ImplicitsTest extends AnyWordSpec with Matchers {
     "Generate a POST HttpRequest should created an entity with the application/json content type" +
       " and remove content type from headers" in {
 
-      val headers = Map("Content-Type" -> ContentTypes.`application/json`.toString(), "custom_header" -> "custom_value")
-      val signedRequest = NewSignedRequest(
-        NewUnsignedRequest.fromStringBodyUtf8(httpMethod = "POST", uri = new URI("/"), body = "Request body", headers = headers),
-        mauthHeaders = mauthHeadersWithValue
-      )
+        val headers = Map("Content-Type" -> ContentTypes.`application/json`.toString(), "custom_header" -> "custom_value")
+        val signedRequest = NewSignedRequest(
+          NewUnsignedRequest.fromStringBodyUtf8(httpMethod = "POST", uri = new URI("/"), body = "Request body", headers = headers),
+          mauthHeaders = mauthHeadersWithValue
+        )
 
-      val request = NewSignedRequestOps(signedRequest)
-      request.toAkkaHttpRequest.headers.toString() should be(
-        List(
-          RawHeader("custom_header", "custom_value"),
-          RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, "mcc-time-value"),
-          RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, "mcc-authentication-value"),
-          RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, "x-mws-time-value"),
-          RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, "x-mws-authentication-value")
-        ).toString()
-      )
-    }
+        val request = NewSignedRequestOps(signedRequest)
+        request.toAkkaHttpRequest.headers.toString() should be(
+          List(
+            RawHeader("custom_header", "custom_value"),
+            RawHeader(MAuthRequest.MCC_TIME_HEADER_NAME, "mcc-time-value"),
+            RawHeader(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, "mcc-authentication-value"),
+            RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, "x-mws-time-value"),
+            RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, "x-mws-authentication-value")
+          ).toString()
+        )
+      }
 
     "Generate a POST HttpRequest should created an entity with plain/text when no content type specified" in {
       val signedRequest: NewSignedRequest =
