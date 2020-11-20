@@ -107,17 +107,19 @@ public class RequestAuthenticator implements Authenticator {
     PublicKey clientPublicKey = clientPublicKeyProvider.getPublicKey(mAuthRequest.getAppUUID());
     if (mAuthRequest.getMauthVersion().equals(MAuthVersion.MWSV2)) {
       boolean v2IsValidated = validateSignatureV2(mAuthRequest, clientPublicKey);
+
+      // Do not fallback validate the signature for v1
+      // when require to authenticate v2 only or the payload is InputStream
       if (v2OnlyAuthenticate) {
         return v2IsValidated;
-      }
-      else if (v2IsValidated) {
+      } else if (v2IsValidated) {
         return v2IsValidated;
-      }
-      else {
+      } else if (mAuthRequest.getInputStream() != null) {
+        return v2IsValidated;
+      } else {
         return fallbackValidateSignatureV1(mAuthRequest, clientPublicKey);
       }
-    }
-    else {
+    } else {
       return validateSignatureV1(mAuthRequest, clientPublicKey);
     }
 
@@ -131,7 +133,6 @@ public class RequestAuthenticator implements Authenticator {
 
   // check signature for V1
   private boolean validateSignatureV1 (MAuthRequest mAuthRequest, PublicKey clientPublicKey ) {
-
     logAuthenticationRequest(mAuthRequest);
 
     // Decrypt the signature with public key from requesting application.
@@ -139,12 +140,7 @@ public class RequestAuthenticator implements Authenticator {
 
     // Recreate the plain text signature, based on the incoming request parameters, and hash it.
     try {
-      byte[] messageDigest_bytes = MAuthSignatureHelper.generateUnencryptedSignature(
-          mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(), mAuthRequest.getResourcePath(),
-          mAuthRequest.getMessagePayload(),
-          String.valueOf(mAuthRequest.getRequestTime())
-      );
-      messageDigest_bytes = MAuthSignatureHelper.getHexEncodedDigestedString(messageDigest_bytes).getBytes(StandardCharsets.UTF_8);
+      byte[] messageDigest_bytes = MAuthSignatureHelper.generateDigestedMessageV1(mAuthRequest).getBytes(StandardCharsets.UTF_8);
 
       // Compare the decrypted signature and the recreated signature hashes.
       // If both match, the request was signed by the requesting application and is valid.
@@ -158,17 +154,10 @@ public class RequestAuthenticator implements Authenticator {
 
   // check signature for V2
   private boolean validateSignatureV2 (MAuthRequest mAuthRequest, PublicKey clientPublicKey ) {
-
     logAuthenticationRequest(mAuthRequest);
 
     // Recreate the plain text signature, based on the incoming request parameters, and hash it.
-    String unencryptedRequestString =
-        MAuthSignatureHelper.generateStringToSignV2(
-            mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(), mAuthRequest.getResourcePath(),
-            mAuthRequest.getQueryParameters(),
-            mAuthRequest.getMessagePayload(),
-            String.valueOf(mAuthRequest.getRequestTime())
-        );
+    String unencryptedRequestString = MAuthSignatureHelper.generateStringToSignV2(mAuthRequest);
 
     // Compare the decrypted signature and the recreated signature hashes.
     try {
@@ -191,6 +180,7 @@ public class RequestAuthenticator implements Authenticator {
           mAuthRequest.getResourcePath(),
           mAuthRequest.getQueryParameters()
       );
+      mAuthRequestV1.setInputStream(mAuthRequest.getInputStream());
       isValidated = validateSignatureV1(mAuthRequestV1, clientPublicKey);
       if (isValidated) {
         logger.warn("Completed successful authentication attempt after fallback to V1");

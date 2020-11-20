@@ -6,6 +6,8 @@ import com.mdsol.mauth.SignerConfiguration;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import com.mdsol.mauth.util.CurrentEpochTimeProvider;
 import com.mdsol.mauth.util.EpochTimeProvider;
+
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.ParseException;
 import org.apache.http.client.HttpClient;
@@ -59,19 +61,30 @@ public class HttpClientRequestSigner extends DefaultSigner {
    */
   public void signRequest(HttpUriRequest request) throws MAuthSigningException {
     String httpVerb = request.getMethod();
+    String path = request.getURI().getRawPath();
+    String query = request.getURI().getRawQuery();
     byte[] body = "".getBytes(StandardCharsets.UTF_8);
 
+    Map<String, String> mauthHeaders;
     if (request instanceof HttpEntityEnclosingRequest) {
       try {
-        body = EntityUtils.toByteArray(((HttpEntityEnclosingRequest) request).getEntity());
+        HttpEntity httpEntity = ((HttpEntityEnclosingRequest) request).getEntity();
+        if(httpEntity.isStreaming()) {
+          mauthHeaders = generateRequestHeaders(httpVerb, path, httpEntity.getContent(), query);
+        } else {
+          body = EntityUtils.toByteArray(((HttpEntityEnclosingRequest) request).getEntity());
+          mauthHeaders = generateRequestHeaders(httpVerb, path, body, query);
+        }
       } catch (ParseException | IOException e) {
         throw new MAuthSigningException(e);
       }
+    } else {
+      mauthHeaders = generateRequestHeaders(httpVerb, path, body, query);
     }
 
-    Map<String, String> mauthHeaders = generateRequestHeaders(httpVerb, request.getURI().getRawPath(), body, request.getURI().getRawQuery());
     for (String key : mauthHeaders.keySet()) {
       request.addHeader(key, mauthHeaders.get(key));
     }
   }
+
 }

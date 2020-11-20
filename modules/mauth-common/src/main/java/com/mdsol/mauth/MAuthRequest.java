@@ -4,6 +4,7 @@ import com.mdsol.mauth.util.MAuthHeadersHelper;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
@@ -40,6 +41,7 @@ public class MAuthRequest {
   private final MAuthVersion mauthVersion;
   private String xmwsSignature = null;
   private String xmwsTime = null;
+  private InputStream inputStream = null;
 
   /**
    * Create a Mauth request
@@ -150,6 +152,14 @@ public class MAuthRequest {
     return mauthVersion;
   }
 
+  public void setInputStream(InputStream inputStream) {
+    this.inputStream = inputStream;
+  }
+
+  public InputStream getInputStream() {
+    return inputStream;
+  }
+
   private void validateNotBlank(String field, String fieldNameInExceptionMessage) {
     if (StringUtils.isBlank(field)) {
       throw new IllegalArgumentException(
@@ -172,6 +182,7 @@ public class MAuthRequest {
     private String resourcePath;
     private String queryParameters;
     private TreeMap<String, String> mauthHeaders = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER);
+    private InputStream inputStream = null;
 
     public static Builder get() {
       return new Builder();
@@ -204,6 +215,11 @@ public class MAuthRequest {
 
     public Builder withQueryParameters(String queryParameters) {
       this.queryParameters = queryParameters;
+      return this;
+    }
+
+    public Builder withInputStream(InputStream inputStream) {
+      this.inputStream = inputStream;
       return this;
     }
 
@@ -241,6 +257,7 @@ public class MAuthRequest {
 
       MAuthRequest mAuthRequest = new MAuthRequest(authenticationHeaderValue, messagePayload,
           httpMethod, timeHeaderValue, resourcePath, queryParameters);
+      mAuthRequest.setInputStream(inputStream);
 
       if (mAuthRequest.getMauthVersion().equals(MAuthVersion.MWSV2)) {
         mAuthRequest.setXmwsSignature(mauthHeaders.get(X_MWS_AUTHENTICATION_HEADER_NAME));

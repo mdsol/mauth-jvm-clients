@@ -58,6 +58,8 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
                   v2IsValidated
                 else if (v2IsValidated)
                   v2IsValidated
+                else if (mAuthRequest.getInputStream != null)
+                  v2IsValidated
                 else
                   fallbackValidateSignatureV1(mAuthRequest, clientPublicKey)
             }
@@ -86,14 +88,7 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
     val decryptedSignature = MAuthSignatureHelper.decryptSignature(clientPublicKey, mAuthRequest.getRequestSignature)
     // Recreate the plain text signature, based on the incoming request parameters, and hash it.
     try {
-      val unencryptedRequestBytes = MAuthSignatureHelper.generateUnencryptedSignature(
-        mAuthRequest.getAppUUID,
-        mAuthRequest.getHttpMethod,
-        mAuthRequest.getResourcePath,
-        mAuthRequest.getMessagePayload,
-        String.valueOf(mAuthRequest.getRequestTime)
-      )
-      val messageDigest_bytes = MAuthSignatureHelper.getHexEncodedDigestedString(unencryptedRequestBytes).getBytes(StandardCharsets.UTF_8)
+      val messageDigest_bytes = MAuthSignatureHelper.generateDigestedMessageV1(mAuthRequest).getBytes(StandardCharsets.UTF_8)
 
       // Compare the decrypted signature and the recreated signature hashes.
       // If both match, the request was signed by the requesting application and is valid.
@@ -110,14 +105,7 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
   private def validateSignatureV2(mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): Boolean = {
     logAuthenticationRequest(mAuthRequest)
     // Recreate the plain text signature, based on the incoming request parameters, and hash it.
-    val unencryptedRequestString = MAuthSignatureHelper.generateStringToSignV2(
-      mAuthRequest.getAppUUID,
-      mAuthRequest.getHttpMethod,
-      mAuthRequest.getResourcePath,
-      mAuthRequest.getQueryParameters,
-      mAuthRequest.getMessagePayload,
-      String.valueOf(mAuthRequest.getRequestTime)
-    )
+    val unencryptedRequestString = MAuthSignatureHelper.generateStringToSignV2(mAuthRequest)
 
     // Compare the decrypted signature and the recreated signature hashes.
     try MAuthSignatureHelper.verifyRSA(unencryptedRequestString, mAuthRequest.getRequestSignature, clientPublicKey)
@@ -141,6 +129,7 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
         mAuthRequest.getResourcePath,
         mAuthRequest.getQueryParameters
       )
+      mAuthRequestV1.setInputStream(mAuthRequest.getInputStream)
       isValidated = validateSignatureV1(mAuthRequestV1, clientPublicKey)
       if (isValidated) {
         logger.warn("Completed successful authentication attempt after fallback to V1")

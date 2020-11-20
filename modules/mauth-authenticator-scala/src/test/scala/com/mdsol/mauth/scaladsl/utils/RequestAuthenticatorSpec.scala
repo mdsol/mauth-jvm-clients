@@ -136,6 +136,32 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     whenReady(authenticator.authenticate(getRequestWithWrongV2Signature))(validationResult => validationResult shouldBe false)
   }
 
+  "When payload is inputstream" should "authenticate a valid request for V1" in {
+    val client: ClientPublicKeyProvider = mock[ClientPublicKeyProvider]
+    (client.getPublicKey _).expects(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID)).returns(Future(Some(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY2))))
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE.toLong + 3)
+    val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
+
+    whenReady(authenticator.authenticate(getRequestWithStreamBodyV1))(validationResult => validationResult shouldBe true)
+  }
+
+  it should "authenticate a valid request for V2" in {
+    val client: ClientPublicKeyProvider = mock[ClientPublicKeyProvider]
+    (client.getPublicKey _).expects(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID)).returns(Future(Some(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY2))))
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE.toLong + 5)
+    val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
+
+    whenReady(authenticator.authenticate(getRequestWithStreamBodyV2))(validationResult => validationResult shouldBe true)
+  }
+
+  it should "fail validating the request with the validated V1 headers and wrong V2 signature" in clientContext { client =>
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
+    val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
+
+    whenReady(authenticator.authenticate(getRequestWithStreamBodyAndWrongV2Signature))(validationResult => validationResult shouldBe false)
+  }
+
   private def clientContext(test: ClientPublicKeyProvider => Any): Unit = {
     val client: ClientPublicKeyProvider = mock[ClientPublicKeyProvider]
     (client.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(Future(Some(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))))

@@ -1,5 +1,6 @@
 package com.mdsol.mauth.util;
 
+import com.mdsol.mauth.MAuthRequest;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
@@ -13,8 +14,12 @@ import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -84,6 +89,35 @@ public class MAuthSignatureHelper {
     return baos.toByteArray();
   }
 
+  @Deprecated
+  public static String generateDigestedMessageV1(MAuthRequest mAuthRequest) throws IOException {
+    logger.debug("Digest unencryptedSignature for V1");
+    String messageDigest;
+    if (mAuthRequest.getInputStream() == null) {
+      byte[]  messageDigest_bytes = MAuthSignatureHelper.generateUnencryptedSignature(
+          mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(), mAuthRequest.getResourcePath(),
+          mAuthRequest.getMessagePayload(),
+          String.valueOf(mAuthRequest.getRequestTime())
+      );
+      messageDigest = MAuthSignatureHelper.getHexEncodedDigestedString(messageDigest_bytes);
+    } else {
+      SequenceInputStream stream = createSequenceInputStreamV1(mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(),
+          mAuthRequest.getResourcePath(), mAuthRequest.getInputStream(), String.valueOf(mAuthRequest.getRequestTime()));
+      messageDigest = MAuthSignatureHelper.getHexEncodedDigestedString(stream);;
+    }
+    return messageDigest;
+  }
+
+  @Deprecated
+  public static SequenceInputStream createSequenceInputStreamV1(UUID appUUID, String httpMethod, String resourceUrl, InputStream requestBody, String epochTime) {
+    String part1 = httpMethod + "\n" + resourceUrl + "\n";
+    InputStream part2 = requestBody;
+    String part3 = "\n" + appUUID.toString() + "\n" + epochTime;
+    SequenceInputStream stream = new SequenceInputStream(new ByteArrayInputStream(part1.getBytes(StandardCharsets.UTF_8)),
+        new SequenceInputStream(part2, new ByteArrayInputStream(part3.getBytes(StandardCharsets.UTF_8))));
+    return stream;
+  }
+
   /**
    * Generate string_to_sign for Mauth V2 protocol
    * @param appUUID: application uuid
@@ -100,12 +134,55 @@ public class MAuthSignatureHelper {
   public static String generateStringToSignV2(UUID appUUID, String httpMethod, String resourcePath,
                                               String queryParameters, byte[] requestBody, String epochTime) throws MAuthSigningException{
     logger.debug("Generating String to sign for V2");
+    String bodyDigest = getHexEncodedDigestedString(requestBody);
+    return stringToSignV2(appUUID, httpMethod, resourcePath, queryParameters, bodyDigest, epochTime);
+  }
 
+  /**
+   * Generate string_to_sign for Mauth V2 protocol
+   * @param appUUID: application uuid
+   * @param httpMethod: Http_Verb
+   * @param resourcePath: resource_path (Only the path segment of the URL; first "/" is included)
+   * @param queryParameters: request parameters string
+   * @param requestBody: request InputStream
+   * @param epochTime: current seconds since Epoch
+   * @return String
+   *   httpMethod + "\n" + normalized_resourcePath + "\n" + requestBody_digest + "\n" + app_uuid + "\n" + epochTime + "\n" + encoded_queryParameters
+   *
+   * @throws MAuthSigningException when generating Unencrypted Signature errors
+   */
+  public static String generateStringToSignV2(UUID appUUID, String httpMethod, String resourcePath,
+                                              String queryParameters, InputStream requestBody, String epochTime) throws MAuthSigningException{
+    logger.debug("Generating String to sign for V2");
+    String bodyDigest = getHexEncodedDigestedString(requestBody);
+    return stringToSignV2(appUUID, httpMethod, resourcePath, queryParameters, bodyDigest, epochTime);
+  }
+
+  /**
+   * Generate string_to_sign for Mauth V2 protocol
+   * @param mAuthRequest: Data from the incoming HTTP request
+   * @return String
+   *   httpMethod + "\n" + normalized_resourcePath + "\n" + requestBody_digest + "\n" + app_uuid + "\n" + epochTime + "\n" + encoded_queryParameters
+   *
+   * @throws MAuthSigningException when generating Unencrypted Signature errors
+   */
+  public static String generateStringToSignV2(MAuthRequest mAuthRequest) throws MAuthSigningException{
+    logger.debug("Generating String to sign for V2");
+    String epochTime = String.valueOf(mAuthRequest.getRequestTime());
     String bodyDigest;
-    String encryptedQueryParams;
-    bodyDigest = getHexEncodedDigestedString(requestBody);
-    encryptedQueryParams = generateEncryptedQueryParams(queryParameters);
+    if (mAuthRequest.getInputStream() != null) {
+      bodyDigest = getHexEncodedDigestedString(mAuthRequest.getInputStream());
+    } else {
+      bodyDigest = getHexEncodedDigestedString(mAuthRequest.getMessagePayload());
+    }
+    return stringToSignV2(mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(),
+        mAuthRequest.getResourcePath(), mAuthRequest.getQueryParameters(), bodyDigest, epochTime);
+   }
 
+  private static String stringToSignV2(UUID appUUID, String httpMethod,
+      String resourcePath, String queryParameters, String bodyDigest, String epochTime) {
+    logger.debug("Generating String to sign for V2");
+    String encryptedQueryParams = generateEncryptedQueryParams(queryParameters);
     return httpMethod.toUpperCase() + "\n" + normalizePath(resourcePath) + "\n" + bodyDigest + "\n"
         + appUUID.toString() + "\n" + epochTime + "\n" + encryptedQueryParams;
   }
@@ -145,6 +222,25 @@ public class MAuthSignatureHelper {
   @Deprecated
   public static String encryptSignature(PrivateKey privateKey, byte[] unencryptedData) throws IOException, CryptoException {
     String hexEncodedString = getHexEncodedDigestedString(unencryptedData);
+    return encryptSignaturePKCS1(privateKey, hexEncodedString);
+  }
+
+  /**
+   * Generate base64 encoded signature for Mauth V1 protocol
+   *
+   * @deprecated
+   *   This is used for Mauth V1 protocol,
+   *   replaced by {@link #encryptSignatureRSA(PrivateKey privateKey, String unencryptedString)} for Mauth V2 protocol
+   *
+   * @param privateKey the private key of the identity whose signature is going to be generated.
+   * @param inputStream the input stream be signed
+   * @return String of Base64 decode the digital signature
+   * @throws IOException
+   * @throws CryptoException
+   */
+  @Deprecated
+  public static String encryptSignature(PrivateKey privateKey, InputStream inputStream) throws IOException, CryptoException {
+    String hexEncodedString = getHexEncodedDigestedString(inputStream);
     return encryptSignaturePKCS1(privateKey, hexEncodedString);
   }
 
@@ -200,6 +296,27 @@ public class MAuthSignatureHelper {
       byte[] digestedString = md.digest(unencryptedData);
       // Convert to hex
       return Hex.encodeHexString(digestedString);
+    } catch (NoSuchAlgorithmException ex) {
+      final String message = "Invalid algorithm or security provider.";
+      logger.error(message, ex);
+      throw new MAuthSigningException(message, ex);
+    }
+  }
+
+  public static String getHexEncodedDigestedString(InputStream inputStream) {
+    try {
+      // Get digest
+      MessageDigest md = MessageDigest.getInstance("SHA-512");
+      try (DigestInputStream dis = new DigestInputStream(inputStream, md)) {
+        while (dis.read() != -1) {
+        }
+        byte[] digestedBytes = md.digest();
+        return Hex.encodeHexString(digestedBytes);
+      } catch (IOException e) {
+        final String message = "Invalid MessageDigestInputStream.";
+        logger.error(message, e);
+        throw new MAuthSigningException(message, e);
+      }
     } catch (NoSuchAlgorithmException ex) {
       final String message = "Invalid algorithm or security provider.";
       logger.error(message, ex);

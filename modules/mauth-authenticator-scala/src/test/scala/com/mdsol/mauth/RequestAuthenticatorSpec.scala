@@ -121,4 +121,29 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     authenticatorV2.authenticate(getRequestWithWrongV2Signature) shouldBe false
   }
 
+  "When payload is inputstream" should "authenticate a valid request for V1" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE.toLong + 3)
+    (mockClientPublicKeyProvider.getPublicKey _)
+      .expects(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID))
+      .returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY2))
+    authenticator.authenticate(getRequestWithStreamBodyV1) shouldBe true
+  }
+
+  it should "authenticate a valid request for V2" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE.toLong + 5)
+    (mockClientPublicKeyProvider.getPublicKey _)
+      .expects(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID))
+      .returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY2))
+    authenticator.authenticate(getRequestWithStreamBodyV2) shouldBe true
+  }
+
+  it should "fail validating request with validated V1 headers and wrong V2 signature" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_MCC_TIME_HEADER_VALUE.toLong + 3)
+    (mockClientPublicKeyProvider.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))
+    authenticator.authenticate(getRequestWithStreamBodyAndWrongV2Signature) shouldBe false
+  }
+
 }
