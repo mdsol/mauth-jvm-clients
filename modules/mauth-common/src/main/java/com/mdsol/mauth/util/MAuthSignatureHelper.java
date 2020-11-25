@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
@@ -113,8 +114,8 @@ public class MAuthSignatureHelper {
     String part1 = httpMethod + "\n" + resourceUrl + "\n";
     InputStream part2 = requestBody;
     String part3 = "\n" + appUUID.toString() + "\n" + epochTime;
-    SequenceInputStream stream = new SequenceInputStream(new ByteArrayInputStream(part1.getBytes(StandardCharsets.UTF_8)),
-        new SequenceInputStream(part2, new ByteArrayInputStream(part3.getBytes(StandardCharsets.UTF_8))));
+    SequenceInputStream stream = new SequenceInputStream(new ByteArrayInputStream(part1.getBytes(StandardCharsets.ISO_8859_1)),
+        new SequenceInputStream(part2, new ByteArrayInputStream(part3.getBytes(StandardCharsets.ISO_8859_1))));
     return stream;
   }
 
