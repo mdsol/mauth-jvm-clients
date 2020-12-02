@@ -193,7 +193,7 @@ trait RequestAuthenticatorBaseSpec extends AnyFlatSpec with BeforeAndAfterAll wi
       .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER_V1)
       .withTimeHeaderValue(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE)
       .withHttpMethod(TestFixtures.REQUEST_METHOD_V2)
-      .withInputStream(new java.io.ByteArrayInputStream(TestFixtures.BINARY_FILE_BODY))
+      .withBodyInputStream(new java.io.ByteArrayInputStream(TestFixtures.BINARY_FILE_BODY))
       .withResourcePath(TestFixtures.REQUEST_PATH_V2)
       .withQueryParameters(TestFixtures.REQUEST_QUERY_PARAMETERS_V2)
       .build
@@ -204,7 +204,7 @@ trait RequestAuthenticatorBaseSpec extends AnyFlatSpec with BeforeAndAfterAll wi
       .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER_V2)
       .withTimeHeaderValue(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE)
       .withHttpMethod(TestFixtures.REQUEST_METHOD_V2)
-      .withInputStream(new java.io.ByteArrayInputStream(TestFixtures.BINARY_FILE_BODY))
+      .withBodyInputStream(new java.io.ByteArrayInputStream(TestFixtures.BINARY_FILE_BODY))
       .withResourcePath(TestFixtures.REQUEST_PATH_V2)
       .withQueryParameters(TestFixtures.REQUEST_QUERY_PARAMETERS_V2)
       .build
@@ -214,7 +214,7 @@ trait RequestAuthenticatorBaseSpec extends AnyFlatSpec with BeforeAndAfterAll wi
     MAuthRequest.Builder.get
       .withHttpMethod(CLIENT_REQUEST_METHOD)
       .withMauthHeaders(CLIENT_REQUEST_HEADERS2)
-      .withInputStream(new java.io.ByteArrayInputStream(CLIENT_REQUEST_BODY.getBytes(StandardCharsets.UTF_8)))
+      .withBodyInputStream(new java.io.ByteArrayInputStream(CLIENT_REQUEST_BODY.getBytes(StandardCharsets.UTF_8)))
       .withResourcePath(CLIENT_REQUEST_PATH)
       .withQueryParameters("")
       .build

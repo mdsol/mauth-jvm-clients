@@ -58,8 +58,6 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
                   v2IsValidated
                 else if (v2IsValidated)
                   v2IsValidated
-                else if (mAuthRequest.getInputStream != null)
-                  v2IsValidated
                 else
                   fallbackValidateSignatureV1(mAuthRequest, clientPublicKey)
             }
@@ -129,7 +127,6 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
         mAuthRequest.getResourcePath,
         mAuthRequest.getQueryParameters
       )
-      mAuthRequestV1.setInputStream(mAuthRequest.getInputStream)
       isValidated = validateSignatureV1(mAuthRequestV1, clientPublicKey)
       if (isValidated) {
         logger.warn("Completed successful authentication attempt after fallback to V1")

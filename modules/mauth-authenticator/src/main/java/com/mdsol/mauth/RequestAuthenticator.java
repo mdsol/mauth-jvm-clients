@@ -114,8 +114,6 @@ public class RequestAuthenticator implements Authenticator {
         return v2IsValidated;
       } else if (v2IsValidated) {
         return v2IsValidated;
-      } else if (mAuthRequest.getInputStream() != null) {
-        return v2IsValidated;
       } else {
         return fallbackValidateSignatureV1(mAuthRequest, clientPublicKey);
       }
@@ -180,7 +178,6 @@ public class RequestAuthenticator implements Authenticator {
           mAuthRequest.getResourcePath(),
           mAuthRequest.getQueryParameters()
       );
-      mAuthRequestV1.setInputStream(mAuthRequest.getInputStream());
       isValidated = validateSignatureV1(mAuthRequestV1, clientPublicKey);
       if (isValidated) {
         logger.warn("Completed successful authentication attempt after fallback to V1");

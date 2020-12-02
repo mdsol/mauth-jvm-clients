@@ -4,6 +4,7 @@ import com.mdsol.mauth.util.MAuthHeadersHelper;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Map;
@@ -41,7 +42,7 @@ public class MAuthRequest {
   private final MAuthVersion mauthVersion;
   private String xmwsSignature = null;
   private String xmwsTime = null;
-  private InputStream inputStream = null;
+  private InputStream bodyInputStream = null;
 
   /**
    * Create a Mauth request
@@ -75,8 +76,40 @@ public class MAuthRequest {
    */
   public MAuthRequest(String authenticationHeaderValue, byte[] messagePayload, String httpMethod,
       String timeHeaderValue, String resourcePath, String queryParameters) {
+    this(authenticationHeaderValue, messagePayload, null, httpMethod, timeHeaderValue, resourcePath, queryParameters);
+  }
+
+  /**
+   * Create a Mauth request
+   *
+   * @param authenticationHeaderValue the string value of Mauth authentication Header
+   * @param bodyInputStream InputStream of request payload
+   * @param httpMethod the string value of Http_Verb
+   * @param timeHeaderValue the string value of Mauth time Header
+   * @param resourcePath resource_url_path (no host, port or query string; first "/" is included)
+   * @param queryParameters the string value of request parameters
+   */
+  public MAuthRequest(String authenticationHeaderValue, InputStream bodyInputStream, String httpMethod,
+                      String timeHeaderValue, String resourcePath, String queryParameters) {
+    this(authenticationHeaderValue, null, bodyInputStream, httpMethod, timeHeaderValue, resourcePath, queryParameters);
+  }
+
+  /**
+   * Create a Mauth request
+   *
+   * @param authenticationHeaderValue the string value of Mauth authentication Header
+   * @param messagePayload byte[] of request payload
+   * @param bodyInputStream InputStream of request payload
+   * @param httpMethod the string value of Http_Verb
+   * @param timeHeaderValue the string value of Mauth time Header
+   * @param resourcePath resource_url_path (no host, port or query string; first "/" is included)
+   * @param queryParameters the string value of request parameters
+   */
+  private MAuthRequest(String authenticationHeaderValue, byte[] messagePayload, InputStream bodyInputStream, String httpMethod,
+                      String timeHeaderValue, String resourcePath, String queryParameters) {
     validateNotBlank(authenticationHeaderValue, "Authentication header value");
     validateNotBlank(timeHeaderValue, "Time header value");
+    validatePayload(messagePayload, bodyInputStream);
 
     UUID appUUID = MAuthHeadersHelper.getAppUUIDFromAuthenticationHeader(authenticationHeaderValue);
     String requestSignature =
@@ -97,11 +130,19 @@ public class MAuthRequest {
     this.appUUID = appUUID;
     this.requestSignature = requestSignature;
     this.messagePayload = messagePayload;
+    this.bodyInputStream = bodyInputStream;
     this.httpMethod = httpMethod;
     this.requestTime = requestTime;
     this.resourcePath = resourcePath;
     this.queryParameters = queryParameters;
     this.mauthVersion = MAuthHeadersHelper.getMauthVersion(authenticationHeaderValue);
+
+    // we always use inputStream for Auth,
+    // wrap byte array in ByteArrayInputStream if bodyInputStream doesn't set
+    if (bodyInputStream == null) {
+      if (messagePayload == null) messagePayload = new byte[0];
+      this.bodyInputStream = new ByteArrayInputStream(messagePayload);
+    }
   }
 
   public UUID getAppUUID() {
@@ -152,12 +193,12 @@ public class MAuthRequest {
     return mauthVersion;
   }
 
-  public void setInputStream(InputStream inputStream) {
-    this.inputStream = inputStream;
+  public void setBodyInputStream(InputStream bodyInputStream) {
+    this.bodyInputStream = bodyInputStream;
   }
 
-  public InputStream getInputStream() {
-    return inputStream;
+  public InputStream getBodyInputStream() {
+    return bodyInputStream;
   }
 
   private void validateNotBlank(String field, String fieldNameInExceptionMessage) {
@@ -173,6 +214,12 @@ public class MAuthRequest {
     }
   }
 
+  private void validatePayload(byte[] messagePayload, InputStream bodyInputStream) {
+    if (bodyInputStream != null && messagePayload != null && messagePayload.length > 0) {
+      throw new IllegalArgumentException("Request payload should be either InputStream or byte[].");
+    }
+  }
+
   public static final class Builder {
 
     private String authenticationHeaderValue;
@@ -182,7 +229,7 @@ public class MAuthRequest {
     private String resourcePath;
     private String queryParameters;
     private TreeMap<String, String> mauthHeaders = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER);
-    private InputStream inputStream = null;
+    private InputStream bodyInputStream = null;
 
     public static Builder get() {
       return new Builder();
@@ -218,8 +265,8 @@ public class MAuthRequest {
       return this;
     }
 
-    public Builder withInputStream(InputStream inputStream) {
-      this.inputStream = inputStream;
+    public Builder withBodyInputStream(InputStream bodyInputStream) {
+      this.bodyInputStream = bodyInputStream;
       return this;
     }
 
@@ -256,8 +303,7 @@ public class MAuthRequest {
       }
 
       MAuthRequest mAuthRequest = new MAuthRequest(authenticationHeaderValue, messagePayload,
-          httpMethod, timeHeaderValue, resourcePath, queryParameters);
-      mAuthRequest.setInputStream(inputStream);
+          bodyInputStream, httpMethod, timeHeaderValue, resourcePath, queryParameters);
 
       if (mAuthRequest.getMauthVersion().equals(MAuthVersion.MWSV2)) {
         mAuthRequest.setXmwsSignature(mauthHeaders.get(X_MWS_AUTHENTICATION_HEADER_NAME));

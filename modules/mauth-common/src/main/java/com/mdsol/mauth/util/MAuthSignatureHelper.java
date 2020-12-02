@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
@@ -93,20 +92,9 @@ public class MAuthSignatureHelper {
   @Deprecated
   public static String generateDigestedMessageV1(MAuthRequest mAuthRequest) throws IOException {
     logger.debug("Digest unencryptedSignature for V1");
-    String messageDigest;
-    if (mAuthRequest.getInputStream() == null) {
-      byte[]  messageDigest_bytes = MAuthSignatureHelper.generateUnencryptedSignature(
-          mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(), mAuthRequest.getResourcePath(),
-          mAuthRequest.getMessagePayload(),
-          String.valueOf(mAuthRequest.getRequestTime())
-      );
-      messageDigest = MAuthSignatureHelper.getHexEncodedDigestedString(messageDigest_bytes);
-    } else {
-      SequenceInputStream stream = createSequenceInputStreamV1(mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(),
-          mAuthRequest.getResourcePath(), mAuthRequest.getInputStream(), String.valueOf(mAuthRequest.getRequestTime()));
-      messageDigest = MAuthSignatureHelper.getHexEncodedDigestedString(stream);;
-    }
-    return messageDigest;
+    SequenceInputStream stream = createSequenceInputStreamV1(mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(),
+          mAuthRequest.getResourcePath(), mAuthRequest.getBodyInputStream(), String.valueOf(mAuthRequest.getRequestTime()));
+    return MAuthSignatureHelper.getHexEncodedDigestedString(stream);
   }
 
   @Deprecated
@@ -170,12 +158,7 @@ public class MAuthSignatureHelper {
   public static String generateStringToSignV2(MAuthRequest mAuthRequest) throws MAuthSigningException{
     logger.debug("Generating String to sign for V2");
     String epochTime = String.valueOf(mAuthRequest.getRequestTime());
-    String bodyDigest;
-    if (mAuthRequest.getInputStream() != null) {
-      bodyDigest = getHexEncodedDigestedString(mAuthRequest.getInputStream());
-    } else {
-      bodyDigest = getHexEncodedDigestedString(mAuthRequest.getMessagePayload());
-    }
+    String bodyDigest = getHexEncodedDigestedString(mAuthRequest.getBodyInputStream());
     return stringToSignV2(mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(),
         mAuthRequest.getResourcePath(), mAuthRequest.getQueryParameters(), bodyDigest, epochTime);
    }
