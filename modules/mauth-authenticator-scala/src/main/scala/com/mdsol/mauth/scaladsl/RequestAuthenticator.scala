@@ -118,7 +118,9 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
 
   private def fallbackValidateSignatureV1(mAuthRequest: MAuthRequest, clientPublicKey: PublicKey) = {
     var isValidated = false
-    if (mAuthRequest.getXmwsSignature != null && mAuthRequest.getXmwsTime != null) {
+    if (mAuthRequest.getMessagePayload == null) {
+      logger.warn("V1 authentication fallback is not available because the full request body is not available in memory.")
+    } else if (mAuthRequest.getXmwsSignature != null && mAuthRequest.getXmwsTime != null) {
       val mAuthRequestV1 = new MAuthRequest(
         mAuthRequest.getXmwsSignature,
         mAuthRequest.getMessagePayload,

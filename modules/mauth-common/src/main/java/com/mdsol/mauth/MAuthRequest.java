@@ -34,7 +34,7 @@ public class MAuthRequest {
 
   private final UUID appUUID;
   private final String requestSignature;
-  private final byte[] messagePayload;
+  private byte[] messagePayload;
   private final String httpMethod;
   private final long requestTime;
   private final String resourcePath;
@@ -109,7 +109,6 @@ public class MAuthRequest {
                       String timeHeaderValue, String resourcePath, String queryParameters) {
     validateNotBlank(authenticationHeaderValue, "Authentication header value");
     validateNotBlank(timeHeaderValue, "Time header value");
-    validatePayload(messagePayload, bodyInputStream);
 
     UUID appUUID = MAuthHeadersHelper.getAppUUIDFromAuthenticationHeader(authenticationHeaderValue);
     String requestSignature =
@@ -120,17 +119,12 @@ public class MAuthRequest {
     validateNotBlank(httpMethod, "Http method");
     validateNotBlank(resourcePath, "Resource path");
     validateRequestTime(requestTime);
-    if (messagePayload == null) {
-      messagePayload = new byte[] {};
-    }
     if (queryParameters == null) {
       queryParameters = "";
     }
 
     this.appUUID = appUUID;
     this.requestSignature = requestSignature;
-    this.messagePayload = messagePayload;
-    this.bodyInputStream = bodyInputStream;
     this.httpMethod = httpMethod;
     this.requestTime = requestTime;
     this.resourcePath = resourcePath;
@@ -138,10 +132,15 @@ public class MAuthRequest {
     this.mauthVersion = MAuthHeadersHelper.getMauthVersion(authenticationHeaderValue);
 
     // we always use inputStream for Auth,
-    // wrap byte array in ByteArrayInputStream if bodyInputStream doesn't set
-    if (bodyInputStream == null) {
-      if (messagePayload == null) messagePayload = new byte[0];
+    // wrap byte array in ByteArrayInputStream if bodyInputStream wasn't provided explicitly
+    validatePayload(messagePayload, bodyInputStream);
+    if (messagePayload != null) {
+      // Use our body bytes as inputStream
+      this.messagePayload = messagePayload;
       this.bodyInputStream = new ByteArrayInputStream(messagePayload);
+    } else {
+      this.messagePayload = null;
+      this.bodyInputStream = bodyInputStream;
     }
   }
 
@@ -154,7 +153,10 @@ public class MAuthRequest {
   }
 
   public byte[] getMessagePayload() {
-    return Arrays.copyOf(messagePayload, messagePayload.length);
+    if (messagePayload != null)
+      return Arrays.copyOf(messagePayload, messagePayload.length);
+    else
+      return null;
   }
 
   public String getHttpMethod() {
@@ -215,8 +217,8 @@ public class MAuthRequest {
   }
 
   private void validatePayload(byte[] messagePayload, InputStream bodyInputStream) {
-    if (bodyInputStream != null && messagePayload != null && messagePayload.length > 0) {
-      throw new IllegalArgumentException("Request payload should be either InputStream or byte[].");
+    if (bodyInputStream != null && messagePayload != null) {
+      throw new IllegalArgumentException("Only one of bodyInputStream and messagePayload should be provided.");
     }
   }
 
@@ -300,6 +302,10 @@ public class MAuthRequest {
           authenticationHeaderValue = mauthHeaders.get(X_MWS_AUTHENTICATION_HEADER_NAME);
           timeHeaderValue = mauthHeaders.get(X_MWS_TIME_HEADER_NAME);
         }
+      }
+
+      if (messagePayload == null && bodyInputStream == null) {
+        messagePayload = new byte[] {};
       }
 
       MAuthRequest mAuthRequest = new MAuthRequest(authenticationHeaderValue, messagePayload,

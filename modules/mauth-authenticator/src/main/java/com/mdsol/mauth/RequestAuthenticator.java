@@ -169,7 +169,9 @@ public class RequestAuthenticator implements Authenticator {
 
   private boolean fallbackValidateSignatureV1(MAuthRequest mAuthRequest, PublicKey clientPublicKey) {
     boolean isValidated = false;
-    if (mAuthRequest.getXmwsSignature() != null && mAuthRequest.getXmwsTime() != null) {
+    if (mAuthRequest.getMessagePayload() == null) {
+      logger.warn("V1 authentication fallback is not available because the full request body is not available in memory.");
+    } else if (mAuthRequest.getXmwsSignature() != null && mAuthRequest.getXmwsTime() != null) {
       MAuthRequest mAuthRequestV1 = new MAuthRequest(
           mAuthRequest.getXmwsSignature(),
           mAuthRequest.getMessagePayload(),
