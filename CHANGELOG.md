@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [6.0.0] - 2020-12-04
 ### Added
 - Accept request payload as java.io.InputStream for Java. Since InputStream in general can only be consumed once, here are limitations of using stream payload:
   - mauth-signer generates the signature for v2 only even the both v1 and v2 are required.
