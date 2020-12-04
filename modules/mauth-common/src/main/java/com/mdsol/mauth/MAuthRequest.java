@@ -133,7 +133,15 @@ public class MAuthRequest {
 
     // we always use inputStream for Auth,
     // wrap byte array in ByteArrayInputStream if bodyInputStream wasn't provided explicitly
-    validatePayload(messagePayload, bodyInputStream);
+    if (bodyInputStream != null && messagePayload != null) {
+      throw new IllegalArgumentException("Only one of bodyInputStream and messagePayload should be provided.");
+    }
+
+    if (messagePayload == null && bodyInputStream == null) {
+      // Set payload to empty byte[]
+      messagePayload = new byte[] {};
+    }
+
     if (messagePayload != null) {
       // Use our body bytes as inputStream
       this.messagePayload = messagePayload;
@@ -195,10 +203,6 @@ public class MAuthRequest {
     return mauthVersion;
   }
 
-  public void setBodyInputStream(InputStream bodyInputStream) {
-    this.bodyInputStream = bodyInputStream;
-  }
-
   public InputStream getBodyInputStream() {
     return bodyInputStream;
   }
@@ -213,12 +217,6 @@ public class MAuthRequest {
   private void validateRequestTime(long requestTime) {
     if (requestTime <= 0) {
       throw new IllegalArgumentException("Request time cannot be negative or 0.");
-    }
-  }
-
-  private void validatePayload(byte[] messagePayload, InputStream bodyInputStream) {
-    if (bodyInputStream != null && messagePayload != null) {
-      throw new IllegalArgumentException("Only one of bodyInputStream and messagePayload should be provided.");
     }
   }
 
@@ -302,10 +300,6 @@ public class MAuthRequest {
           authenticationHeaderValue = mauthHeaders.get(X_MWS_AUTHENTICATION_HEADER_NAME);
           timeHeaderValue = mauthHeaders.get(X_MWS_TIME_HEADER_NAME);
         }
-      }
-
-      if (messagePayload == null && bodyInputStream == null) {
-        messagePayload = new byte[] {};
       }
 
       MAuthRequest mAuthRequest = new MAuthRequest(authenticationHeaderValue, messagePayload,
