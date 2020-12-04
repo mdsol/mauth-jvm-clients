@@ -158,7 +158,7 @@ class MAuthSignatureHelperSpec extends AnyFlatSpec with Matchers {
       CLIENT_REQUEST_METHOD_V2,
       CLIENT_REQUEST_PATH_V2,
       CLIENT_REQUEST_QUERY_PARAMETERS_V2,
-      Array.empty,
+      Array[Byte](),
       TEST_EPOCH_TIME_V2
     )
     MAuthSignatureHelper.encryptSignatureRSA(TEST_PRIVATE_KEY, testString) shouldBe TestFixtures.SIGNATURE_V2_EMPTY

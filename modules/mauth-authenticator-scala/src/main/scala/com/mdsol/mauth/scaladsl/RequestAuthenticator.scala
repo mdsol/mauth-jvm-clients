@@ -86,14 +86,7 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
     val decryptedSignature = MAuthSignatureHelper.decryptSignature(clientPublicKey, mAuthRequest.getRequestSignature)
     // Recreate the plain text signature, based on the incoming request parameters, and hash it.
     try {
-      val unencryptedRequestBytes = MAuthSignatureHelper.generateUnencryptedSignature(
-        mAuthRequest.getAppUUID,
-        mAuthRequest.getHttpMethod,
-        mAuthRequest.getResourcePath,
-        mAuthRequest.getMessagePayload,
-        String.valueOf(mAuthRequest.getRequestTime)
-      )
-      val messageDigest_bytes = MAuthSignatureHelper.getHexEncodedDigestedString(unencryptedRequestBytes).getBytes(StandardCharsets.UTF_8)
+      val messageDigest_bytes = MAuthSignatureHelper.generateDigestedMessageV1(mAuthRequest).getBytes(StandardCharsets.UTF_8)
 
       // Compare the decrypted signature and the recreated signature hashes.
       // If both match, the request was signed by the requesting application and is valid.
@@ -110,14 +103,7 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
   private def validateSignatureV2(mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): Boolean = {
     logAuthenticationRequest(mAuthRequest)
     // Recreate the plain text signature, based on the incoming request parameters, and hash it.
-    val unencryptedRequestString = MAuthSignatureHelper.generateStringToSignV2(
-      mAuthRequest.getAppUUID,
-      mAuthRequest.getHttpMethod,
-      mAuthRequest.getResourcePath,
-      mAuthRequest.getQueryParameters,
-      mAuthRequest.getMessagePayload,
-      String.valueOf(mAuthRequest.getRequestTime)
-    )
+    val unencryptedRequestString = MAuthSignatureHelper.generateStringToSignV2(mAuthRequest)
 
     // Compare the decrypted signature and the recreated signature hashes.
     try MAuthSignatureHelper.verifyRSA(unencryptedRequestString, mAuthRequest.getRequestSignature, clientPublicKey)
@@ -132,7 +118,9 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
 
   private def fallbackValidateSignatureV1(mAuthRequest: MAuthRequest, clientPublicKey: PublicKey) = {
     var isValidated = false
-    if (mAuthRequest.getXmwsSignature != null && mAuthRequest.getXmwsTime != null) {
+    if (mAuthRequest.getMessagePayload == null) {
+      logger.warn("V1 authentication fallback is not available because the full request body is not available in memory.")
+    } else if (mAuthRequest.getXmwsSignature != null && mAuthRequest.getXmwsTime != null) {
       val mAuthRequestV1 = new MAuthRequest(
         mAuthRequest.getXmwsSignature,
         mAuthRequest.getMessagePayload,
