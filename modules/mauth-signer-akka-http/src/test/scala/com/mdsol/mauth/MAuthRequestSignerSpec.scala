@@ -67,15 +67,18 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers with HttpClient w
   val unsignedRequest: NewUnsignedRequest =
     NewUnsignedRequest.fromStringBodyUtf8(httpMethod = "GET", uri = URI_EMPTY_PATH_WITH_PARAM, body = SIMPLE_REQUEST_BODY, headers = Map.empty)
   "MAuthRequestSigner" should "add time header to a request for V1" in {
-    signer.signRequest(simpleUnsignedRequest).right.get.timeHeader shouldBe EXPECTED_TIME_HEADER_1
+    signer.signRequest(simpleUnsignedRequest).getOrElse(fail("signRequest unexpectedly failed")).timeHeader shouldBe EXPECTED_TIME_HEADER_1
   }
 
   it should "add authentication header to a request for V1" in {
-    signer.signRequest(simpleUnsignedRequest).right.get.authHeader shouldBe EXPECTED_AUTH_NO_BODY_V1
+    signer.signRequest(simpleUnsignedRequest).getOrElse(fail("signRequest unexpectedly failed")).authHeader shouldBe EXPECTED_AUTH_NO_BODY_V1
   }
 
   it should "add authentication header to a request with body for V1" in {
-    signer.signRequest(UnsignedRequest(uri = URI_EMPTY_PATH, body = Some(SIMPLE_REQUEST_BODY))).right.get.authHeader shouldBe EXPECTED_AUTH_SIMPLE_BODY_V1
+    signer
+      .signRequest(UnsignedRequest(uri = URI_EMPTY_PATH, body = Some(SIMPLE_REQUEST_BODY)))
+      .getOrElse(fail("signRequest unexpectedly failed"))
+      .authHeader shouldBe EXPECTED_AUTH_SIMPLE_BODY_V1
   }
 
   it should "add authentication header to a request" in {

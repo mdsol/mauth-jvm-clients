@@ -3,10 +3,7 @@ package com.mdsol.mauth
 import java.net.URI
 import java.security.Security
 import java.util.UUID
-
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.Source
-import akka.util.ByteString
 import cats.effect.IO
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
@@ -14,9 +11,9 @@ import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import org.scalatest.wordspec.AsyncWordSpec
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.mdsol.mauth.util.EpochTimeProvider
-import sttp.client.{basicRequest, SttpBackend}
+import sttp.client3.{basicRequest, SttpBackend}
 import sttp.model.{MediaType, Uri}
-import sttp.client.akkahttp.AkkaHttpBackend
+import sttp.client3.akkahttp.AkkaHttpBackend
 
 import scala.jdk.CollectionConverters._
 import org.scalatest.Inside._
@@ -26,6 +23,8 @@ import com.mdsol.mauth.test.utils.TestFixtures
 import com.mdsol.mauth.test.utils.TestFixtures._
 import com.mdsol.mauth.util.MAuthKeysHelper.getPrivateKeyFromString
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import sttp.capabilities.WebSockets
+import sttp.capabilities.akka.AkkaStreams
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -36,7 +35,7 @@ class SttpAkkaMAuthRequestSenderSpec extends AsyncWordSpec with BeforeAndAfter w
   val wiremockServer: WireMockServer = new WireMockServer(wireMockConfig.dynamicPort())
 
   val actorSystem = ActorSystem(this.getClass.getSimpleName)
-  val sttpBackend: SttpBackend[Future, Source[ByteString, Any], Nothing] = AkkaHttpBackend.usingActorSystem(actorSystem)
+  val sttpBackend: SttpBackend[Future, AkkaStreams with WebSockets] = AkkaHttpBackend.usingActorSystem(actorSystem)
 
   "correctly send auth signatures and content-type header" in {
     val req = basicRequest

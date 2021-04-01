@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Dependency update
+  - Update sttp to 3.x from 2.x. Note this is a new major sttp version with new package prefix `sttp.client3`
+  - Remove silencer as 2.12.13 also got configurable warnings now
+  
+## Removed
+- Removed mauth-proxy. The library we depend on (littleproxy) has been unmaintained for a long time
+  and there are better mauth proxy alternatives like https://github.com/mdsol/go-mauth-proxy
+
 ## [6.0.0] - 2020-12-04
 ### Added
 - Accept request payload as java.io.InputStream for Java. Since InputStream in general can only be consumed once, here are limitations of using stream payload:

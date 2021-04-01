@@ -81,7 +81,7 @@ lazy val `mauth-signer-akka-http` = scalaModuleProject("mauth-signer-akka-http")
     publishSettings,
     libraryDependencies ++=
       Dependencies.provided(akkaHttp, akkaStream).map(withExclusions) ++
-        Dependencies.compile(scalaLogging).map(withExclusions) ++
+        Dependencies.compile(scalaLogging, scalaLibCompat).map(withExclusions) ++
         Dependencies.example(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.test(scalaMock, scalaTest, wiremock).map(withExclusions)
   )
@@ -144,49 +144,6 @@ lazy val `mauth-authenticator-akka-http` = scalaModuleProject("mauth-authenticat
         Dependencies.test(scalaTest, scalaMock, wiremock) ++ Dependencies.test(akkaHttpTestKit: _*).map(withExclusions)
   )
 
-lazy val `mauth-proxy` = scalaModuleProject("mauth-proxy")
-  .enablePlugins(DockerPlugin)
-  .enablePlugins(EcrPlugin)
-  .dependsOn(`mauth-signer-apachehttp`)
-  .settings(
-    publishSettings,
-    assemblySettings,
-    mimaPreviousArtifacts := Set(),
-    // apachehttp uses Guava 27, but littleproxy is compiled against Guava 20 calling now-removed method,
-    // throwing java.lang.NoSuchMethodError. Overriding the dep to use v20 seems to work...for now...
-    // (This is fine - mauth-proxy is only a helper utility devs/testers run locally)
-    dependencyOverrides += "com.google.guava" % "guava" % "20.0",
-    crossScalaVersions := Seq(scala213), // This is an application so only need to be published once
-    crossPaths := false,
-    name := "mauth-proxy",
-    libraryDependencies ++=
-      Dependencies.compile(jacksonDataBind, littleProxy, logbackClassic, logbackCore).map(withExclusions) ++
-        Dependencies.test(scalaMock, scalaTest, wiremock).map(withExclusions),
-    dockerfile in docker := {
-      val artifact: File = assembly.value
-      val artifactTargetPath = s"/app/${artifact.name}"
-
-      new Dockerfile {
-        from("java")
-        add(artifact, artifactTargetPath)
-        entryPoint("java", "-jar", artifactTargetPath)
-      }
-    },
-    region in Ecr := Region.getRegion(Regions.US_EAST_1),
-    repositoryName in Ecr := s"mdsol/${name.value.replaceAll("-", "_")}",
-    localDockerImage in Ecr := s"${(repositoryName in Ecr).value}:local",
-    imageNames in docker := Seq(ImageName((localDockerImage in Ecr).value)),
-    repositoryTags in Ecr := {
-      if (mainBranch.value) {
-        Seq("latest", version.value)
-      } else {
-        Seq(currentBranch.value)
-      }
-    },
-    push in Ecr := ((push in Ecr) dependsOn (createRepository in Ecr, login in Ecr, DockerKeys.docker)).value,
-    buildOptions in docker := BuildOptions(cache = false)
-  )
-
 lazy val `mauth-jvm-clients` = (project in file("."))
   .aggregate(
     `mauth-authenticator`,
@@ -194,7 +151,6 @@ lazy val `mauth-jvm-clients` = (project in file("."))
     `mauth-authenticator-akka-http`,
     `mauth-authenticator-apachehttp`,
     `mauth-common`,
-    `mauth-proxy`,
     `mauth-signer`,
     `mauth-signer-akka-http`,
     `mauth-signer-sttp`,
