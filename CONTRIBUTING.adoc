@@ -8,6 +8,17 @@ $ cd mauth-jvm-clients
 $ git checkout develop
 ----
 
+This repo contains the submodule `mauth-protocol-test-suite` so requires a flag when initially cloning in order to clone and init submodules.
+----
+$ git clone --recurse-submodules git@github.com:mdsol/mauth-jvm-clients.git
+----
+
+If you have already cloned before the submodule was introduced, then run:
+----
+$ cd mauth-protocol-test-suite
+$ git submodule update --init
+----
+
 == Git Hooks
 Install desired hook(s)
 
