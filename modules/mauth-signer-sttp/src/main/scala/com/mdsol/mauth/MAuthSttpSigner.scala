@@ -7,11 +7,11 @@ import java.util.UUID
 import com.mdsol.mauth.util.EpochTimeProvider
 
 import scala.jdk.CollectionConverters._
-import sttp.client.{BasicRequestBody, ByteArrayBody, ByteBufferBody, FileBody, InputStreamBody, MultipartBody, NoBody, Request, StreamBody, StringBody}
+import sttp.client3.{BasicRequestBody, ByteArrayBody, ByteBufferBody, FileBody, InputStreamBody, MultipartBody, NoBody, Request, StreamBody, StringBody}
 import sttp.model.Header
 
 trait MAuthSttpSigner {
-  def signSttpRequest[T](request: Request[T, Nothing]): Request[T, Nothing]
+  def signSttpRequest[T](request: Request[T, Any]): Request[T, Any]
 }
 
 /** Sign an sttp request by adding MAuth headers to the request */
@@ -21,7 +21,7 @@ class MAuthSttpSignerImpl(signer: Signer) extends MAuthSttpSigner {
     this(new DefaultSigner(appUuid, privateKey, epochTimeProvider, signVersions))
   }
 
-  def signSttpRequest[T](request: Request[T, Nothing]): Request[T, Nothing] = {
+  def signSttpRequest[T](request: Request[T, Any]): Request[T, Any] = {
     val bodyBytes: Array[Byte] = request.body match {
       case NoBody => Array.empty[Byte]
       case body: BasicRequestBody =>

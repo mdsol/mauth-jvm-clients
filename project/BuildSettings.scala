@@ -2,9 +2,7 @@ import java.util
 
 import com.jsuereth.sbtpgp.SbtPgp.autoImport._
 import sbt.Keys._
-import sbt.{url, _}
-import sbtassembly.AssemblyKeys._
-import sbtassembly.{MergeStrategy, PathList}
+import sbt._
 import sbtrelease.ReleasePlugin.autoImport._
 import smartrelease.SmartReleasePlugin.ReleaseSteps
 import xerial.sbt.Sonatype.SonatypeKeys._
@@ -12,8 +10,8 @@ import xerial.sbt.Sonatype._
 
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
-  val scala212 = "2.12.12"
-  val scala213 = "2.13.3"
+  val scala212 = "2.12.13"
+  val scala213 = "2.13.5"
 
   lazy val basicSettings = Seq(
     homepage := Some(new URL("https://github.com/mdsol/mauth-jvm-clients")),
@@ -23,12 +21,17 @@ object BuildSettings {
     scalaVersion := scala213,
     resolvers += Resolver.mavenLocal,
     resolvers += Resolver.sonatypeRepo("releases"),
-    libraryDependencies ++= Dependencies.silencer,
     javacOptions ++= Seq("-encoding", "UTF-8"),
     // Avoid issues such as java.lang.IllegalAccessError: tried to access method org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey
     // By running tests in a separate JVM
     Test / fork := true,
-    scalacOptions ++= silencerOptions,
+    scalacOptions ++= Seq(
+      // We deprecated many MAuth v1 methods, and we want to the deprecation warnings
+      // for existing tests
+      "-Wconf:msg=.*(Uns|S)ignedRequest|signRequest|(decrypt|encrypt)Signature|" +
+        "generateRequestHeaders|extract(MwsTime|MAuth)Header|" +
+        "generateDigestedMessageV1|generateUnencryptedSignature:s"
+    ),
     scalacOptions --= {
       if (sys.env.contains("CI"))
         Seq.empty
@@ -43,16 +46,6 @@ object BuildSettings {
         Opts.resolver.sonatypeStaging
       }
     )
-  )
-
-  private lazy val silencerOptions = Seq(
-    "-P:silencer:checkUnused",
-    "-P:silencer:globalFilters=since 2.13.0;" +
-      ".*(Uns|S)ignedRequest.*;" +
-      ".*in class (DefaultSigner|MAuthRequestSigner|MAuthSignatureHelper) is deprecated.*;" +
-      ".*X_MWS_(AUTHENTICATION|TIME)_HEADER_NAME.*;" +
-      ".*extract(MwsTime|MAuth)Header.*",
-    "-P:silencer:pathFilters=target/.*"
   )
 
   lazy val noPublishSettings = Seq(
@@ -86,20 +79,6 @@ object BuildSettings {
       "A9A6453ABA90E61B2492BDCD9F58C26F3772CEEE",
       "ignored"
     )
-  )
-
-  lazy val assemblySettings = Seq(
-    test in assembly := {},
-    mainClass in assembly := Some("com.mdsol.mauth.proxy.ProxyServer"),
-    assemblyJarName in assembly := s"mauth-proxy-${version.value}.jar",
-    assemblyMergeStrategy in assembly := {
-      case "logback.xml"                        => MergeStrategy.first
-      case PathList("META-INF", xs @ _*)        => MergeStrategy.discard
-      case x if x.endsWith("module-info.class") => MergeStrategy.discard
-      case x =>
-        val oldStrategy = (assemblyMergeStrategy in assembly).value
-        oldStrategy(x)
-    }
   )
 
   val releaseSteps: Seq[ReleaseStep] = {

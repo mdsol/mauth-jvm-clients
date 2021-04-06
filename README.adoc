@@ -16,6 +16,14 @@ Medidata's authentication process requires public key management, which is done 
 
 *NOTE:* Only the signing application has any knowledge of the application's private key.
 
+=== MAuth proxy
+
+If you're performing some small, manual tests with MAuth-enabled service and do not want to 
+code the MAuth signing process, consider using these tools:
+
+- https://github.com/mdsol/go-mauth-proxy
+- https://github.com/mdsol/mauth-insomnia-plugin (For users of the Insomnia HTTP client)
+
 === Usage
 
 A Medidata server requires the requests to be signed using Medidata Authentication

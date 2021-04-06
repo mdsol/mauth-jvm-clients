@@ -4,7 +4,7 @@ import java.net.URI
 import java.security.PrivateKey
 import java.util.{List, UUID}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import models.{SignedRequest => NewSignedRequest, UnsignedRequest => NewUnsignedRequest}
 import com.mdsol.mauth.util.{CurrentEpochTimeProvider, EpochTimeProvider, MAuthKeysHelper}
 
