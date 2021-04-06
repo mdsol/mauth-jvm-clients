@@ -44,7 +44,7 @@ public class ProtocolTestSuiteHelper {
     try {
       tmp = new String(Files.readAllBytes(normalizePath(filePath)), StandardCharsets.UTF_8);
     } catch (IOException ex) {
-      ex.printStackTrace();
+      throw new IllegalStateException("Failed to load the public key " + filePath, ex);
     }
     PUBLIC_KEY = tmp;
   }
@@ -78,7 +78,7 @@ public class ProtocolTestSuiteHelper {
     try {
       privateKey = new String(Files.readAllBytes(filePath), Charset.defaultCharset());
     } catch (IOException ex) {
-      ex.printStackTrace();
+      throw new IllegalStateException("Failed to load the private key " + filePath, ex);
     }
     return privateKey;
   }
@@ -100,8 +100,8 @@ public class ProtocolTestSuiteHelper {
     try {
       bytes = Files.readAllBytes(path);
     } catch (IOException ex) {
-      ex.printStackTrace();
-    }
+      throw new IllegalStateException("Failed to load " + filePath, ex);
+     }
     return bytes;
   }
 
@@ -117,7 +117,7 @@ public class ProtocolTestSuiteHelper {
       ObjectMapper objectMapper = new ObjectMapper();
       unsignedRequest = objectMapper.readValue(jsonData, UnsignedRequest.class);
     } catch (IOException ex) {
-      ex.printStackTrace();
+      throw new IllegalStateException("Failed to load " + filePath, ex);
     }
     return unsignedRequest;
   }
@@ -141,7 +141,7 @@ public class ProtocolTestSuiteHelper {
       ObjectMapper objectMapper = new ObjectMapper();
       authenticationHeader = objectMapper.readValue(jsonData, AuthenticationHeader.class);
     } catch (IOException ex) {
-      ex.printStackTrace();
+      throw new IllegalStateException("Failed to load " + filePath, ex);
     }
     return authenticationHeader;
   }
