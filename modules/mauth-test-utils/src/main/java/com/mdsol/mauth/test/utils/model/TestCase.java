@@ -16,7 +16,7 @@ public class TestCase {
 
   public boolean isAuthenticationOnly() { return authenticationOnly; }
 
-  public void authenticationOnly(boolean authenticationOnly) { this.authenticationOnly = authenticationOnly; }
+  public void setAuthenticationOnly(boolean authenticationOnly) { this.authenticationOnly = authenticationOnly; }
 
   public String getStringToSign() { return stringToSign; }
 

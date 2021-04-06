@@ -43,7 +43,7 @@ public class UnsignedRequest {
 
   public byte[] getBodyInBytes() { return bodyInBytes; }
 
-  public void setBBodyInBytes(byte[] bodyInBytes) {
+  public void setBodyInBytes(byte[] bodyInBytes) {
     this.bodyInBytes = bodyInBytes == null? "".getBytes(StandardCharsets.UTF_8) : bodyInBytes;
   }
 

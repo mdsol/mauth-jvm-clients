@@ -32,7 +32,7 @@ public class ProtocolTestSuiteHelper {
       byte[] jsonData = Files.readAllBytes(normalizePath(configFile));
       tmp = objectMapper.readValue(jsonData, SigningConfig.class);
     } catch (IOException ex) {
-      ex.printStackTrace();
+      throw new IllegalStateException("Failed to load the config file " + configFile, ex);
     }
     SIGNING_CONFIG = tmp;
   }
@@ -42,7 +42,7 @@ public class ProtocolTestSuiteHelper {
     String tmp = null;
     String filePath = getFullFilePath("signing-params/rsa-key-pub");
     try {
-      tmp = new String(Files.readAllBytes(normalizePath(filePath)), Charset.defaultCharset());
+      tmp = new String(Files.readAllBytes(normalizePath(filePath)), StandardCharsets.UTF_8);
     } catch (IOException ex) {
       ex.printStackTrace();
     }
@@ -57,18 +57,16 @@ public class ProtocolTestSuiteHelper {
       String caseFile = caseName.concat("/").concat(caseName);
       TestCase newCase = new TestCase(caseName);
       boolean isAuthenticationOnly = caseName.contains("authentication-only");
-      newCase.authenticationOnly(isAuthenticationOnly);
+      newCase.setAuthenticationOnly(isAuthenticationOnly);
       if (!isAuthenticationOnly) {
         newCase.setStringToSign(loadTestDataAsString(caseFile.concat(".sts")));
         newCase.setSignature(loadTestDataAsString(caseFile.concat(".sig")));
       }
       newCase.setAuthenticationHeader(loadAuthenticationHeader(caseFile.concat(".authz")));
       UnsignedRequest unsignedRequest = loadUnsignedRequest(caseFile.concat(".req"));
-      if (unsignedRequest != null) {
-        byte[] bodyInBytes = getTestRequestBody(unsignedRequest, caseName);
-        unsignedRequest.setBBodyInBytes(bodyInBytes);
-        newCase.setUnsignedRequest(unsignedRequest);
-      }
+      byte[] bodyInBytes = getTestRequestBody(unsignedRequest, caseName);
+      unsignedRequest.setBodyInBytes(bodyInBytes);
+      newCase.setUnsignedRequest(unsignedRequest);
       testCaseList.add(newCase);
     }
     TEST_SPECIFICATIONS = testCaseList.toArray(new TestCase[0]);
