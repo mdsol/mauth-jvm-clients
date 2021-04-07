@@ -2,6 +2,7 @@ package com.mdsol.mauth
 
 import java.util.UUID
 
+import com.mdsol.mauth.test.utils.model.{AuthenticationHeader, CaseType, UnsignedRequest}
 import com.mdsol.mauth.test.utils.ProtocolTestSuiteHelper
 import com.mdsol.mauth.util.MAuthKeysHelper.getPrivateKeyFromString
 import com.mdsol.mauth.util.{EpochTimeProvider, MAuthKeysHelper, MAuthSignatureHelper}
@@ -42,57 +43,68 @@ class MauthProtocolSuiteSpec extends AnyFlatSpec with BeforeAndAfterAll with Mat
   testSpecifications.foreach { testSpec =>
     val authHeader = testSpec.getAuthenticationHeader
     val unsignedRequest = testSpec.getUnsignedRequest
-    s"Test Case: ${testSpec.getName}" should "pass authentication" in {
-      val mauthRequest = MAuthRequest.Builder.get
-        .withAuthenticationHeaderValue(authHeader.getMccAuthentication)
-        .withTimeHeaderValue(String.valueOf(authHeader.getMccTime))
-        .withHttpMethod(unsignedRequest.getHttpVerb)
-        .withResourcePath(unsignedRequest.getResourcePath)
-        .withQueryParameters(unsignedRequest.getQueryString)
-        .withMessagePayload(unsignedRequest.getBodyInBytes)
-        .build()
 
-      (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(signingConfig.getRequestTime.toLong + 3)
-      (mockClientPublicKeyProvider.getPublicKey _)
-        .expects(uuid)
-        .returns(publicKey)
-      authenticatorV2.authenticate(mauthRequest) shouldBe true
-    }
+    testSpec.getCaseType match {
+      case CaseType.AUTHENTICATION_ONLY =>
+        s"Test Case: ${testSpec.getName}" should "pass authentication" in {
+          doAuthentication(unsignedRequest, authHeader) shouldBe true
+        }
 
-    if (!testSpec.isAuthenticationOnly) {
-
-      it should "correctly generate the string to sign" in {
-        MAuthSignatureHelper.generateStringToSignV2(
-          uuid,
-          unsignedRequest.getHttpVerb,
-          unsignedRequest.getResourcePath,
-          unsignedRequest.getQueryString,
-          unsignedRequest.getBodyInBytes,
-          signingConfig.getRequestTime
-        ) shouldBe testSpec.getStringToSign
-      }
-
-      it should "correctly generate the signature" in {
-        MAuthSignatureHelper.encryptSignatureRSA(
-          privateKey,
-          testSpec.getStringToSign
-        ) shouldBe testSpec.getSignature
-      }
-
-      it should "correctly generate the authentication headers" in {
+      case CaseType.SIGNING_AUTHENTICATION =>
         val httpVerb = unsignedRequest.getHttpVerb
         val resourcePath = unsignedRequest.getResourcePath
         val queryString = unsignedRequest.getQueryString
         val bodyInBytes = unsignedRequest.getBodyInBytes
-        (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(signingConfig.getRequestTime.toLong)
-        val headers: Map[String, String] =
-          mAuthSigner
-            .generateRequestHeaders(httpVerb, resourcePath, bodyInBytes, queryString)
-            .asScala
-            .toMap
-        headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe authHeader.getMccAuthentication
-        headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe authHeader.getMccTime.toString
-      }
+        s"Test Case: ${testSpec.getName}" should "correctly generate the string to sign" in {
+          MAuthSignatureHelper.generateStringToSignV2(
+            uuid,
+            httpVerb,
+            resourcePath,
+            queryString,
+            bodyInBytes,
+            signingConfig.getRequestTime
+          ) shouldBe testSpec.getStringToSign
+        }
+
+        it should "correctly generate the signature" in {
+          MAuthSignatureHelper.encryptSignatureRSA(
+            privateKey,
+            testSpec.getStringToSign
+          ) shouldBe testSpec.getSignature
+        }
+
+        it should "correctly generate the authentication headers" in {
+          (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(signingConfig.getRequestTime.toLong)
+          val headers: Map[String, String] =
+            mAuthSigner
+              .generateRequestHeaders(httpVerb, resourcePath, bodyInBytes, queryString)
+              .asScala
+              .toMap
+          headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe authHeader.getMccAuthentication
+          headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe authHeader.getMccTime.toString
+        }
+
+        it should "pass authentication" in {
+          doAuthentication(unsignedRequest, authHeader) shouldBe true
+        }
     }
   }
+
+  private def doAuthentication(unsignedRequest: UnsignedRequest, authHeader: AuthenticationHeader): Boolean = {
+    val mauthRequest = MAuthRequest.Builder.get
+      .withAuthenticationHeaderValue(authHeader.getMccAuthentication)
+      .withTimeHeaderValue(String.valueOf(authHeader.getMccTime))
+      .withHttpMethod(unsignedRequest.getHttpVerb)
+      .withResourcePath(unsignedRequest.getResourcePath)
+      .withQueryParameters(unsignedRequest.getQueryString)
+      .withMessagePayload(unsignedRequest.getBodyInBytes)
+      .build()
+
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(signingConfig.getRequestTime.toLong + 3)
+    (mockClientPublicKeyProvider.getPublicKey _)
+      .expects(uuid)
+      .returns(publicKey)
+    authenticatorV2.authenticate(mauthRequest)
+  }
+
 }

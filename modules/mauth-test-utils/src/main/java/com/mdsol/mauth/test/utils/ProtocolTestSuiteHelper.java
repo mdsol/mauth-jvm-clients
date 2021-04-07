@@ -1,6 +1,7 @@
 package com.mdsol.mauth.test.utils;
 
 import com.mdsol.mauth.test.utils.model.AuthenticationHeader;
+import com.mdsol.mauth.test.utils.model.CaseType;
 import com.mdsol.mauth.test.utils.model.SigningConfig;
 import com.mdsol.mauth.test.utils.model.TestCase;
 import com.mdsol.mauth.test.utils.model.UnsignedRequest;
@@ -57,8 +58,10 @@ public class ProtocolTestSuiteHelper {
       String caseFile = caseName.concat("/").concat(caseName);
       TestCase newCase = new TestCase(caseName);
       boolean isAuthenticationOnly = caseName.contains("authentication-only");
-      newCase.setAuthenticationOnly(isAuthenticationOnly);
-      if (!isAuthenticationOnly) {
+      if(isAuthenticationOnly) {
+        newCase.setCaseType(CaseType.AUTHENTICATION_ONLY);
+      } else {
+        newCase.setCaseType(CaseType.SIGNING_AUTHENTICATION);
         newCase.setStringToSign(loadTestDataAsString(caseFile.concat(".sts")));
         newCase.setSignature(loadTestDataAsString(caseFile.concat(".sig")));
       }

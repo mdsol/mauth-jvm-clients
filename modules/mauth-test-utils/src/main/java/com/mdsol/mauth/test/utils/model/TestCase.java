@@ -6,7 +6,7 @@ public class TestCase {
   String signature;
   AuthenticationHeader authHeader;
   UnsignedRequest unsignedRequest;
-  boolean authenticationOnly = false;
+  CaseType caseType;
 
   public TestCase(String name) {
     this.name = name;
@@ -14,9 +14,9 @@ public class TestCase {
 
   public String getName() { return name; }
 
-  public boolean isAuthenticationOnly() { return authenticationOnly; }
+  public CaseType getCaseType() { return caseType; }
 
-  public void setAuthenticationOnly(boolean authenticationOnly) { this.authenticationOnly = authenticationOnly; }
+  public void setCaseType(CaseType caseType) { this.caseType = caseType; }
 
   public String getStringToSign() { return stringToSign; }
 
