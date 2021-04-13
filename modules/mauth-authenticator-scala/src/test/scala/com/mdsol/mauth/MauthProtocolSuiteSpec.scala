@@ -2,7 +2,7 @@ package com.mdsol.mauth
 
 import java.util.UUID
 
-import com.mdsol.mauth.test.utils.model.{AuthenticationHeader, CaseType, UnsignedRequest}
+import com.mdsol.mauth.test.utils.model._
 import com.mdsol.mauth.test.utils.ProtocolTestSuiteHelper
 import com.mdsol.mauth.util.MAuthKeysHelper.getPrivateKeyFromString
 import com.mdsol.mauth.util.{EpochTimeProvider, MAuthKeysHelper, MAuthSignatureHelper}
@@ -41,21 +41,26 @@ class MauthProtocolSuiteSpec extends AnyFlatSpec with BeforeAndAfterAll with Mat
   // run the tests
   val testSpecifications = ProtocolTestSuiteHelper.TEST_SPECIFICATIONS
   testSpecifications.foreach { testSpec =>
-    val authHeader = testSpec.getAuthenticationHeader
-    val unsignedRequest = testSpec.getUnsignedRequest
-
-    testSpec.getCaseType match {
+    testSpec.getType match {
       case CaseType.AUTHENTICATION_ONLY =>
-        s"Test Case: ${testSpec.getName}" should "pass authentication" in {
-          doAuthentication(unsignedRequest, authHeader) shouldBe true
+        val authenticationOnly = testSpec.asInstanceOf[AuthenticationOnly]
+        s"Test Case: ${authenticationOnly.getName}" should "pass authentication" in {
+          doAuthentication(
+            authenticationOnly.getUnsignedRequest,
+            authenticationOnly.getAuthenticationHeader
+          ) shouldBe true
         }
 
       case CaseType.SIGNING_AUTHENTICATION =>
+        val signingAuthentication = testSpec.asInstanceOf[SigningAuthentication]
+        val authHeader = signingAuthentication.getAuthenticationHeader
+        val unsignedRequest = signingAuthentication.getUnsignedRequest
+
         val httpVerb = unsignedRequest.getHttpVerb
         val resourcePath = unsignedRequest.getResourcePath
         val queryString = unsignedRequest.getQueryString
         val bodyInBytes = unsignedRequest.getBodyInBytes
-        s"Test Case: ${testSpec.getName}" should "correctly generate the string to sign" in {
+        s"Test Case: ${signingAuthentication.getName}" should "correctly generate the string to sign" in {
           MAuthSignatureHelper.generateStringToSignV2(
             uuid,
             httpVerb,
@@ -63,14 +68,14 @@ class MauthProtocolSuiteSpec extends AnyFlatSpec with BeforeAndAfterAll with Mat
             queryString,
             bodyInBytes,
             signingConfig.getRequestTime
-          ) shouldBe testSpec.getStringToSign
+          ) shouldBe signingAuthentication.getStringToSign
         }
 
         it should "correctly generate the signature" in {
           MAuthSignatureHelper.encryptSignatureRSA(
             privateKey,
-            testSpec.getStringToSign
-          ) shouldBe testSpec.getSignature
+            signingAuthentication.getStringToSign
+          ) shouldBe signingAuthentication.getSignature
         }
 
         it should "correctly generate the authentication headers" in {

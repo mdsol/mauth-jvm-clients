@@ -1,7 +1,8 @@
 package com.mdsol.mauth.test.utils;
 
 import com.mdsol.mauth.test.utils.model.AuthenticationHeader;
-import com.mdsol.mauth.test.utils.model.CaseType;
+import com.mdsol.mauth.test.utils.model.AuthenticationOnly;
+import com.mdsol.mauth.test.utils.model.SigningAuthentication;
 import com.mdsol.mauth.test.utils.model.SigningConfig;
 import com.mdsol.mauth.test.utils.model.TestCase;
 import com.mdsol.mauth.test.utils.model.UnsignedRequest;
@@ -54,23 +55,22 @@ public class ProtocolTestSuiteHelper {
   static {
     List<TestCase> testCaseList = new ArrayList<TestCase>();
     String[] cases = retrieveV2TestCases();
+
     for (String caseName : cases) {
       String caseFile = caseName.concat("/").concat(caseName);
-      TestCase newCase = new TestCase(caseName);
-      boolean isAuthenticationOnly = caseName.contains("authentication-only");
-      if(isAuthenticationOnly) {
-        newCase.setCaseType(CaseType.AUTHENTICATION_ONLY);
-      } else {
-        newCase.setCaseType(CaseType.SIGNING_AUTHENTICATION);
-        newCase.setStringToSign(loadTestDataAsString(caseFile.concat(".sts")));
-        newCase.setSignature(loadTestDataAsString(caseFile.concat(".sig")));
-      }
-      newCase.setAuthenticationHeader(loadAuthenticationHeader(caseFile.concat(".authz")));
+      AuthenticationHeader authHeader = loadAuthenticationHeader(caseFile.concat(".authz"));
       UnsignedRequest unsignedRequest = loadUnsignedRequest(caseFile.concat(".req"));
       byte[] bodyInBytes = getTestRequestBody(unsignedRequest, caseName);
       unsignedRequest.setBodyInBytes(bodyInBytes);
-      newCase.setUnsignedRequest(unsignedRequest);
-      testCaseList.add(newCase);
+
+      boolean isAuthenticationOnly = caseName.contains("authentication-only");
+      if(isAuthenticationOnly) {
+        testCaseList.add(new AuthenticationOnly(caseName, unsignedRequest, authHeader));
+      } else {
+        String stringToSign = loadTestDataAsString(caseFile.concat(".sts"));
+        String signature = loadTestDataAsString(caseFile.concat(".sig"));
+        testCaseList.add(new SigningAuthentication(caseName, unsignedRequest, authHeader, stringToSign, signature));
+      }
     }
     TEST_SPECIFICATIONS = testCaseList.toArray(new TestCase[0]);
   }
