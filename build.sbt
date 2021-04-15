@@ -118,11 +118,11 @@ lazy val `mauth-authenticator` = javaModuleProject("mauth-authenticator")
   )
 
 lazy val `mauth-authenticator-scala` = scalaModuleProject("mauth-authenticator-scala")
-  .dependsOn(`mauth-authenticator`, `mauth-test-utils` % "test")
+  .dependsOn(`mauth-authenticator`, `mauth-signer` % "test", `mauth-test-utils` % "test")
   .settings(
     publishSettings,
     libraryDependencies ++=
-      Dependencies.test(logbackClassic, scalaMock, scalaTest).map(withExclusions)
+      Dependencies.test(logbackClassic, scalaMock, scalaTest, scalaLibCompat).map(withExclusions)
   )
 
 lazy val `mauth-authenticator-apachehttp` = javaModuleProject("mauth-authenticator-apachehttp")
