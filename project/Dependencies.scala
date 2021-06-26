@@ -27,6 +27,7 @@ object Dependencies extends DependencyUtils {
   val sttp: ModuleID = "com.softwaremill.sttp.client3"                %% "core"                    % Version.sttp
   val sttpAkkaHttpBackend: ModuleID = "com.softwaremill.sttp.client3" %% "akka-http-backend"       % Version.sttp
   val scalaLibCompat: ModuleID = "org.scala-lang.modules"             %% "scala-collection-compat" % "2.4.3"
+  val caffeine: ModuleID = "com.github.ben-manes.caffeine"             % "caffeine"                % "2.9.1"
 
   // TEST DEPENDENCIES
   val akkaHttpTestKit: Seq[ModuleID] = Seq(
