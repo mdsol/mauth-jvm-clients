@@ -50,10 +50,10 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
     publicKeyCache =
       Caffeine.newBuilder()
         .expireAfterAccess(ttl, TimeUnit.SECONDS)
-        .build(this::getPublicKeyFromEureka);
+        .build(this::getPublicKeyFromMauth);
   }
 
-  private PublicKey getPublicKeyFromEureka(UUID appUUID) {
+  private PublicKey getPublicKeyFromMauth(UUID appUUID) {
     byte[] payload = new byte[0];
     String requestUrlPath = getRequestUrlPath(appUUID);
     Map<String, String> headers = signer.generateRequestHeaders("GET", requestUrlPath, payload, "");
@@ -68,7 +68,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
       if (publicKeyCache == null) {
         // Lazy load public key cache so that we can set the ttl based on the first response max-age
         // Do Eureka call first to set the ttl
-        PublicKey key = getPublicKeyFromEureka(appUUID);
+        PublicKey key = getPublicKeyFromMauth(appUUID);
         setupCache();
         publicKeyCache.put(appUUID, key);
       }
