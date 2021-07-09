@@ -74,7 +74,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
       }
       return publicKeyCache.get(appUUID);
     } catch (Exception e) {
-      logger.error("Couldn't find public key", e);
+      logger.error("Public key retrieval error", e);
       throw new HttpClientPublicKeyProviderException(e);
     }
   }
@@ -117,8 +117,8 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
     }
 
     public Optional<Long> getMaxage(HttpResponse response) {
-      if (response.getFirstHeader(HttpHeaders.CACHE_CONTROL) != null) {
-        HeaderElement[] elements = response.getFirstHeader(HttpHeaders.CACHE_CONTROL).getElements();
+      if (response.getFirstHeader(HttpHeaders.CACHE_CONTROL.toLowerCase()) != null) {
+        HeaderElement[] elements = response.getFirstHeader(HttpHeaders.CACHE_CONTROL.toLowerCase()).getElements();
         return Arrays.stream(elements)
           .filter(e -> e.getName().equals(MAX_AGE))
           .findFirst()
