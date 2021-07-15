@@ -120,7 +120,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
       if (response.getFirstHeader(HttpHeaders.CACHE_CONTROL) != null) {
         HeaderElement[] elements = response.getFirstHeader(HttpHeaders.CACHE_CONTROL).getElements();
         return Arrays.stream(elements)
-          .filter(e -> e.getName().equals(MAX_AGE))
+          .filter(e -> e.getName().equalsIgnoreCase(MAX_AGE))
           .findFirst()
           .map(e -> Long.parseLong(e.getValue()));
       }
