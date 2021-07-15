@@ -117,8 +117,8 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
     }
 
     public Optional<Long> getMaxage(HttpResponse response) {
-      if (response.getFirstHeader(HttpHeaders.CACHE_CONTROL.toLowerCase()) != null) {
-        HeaderElement[] elements = response.getFirstHeader(HttpHeaders.CACHE_CONTROL.toLowerCase()).getElements();
+      if (response.getFirstHeader(HttpHeaders.CACHE_CONTROL) != null) {
+        HeaderElement[] elements = response.getFirstHeader(HttpHeaders.CACHE_CONTROL).getElements();
         return Arrays.stream(elements)
           .filter(e -> e.getName().equals(MAX_AGE))
           .findFirst()
