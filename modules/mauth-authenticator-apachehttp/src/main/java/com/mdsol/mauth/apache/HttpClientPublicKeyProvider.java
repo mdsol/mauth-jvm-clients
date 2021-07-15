@@ -103,7 +103,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
     public String handleResponse(HttpResponse response) throws IOException {
       if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
         if (ttl == null) {
-          ttl = getMaxage(response).orElse(configuration.getTimeToLive());
+          ttl = getMaxAge(response).orElse(configuration.getTimeToLive());
         }
 
         HttpEntity entity = response.getEntity();
@@ -116,7 +116,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
       }
     }
 
-    public Optional<Long> getMaxage(HttpResponse response) {
+    public Optional<Long> getMaxAge(HttpResponse response) {
       if (response.getFirstHeader(HttpHeaders.CACHE_CONTROL) != null) {
         HeaderElement[] elements = response.getFirstHeader(HttpHeaders.CACHE_CONTROL).getElements();
         return Arrays.stream(elements)
