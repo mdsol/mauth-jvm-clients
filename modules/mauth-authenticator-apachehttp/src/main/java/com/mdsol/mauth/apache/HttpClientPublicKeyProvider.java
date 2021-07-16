@@ -117,12 +117,12 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
     }
 
     public Optional<Long> getMaxAge(HttpResponse response) {
-      return Optional.ofNullable(response.getFirstHeader(HttpHeaders.CACHE_CONTROL))
-        .flatMap(header -> Arrays.stream(header.getElements())
-          .filter(e -> e.getName().equalsIgnoreCase(MAX_AGE))
-          .findFirst()
-          .map(e -> Long.parseLong(e.getValue()))
-        );
+      return Optional.ofNullable(response.getHeaders(HttpHeaders.CACHE_CONTROL))
+        .flatMap(headers -> Arrays.stream(headers)
+          .flatMap(header -> Arrays.stream(header.getElements())
+            .filter(e -> e.getName().equalsIgnoreCase(MAX_AGE))
+            .map(e -> Long.parseLong(e.getValue())))
+          .findFirst());
     }
   }
 }
