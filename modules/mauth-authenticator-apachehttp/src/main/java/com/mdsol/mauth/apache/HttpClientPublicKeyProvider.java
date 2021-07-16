@@ -118,8 +118,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
 
     public Optional<Long> getMaxAge(HttpResponse response) {
       return Optional.ofNullable(response.getFirstHeader(HttpHeaders.CACHE_CONTROL))
-        .map(Header::getElements)
-        .flatMap(elements -> Arrays.stream(elements)
+        .flatMap(header -> Arrays.stream(header.getElements())
           .filter(e -> e.getName().equalsIgnoreCase(MAX_AGE))
           .findFirst()
           .map(e -> Long.parseLong(e.getValue()))
