@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import org.apache.http.HttpHeaders;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -37,7 +38,8 @@ public class FakeMAuthServer {
 
   public static void return200() {
     WireMock.stubFor(WireMock.get(WireMock.urlPathEqualTo("/mauth/v1/security_tokens/" + EXISTING_CLIENT_APP_UUID.toString() + ".json"))
-        .willReturn(WireMock.aResponse().withStatus(200).withBody(mockedMauthTokenResponse())));
+        .willReturn(WireMock.aResponse().withStatus(200).withBody(mockedMauthTokenResponse())
+          .withHeader(HttpHeaders.CACHE_CONTROL, "max-age=3600, private")));
   }
 
   public static void return401() {

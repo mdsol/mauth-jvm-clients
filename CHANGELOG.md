@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - parsing code to test with mauth-protocol-test-suite.
+- Caffeine dependency for local cache
 
 ### Changed
 - Dependency update
   - Update sttp to 3.x from 2.x. Note this is a new major sttp version with new package prefix `sttp.client3`
   - Remove silencer as 2.12.13 also got configurable warnings now
-  
+- Use Caffeine as local cache instead of Guava Cache
+- Added Cache-Control header in FakeMauthServer success response
+- Use Cache-Control max-age header as ttl in public key local cache and only set configuration value as fallback
+
 ## Removed
 - Removed mauth-proxy. The library we depend on (littleproxy) has been unmaintained for a long time
   and there are better mauth proxy alternatives like https://github.com/mdsol/go-mauth-proxy
