@@ -93,9 +93,7 @@ lazy val `mauth-signer-sttp` = scalaModuleProject("mauth-signer-sttp")
     publishSettings,
     libraryDependencies ++=
       Dependencies.compile(scalaLibCompat, sttp, scalaLogging).map(withExclusions) ++
-        Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions),
-    // TODO remove once published
-    mimaPreviousArtifacts := Set.empty
+        Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions)
   )
 
 // A separate module to sign and send sttp request using akka-http backend
@@ -107,9 +105,7 @@ lazy val `mauth-sender-sttp-akka-http` = scalaModuleProject("mauth-sender-sttp-a
     publishSettings,
     libraryDependencies ++=
       Dependencies.compile(catsEffect, akkaHttp, akkaStream, scalaLibCompat, sttp, scalaLogging).map(withExclusions) ++
-        Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions),
-    // TODO remove once published
-    mimaPreviousArtifacts := Set.empty
+        Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions)
   )
 
 lazy val `mauth-authenticator` = javaModuleProject("mauth-authenticator")
