@@ -6,8 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- update the client fallbacks to caching for 5 minutes if Cache-Control is missing or malformed.
-- Make that value `unconfigurable` to prevent user introduced discrepancies. 
+- Cache responses for 5 minutes (non configurable) as a fallback when the Cache-Control header is missing or malformed.
 
 ## [6.0.1] - 2021-07-21
 ### Added
