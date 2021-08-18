@@ -32,7 +32,6 @@ class MauthPublicKeyProviderSpec
   private val MAUTH_BASE_URL = s"http://localhost:$MAUTH_PORT"
   private val MAUTH_URL_PATH = "/mauth/v1"
   private val SECURITY_TOKENS_PATH = "/security_tokens/%s.json"
-  private val FIVE_MINUTES = 300L
 
   val mauthHeadersWithValue = Map(
     MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> EXPECTED_AUTHENTICATION_HEADER_VALUE,
@@ -53,7 +52,7 @@ class MauthPublicKeyProviderSpec
 
   private def getRequestUrlPath(clientAppId: String) = String.format(MAUTH_URL_PATH + SECURITY_TOKENS_PATH, clientAppId)
 
-  private def getMAuthConfiguration = new AuthenticatorConfiguration(MAUTH_BASE_URL, MAUTH_URL_PATH, SECURITY_TOKENS_PATH, FIVE_MINUTES)
+  private def getMAuthConfiguration = new AuthenticatorConfiguration(MAUTH_BASE_URL, MAUTH_URL_PATH, SECURITY_TOKENS_PATH)
 
   "MauthPublicKeyProvider" should "retrieve PublicKey from MAuth Server" in {
     FakeMAuthServer.return200()
