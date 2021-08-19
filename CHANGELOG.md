@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [7.0.0] - 2021-08-19
 ### Changed
 - Cache responses for 5 minutes (non configurable) as a fallback when the Cache-Control header is missing or malformed.
 
