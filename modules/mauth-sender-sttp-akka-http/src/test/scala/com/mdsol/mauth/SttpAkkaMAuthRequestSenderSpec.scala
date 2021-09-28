@@ -1,32 +1,31 @@
 package com.mdsol.mauth
 
-import java.net.URI
-import java.security.Security
-import java.util.UUID
 import akka.actor.ActorSystem
-import cats.effect.IO
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
-import org.scalatest.wordspec.AsyncWordSpec
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
-import com.mdsol.mauth.util.EpochTimeProvider
-import sttp.client3.{basicRequest, SttpBackend}
-import sttp.model.{MediaType, Uri}
-import sttp.client3.akkahttp.AkkaHttpBackend
-
-import scala.jdk.CollectionConverters._
-import org.scalatest.Inside._
-import org.scalatest.matchers.should.Matchers._
 import com.github.tomakehurst.wiremock.verification.LoggedRequest
 import com.mdsol.mauth.test.utils.TestFixtures
 import com.mdsol.mauth.test.utils.TestFixtures._
+import com.mdsol.mauth.util.EpochTimeProvider
 import com.mdsol.mauth.util.MAuthKeysHelper.getPrivateKeyFromString
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.scalatest.Inside._
+import org.scalatest.matchers.should.Matchers._
+import org.scalatest.wordspec.AsyncWordSpec
+import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import sttp.capabilities.WebSockets
 import sttp.capabilities.akka.AkkaStreams
+import sttp.client3.akkahttp.AkkaHttpBackend
+import sttp.client3.{basicRequest, SttpBackend}
+import sttp.model.{MediaType, Uri}
 
-import scala.concurrent.{ExecutionContext, Future}
+import java.net.URI
+import java.security.Security
+import java.util.UUID
+import scala.concurrent.Future
+import scala.jdk.CollectionConverters._
+import cats.effect.unsafe.implicits.global
 
 class SttpAkkaMAuthRequestSenderSpec extends AsyncWordSpec with BeforeAndAfter with BeforeAndAfterAll {
 
@@ -84,7 +83,7 @@ class SttpAkkaMAuthRequestSenderSpec extends AsyncWordSpec with BeforeAndAfter w
     )
   }
 
-  lazy val requestSender = new SttpAkkaMAuthRequestSender(v1v2Signer, sttpBackend, IO.contextShift(ExecutionContext.global))
+  lazy val requestSender = new SttpAkkaMAuthRequestSender(v1v2Signer, sttpBackend)
 
   before {
     wiremockServer.stubFor(

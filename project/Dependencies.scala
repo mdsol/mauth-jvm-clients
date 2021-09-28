@@ -23,7 +23,7 @@ object Dependencies extends DependencyUtils {
   val typeSafeConfig: ModuleID = "com.typesafe"                        % "config"                  % "1.4.1"
   val scalaCache: ModuleID = "com.github.cb372"                       %% "scalacache-guava"        % "0.28.0"
   val scalaLogging: ModuleID = "com.typesafe.scala-logging"           %% "scala-logging"           % "3.9.3"
-  val catsEffect: ModuleID = "org.typelevel"                          %% "cats-effect"             % "2.4.1"
+  val catsEffect: ModuleID = "org.typelevel"                          %% "cats-effect"             % "3.2.9"
   val sttp: ModuleID = "com.softwaremill.sttp.client3"                %% "core"                    % Version.sttp
   val sttpAkkaHttpBackend: ModuleID = "com.softwaremill.sttp.client3" %% "akka-http-backend"       % Version.sttp
   val scalaLibCompat: ModuleID = "org.scala-lang.modules"             %% "scala-collection-compat" % "2.4.3"
