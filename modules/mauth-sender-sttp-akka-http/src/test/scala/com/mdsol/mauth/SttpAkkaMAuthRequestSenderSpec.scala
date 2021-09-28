@@ -17,7 +17,7 @@ import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
 import sttp.capabilities.WebSockets
 import sttp.capabilities.akka.AkkaStreams
 import sttp.client3.akkahttp.AkkaHttpBackend
-import sttp.client3.{SttpBackend, basicRequest}
+import sttp.client3.{basicRequest, SttpBackend}
 import sttp.model.{MediaType, Uri}
 
 import java.net.URI
