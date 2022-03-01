@@ -1,21 +1,27 @@
+dist: bionic
 language: java
-jdk:
-- oraclejdk8
+
+cache:
+  directories:
+  - "$HOME/.m2"
+
 env:
   global:
   - APP_UUID=398ea708-50eb-499f-98d3-14cc7692668c
-  - secure: n++Arc8CcxaAG17/0hXWM43QuAqFOyM83o1OuFh5hAz7nMeearWUTM7o/LaOw1tD0bqWoOEwZbiZ1T1PBPo8ItQmn7FYdo9yEpdf2/eJPGxViYagpBYEU8UZDwv9tQvUq3gYB1Jly60LhsuG/n/3cpclMHpGlBI11Q/Qm3pN66o=
-  - secure: OK5crzS2IVb0urPleQLXomHYKYBEcF2XJSHJ1zqGc8ibqt/YSMSIf4Huc9r89s6IIrjLhNv9HkyqNrxWcAKAvGinobOvVoSMB1DojH3k6CG8hpWLusjDty3RwjDYUrvYS39MGaHsGuIDnH7fXEKo7DvGl2/7KmkPcgE6NDh1xNo=
-cache:
-  directories:
-  - $HOME/.m2
-before_install:
- - export APP_PRIVATE_KEY=$(cat travis/fake_private_key_for_testing)
-install: mvn install -Dmaven.javadoc.skip=true -B -V --settings travis/settings.xml
-script: mvn test --settings travis/settings.xml
 
-deploy:
-  provider: script
-  script: mvn deploy -DskipTests=true --settings travis/settings.xml
-  on:
-    branch: develop
+matrix:
+  include:
+  - stage: Test
+    jdk: openjdk8
+    before_install: export APP_PRIVATE_KEY=$(cat travis/fake_private_key_for_testing)
+    install: mvn clean install -Dmaven.javadoc.skip=true -B -V --settings travis/settings.xml
+    script: skip
+  - stage: Publish
+    jdk: openjdk8
+    install: skip
+    script: skip
+    deploy:
+    - provider: script
+      script: "./travis/deploy.sh"
+      on:
+        tags: true

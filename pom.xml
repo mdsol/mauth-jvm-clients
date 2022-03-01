@@ -148,14 +148,6 @@
         </dependencies>
     </dependencyManagement>
 
-    <distributionManagement>
-        <repository>
-            <id>central</id>
-            <name>platformLibraries-maven-prod-local</name>
-            <url>https://mdsol.jfrog.io/artifactory/PlatformLibraries-maven-prod-local/</url>
-        </repository>
-    </distributionManagement>
-
     <repositories>
         <repository>
 			<snapshots>
