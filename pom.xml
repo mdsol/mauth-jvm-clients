@@ -150,9 +150,9 @@
 
     <repositories>
         <repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
             <id>central</id>
             <name>maven-prod-virtual</name>
             <url>https://mdsol.jfrog.io/artifactory/maven-prod-virtual/</url>
