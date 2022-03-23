@@ -21,7 +21,7 @@ object Dependencies extends DependencyUtils {
   val logbackCore: ModuleID = "ch.qos.logback"                         % "logback-core"            % Version.logback
   val slf4jApi: ModuleID = "org.slf4j"                                 % "slf4j-api"               % "1.7.30"
   val typeSafeConfig: ModuleID = "com.typesafe"                        % "config"                  % "1.4.1"
-  val scalaCache: ModuleID = "com.github.cb372"                       %% "scalacache-guava"        % "0.28.0"
+  val scalaCache: ModuleID = "com.github.cb372"                       %% "scalacache-caffeine"     % "1.0.0-M6"
   val scalaLogging: ModuleID = "com.typesafe.scala-logging"           %% "scala-logging"           % "3.9.3"
   val catsEffect: ModuleID = "org.typelevel"                          %% "cats-effect"             % "3.2.9"
   val sttp: ModuleID = "com.softwaremill.sttp.client3"                %% "core"                    % Version.sttp
