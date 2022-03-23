@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Swap scalacache-guava to scalacache-caffeine
-- Add an IO interface for 
+- Add an IO interface for ClientPublicKeyProvider
 
 ## [7.0.1] - 2021-09-28
 ### Changed
