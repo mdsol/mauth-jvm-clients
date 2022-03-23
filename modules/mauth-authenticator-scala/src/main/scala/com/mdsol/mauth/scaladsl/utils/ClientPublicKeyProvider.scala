@@ -16,5 +16,5 @@ trait ClientPublicKeyProvider {
     */
   def getPublicKey(appUUID: UUID): Future[Option[PublicKey]]
 
-  def getPublicKeyF(appUUID: UUID): IO[Option[PublicKey]]
+  def getPublicKeyIO(appUUID: UUID): IO[Option[PublicKey]]
 }
