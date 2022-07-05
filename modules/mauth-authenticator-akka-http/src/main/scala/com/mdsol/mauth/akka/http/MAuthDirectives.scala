@@ -4,7 +4,7 @@ import java.util.UUID
 import akka.http.javadsl.model.HttpHeader
 import akka.http.javadsl.server.AuthorizationFailedRejection
 import akka.http.scaladsl.model.{HttpEntity, HttpRequest}
-import akka.http.scaladsl.server.Directives.{headerValueByName, headerValueByType, headerValuePF, optionalHeaderValueByType}
+import akka.http.scaladsl.server.Directives.{headerValueByName, headerValuePF}
 import akka.http.scaladsl.server.directives.BasicDirectives._
 import akka.http.scaladsl.server.directives.FutureDirectives.onComplete
 import akka.http.scaladsl.server.directives.RouteDirectives.reject
