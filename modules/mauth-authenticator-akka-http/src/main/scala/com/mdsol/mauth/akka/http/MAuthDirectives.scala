@@ -1,15 +1,15 @@
 package com.mdsol.mauth.akka.http
 
 import java.util.UUID
-
 import akka.http.javadsl.model.HttpHeader
 import akka.http.javadsl.server.AuthorizationFailedRejection
 import akka.http.scaladsl.model.{HttpEntity, HttpRequest}
-import akka.http.scaladsl.server.Directives.{headerValueByName, headerValueByType}
+import akka.http.scaladsl.server.Directives.{headerValueByName, headerValuePF}
 import akka.http.scaladsl.server.directives.BasicDirectives._
 import akka.http.scaladsl.server.directives.FutureDirectives.onComplete
 import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import akka.http.scaladsl.server._
+import akka.http.scaladsl.server.directives.HeaderMagnet
 import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.http.{`X-MWS-Authentication`, `X-MWS-Time`, HttpVerbOps}
 import com.mdsol.mauth.scaladsl.Authenticator
@@ -24,6 +24,12 @@ case class MauthHeaderValues(authenticator: String, time: Long)
 case class AuthHeaderDetail(appId: UUID, hash: String)
 
 case object MdsolAuthFailedRejection extends AuthorizationFailedRejection with Rejection
+
+final case class MdsolAuthMalformedHeaderRejection(headerName: String, errorMsg: String, cause: Option[Throwable] = None)
+    extends AuthorizationFailedRejection
+    with RejectionWithOptionalCause
+
+final case class MdsolAuthMissingHeaderRejection(headerName: String) extends AuthorizationFailedRejection with Rejection
 
 trait MAuthDirectives extends StrictLogging {
 
@@ -81,6 +87,9 @@ trait MAuthDirectives extends StrictLogging {
   @deprecated("This method is for Mauth V1 protocol only", "3.0.0")
   val extractMwsAuthenticationHeader: Directive1[String] = headerValueByName(`X-MWS-Authentication`.name)
 
+  def headerValueByTypeMdsol[T](magnet: HeaderMagnet[T]): Directive1[T] =
+    headerValuePF(magnet.extractPF) | reject(MdsolAuthMissingHeaderRejection(magnet.headerName))
+
   /** Extracts the detail information of the HTTP request header X-MWS-Authentication
     *
     * @return Directive1[AuthHeaderDetail] of Mauth V1 protocol
@@ -88,13 +97,13 @@ trait MAuthDirectives extends StrictLogging {
     */
   @deprecated("This method is for Mauth V1 protocol only", "3.0.0")
   val extractMAuthHeader: Directive1[AuthHeaderDetail] =
-    headerValueByType[`X-MWS-Authentication`]((): Unit).flatMap { hdr =>
+    headerValueByTypeMdsol[`X-MWS-Authentication`]((): Unit).flatMap { hdr =>
       extractAuthHeaderDetail(hdr.value) match {
         case Some(ahd: AuthHeaderDetail) => provide(ahd)
         case None =>
           val msg = s"${`X-MWS-Authentication`.name} header supplied with bad format: [${hdr.value}]"
           logger.error(msg)
-          reject(MalformedHeaderRejection(headerName = `X-MWS-Authentication`.name, errorMsg = msg, None))
+          reject(MdsolAuthMalformedHeaderRejection(headerName = `X-MWS-Authentication`.name, errorMsg = msg, None))
 
       }
     }
@@ -106,13 +115,13 @@ trait MAuthDirectives extends StrictLogging {
     */
   @deprecated("This method is for Mauth V1 protocol only", "3.0.0")
   val extractMwsTimeHeader: Directive1[Long] =
-    headerValueByType[`X-MWS-Time`]((): Unit).flatMap { time =>
+    headerValueByTypeMdsol[`X-MWS-Time`]((): Unit).flatMap { time =>
       Try(time.value.toLong).toOption match {
         case Some(t: Long) => provide(t)
         case None =>
           val msg = s"${`X-MWS-Time`.name} header supplied with bad format: [${time.value}]"
           logger.error(msg)
-          reject(MalformedHeaderRejection(headerName = `X-MWS-Time`.name, errorMsg = msg, None))
+          reject(MdsolAuthMalformedHeaderRejection(headerName = `X-MWS-Time`.name, errorMsg = msg, None))
       }
     }
 
@@ -156,7 +165,7 @@ trait MAuthDirectives extends StrictLogging {
     *        Otherwise, extracts the authentication header of X-MWS-Authentication if MCC-Authentication header is not found.
     *
     * @return Directive1[MauthHeaderValues] of Mauth authentication header values for V1 or V2
-    *         the request is rejected with a MissingHeaderRejection if the expected header is not present
+    *         the request is rejected with a MdsolAuthMissingHeaderRejection if the expected header is not present
     */
   def extractLatestAuthenticationHeaders(v2OnlyAuthenticate: Boolean): Directive1[MauthHeaderValues] = {
     extractRequest.flatMap { request: HttpRequest =>
@@ -171,10 +180,10 @@ trait MAuthDirectives extends StrictLogging {
             case None =>
               val msg = s"${MAuthRequest.MCC_TIME_HEADER_NAME} header supplied with bad format: [$timeHeaderStr]"
               logger.error(msg)
-              reject(MalformedHeaderRejection(headerName = MAuthRequest.MCC_TIME_HEADER_NAME, errorMsg = msg, None))
+              reject(MdsolAuthMalformedHeaderRejection(headerName = MAuthRequest.MCC_TIME_HEADER_NAME, errorMsg = msg, None))
           }
         } else {
-          reject(MissingHeaderRejection(MAuthRequest.MCC_TIME_HEADER_NAME))
+          reject(MdsolAuthMissingHeaderRejection(MAuthRequest.MCC_TIME_HEADER_NAME))
         }
       } else {
         // If V2 headers not found, fallback to V1 headers if allowed
@@ -189,16 +198,16 @@ trait MAuthDirectives extends StrictLogging {
                 case None =>
                   val msg = s"${MAuthRequest.X_MWS_TIME_HEADER_NAME} header supplied with bad format: [$timeHeaderStr]"
                   logger.error(msg)
-                  reject(MalformedHeaderRejection(headerName = MAuthRequest.X_MWS_TIME_HEADER_NAME, errorMsg = msg, None))
+                  reject(MdsolAuthMalformedHeaderRejection(headerName = MAuthRequest.X_MWS_TIME_HEADER_NAME, errorMsg = msg, None))
               }
             } else {
-              reject(MissingHeaderRejection(MAuthRequest.X_MWS_TIME_HEADER_NAME))
+              reject(MdsolAuthMissingHeaderRejection(MAuthRequest.X_MWS_TIME_HEADER_NAME))
             }
           } else {
-            reject(MissingHeaderRejection(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME))
+            reject(MdsolAuthMissingHeaderRejection(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME))
           }
         } else {
-          reject(MissingHeaderRejection(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME))
+          reject(MdsolAuthMissingHeaderRejection(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME))
         }
       }
     }
