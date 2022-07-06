@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.0.1] - 2022-07-06
+
 ## [8.0.0] - 2022-03-23
 
 - Swap scalacache-guava to scalacache-caffeine
