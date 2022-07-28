@@ -7,6 +7,9 @@ object Dependencies extends DependencyUtils {
     val akkaHttp = "10.2.4"
     val logback = "1.2.3"
     val sttp = "3.2.0"
+    val http4s = "0.23.14"
+    val enumeratum = "1.7.0"
+    val log4cats = "2.1.1"
   }
 
   val akkaHttp: ModuleID = "com.typesafe.akka"                        %% "akka-http"               % Version.akkaHttp
@@ -28,6 +31,9 @@ object Dependencies extends DependencyUtils {
   val sttpAkkaHttpBackend: ModuleID = "com.softwaremill.sttp.client3" %% "akka-http-backend"       % Version.sttp
   val scalaLibCompat: ModuleID = "org.scala-lang.modules"             %% "scala-collection-compat" % "2.4.3"
   val caffeine: ModuleID = "com.github.ben-manes.caffeine"             % "caffeine"                % "2.9.1"
+  val http4s: ModuleID = "org.http4s" %% "http4s-dsl" % Version.http4s
+  val enumeratum: ModuleID =  "com.beachape" %% "enumeratum" % Version.enumeratum
+  val log4cats = "org.typelevel" %% "log4cats-slf4j" % Version.log4cats
 
   // TEST DEPENDENCIES
   val akkaHttpTestKit: Seq[ModuleID] = Seq(
@@ -39,6 +45,12 @@ object Dependencies extends DependencyUtils {
   val scalaMock: ModuleID = "org.scalamock"        %% "scalamock"  % "5.1.0"
   val scalaTest: ModuleID = "org.scalatest"        %% "scalatest"  % "3.2.7"
   val wiremock: ModuleID = "com.github.tomakehurst" % "wiremock"   % "2.27.2"
+
+  val munitAndScalacheckForHttp4s: Seq[ModuleID] = Seq(
+    "org.typelevel" %% "discipline-munit" % "1.0.9",
+    "org.typelevel" %% "munit-cats-effect-3" % "1.0.7",
+    "org.typelevel" %% "scalacheck-effect-munit" % "1.0.4"
+  )
 
   // Dependency Conflict Resolution
   val exclusions = Seq()
