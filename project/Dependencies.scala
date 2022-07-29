@@ -41,16 +41,11 @@ object Dependencies extends DependencyUtils {
     "com.typesafe.akka" %% "akka-testkit"        % Version.akka,
     "com.typesafe.akka" %% "akka-stream-testkit" % Version.akka
   )
-  val commonsIO: ModuleID = "commons-io"            % "commons-io" % "2.8.0"
-  val scalaMock: ModuleID = "org.scalamock"        %% "scalamock"  % "5.1.0"
-  val scalaTest: ModuleID = "org.scalatest"        %% "scalatest"  % "3.2.7"
-  val wiremock: ModuleID = "com.github.tomakehurst" % "wiremock"   % "2.27.2"
-
-  val munitAndScalacheckForHttp4s: Seq[ModuleID] = Seq(
-    "org.typelevel" %% "discipline-munit"        % "1.0.9",
-    "org.typelevel" %% "munit-cats-effect-3"     % "1.0.7",
-    "org.typelevel" %% "scalacheck-effect-munit" % "1.0.4"
-  )
+  val commonsIO: ModuleID = "commons-io"            % "commons-io"          % "2.8.0"
+  val scalaMock: ModuleID = "org.scalamock"        %% "scalamock"           % "5.1.0"
+  val scalaTest: ModuleID = "org.scalatest"        %% "scalatest"           % "3.2.7"
+  val wiremock: ModuleID = "com.github.tomakehurst" % "wiremock"            % "2.27.2"
+  val munitCatsEffect: ModuleID = "org.typelevel"  %% "munit-cats-effect-3" % "1.0.7"
 
   // Dependency Conflict Resolution
   val exclusions = Seq()

@@ -67,7 +67,6 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
       if (appUUID == appUuid) {
         Future(publicKey.some)
       } else Future.failed(new Throwable("Wrong app UUID"))
-    override def getPublicKeyIO(appUUID: UUID): IO[Option[PublicKey]] = ???
   }
 
   private val epochTimeProvider = new EpochTimeProvider {
@@ -144,7 +143,6 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
         if (appUUID == appUuid) {
           Future(none)
         } else Future.failed(new Throwable("Wrong app UUID"))
-      override def getPublicKeyIO(appUUID: UUID): IO[Option[PublicKey]] = ???
     }
 
     val localAuthenticator: RequestAuthenticator = new RequestAuthenticator(localClient, epochTimeProvider)
