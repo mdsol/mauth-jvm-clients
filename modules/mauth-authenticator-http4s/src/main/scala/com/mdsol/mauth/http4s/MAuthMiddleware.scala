@@ -5,7 +5,7 @@ import cats.data.{Kleisli, OptionT}
 import cats.effect.Sync
 import cats.syntax.all._
 import cats.effect.kernel.Async
-import cats.{~>, Monad, MonadThrow}
+import cats.~>
 import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.scaladsl.Authenticator
 import org.http4s.{Http, HttpApp, HttpRoutes, Response, Status}
