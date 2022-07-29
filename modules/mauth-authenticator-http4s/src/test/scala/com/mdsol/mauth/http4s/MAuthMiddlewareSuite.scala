@@ -66,8 +66,7 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
     override def getPublicKey(appUUID: UUID): Future[Option[PublicKey]] =
       if (appUUID == appUuid) {
         Future(publicKey.some)
-      }
-      else Future.failed(new Throwable("Wrong app UUID"))
+      } else Future.failed(new Throwable("Wrong app UUID"))
     override def getPublicKeyIO(appUUID: UUID): IO[Option[PublicKey]] = ???
   }
 
@@ -80,52 +79,63 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
   private val service = MAuthMiddleware.httpRoutes[IO](requestValidationTimeout)(route).orNotFound
 
   val authenticatorV2: RequestAuthenticator = new RequestAuthenticator(client, epochTimeProvider, v2OnlyAuthenticate = true)
-  val serviceV2 = MAuthMiddleware.httpRoutes[IO](requestValidationTimeout)(route)(implicitly[Async[IO]], authenticatorV2,implicitly[ExecutionContext]).orNotFound
-
+  val serviceV2 =
+    MAuthMiddleware.httpRoutes[IO](requestValidationTimeout)(route)(implicitly[Async[IO]], authenticatorV2, implicitly[ExecutionContext]).orNotFound
 
   test("allow successfully authenticated request") {
-    val res = service(Request[IO](GET,uri"/").withHeaders(
-      MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString,
-      MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
-    ))
+    val res = service(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
+      )
+    )
 
     res.map(_.status).assertEquals(Status.Ok)
   }
 
   test("allow successfully authenticated request with both v1 and v2 headers, with V2 headers taking precedence") {
-    val res = service(Request[IO](GET,uri"/").withHeaders(
-      MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
-      MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2,
-      MAuthRequest.X_MWS_TIME_HEADER_NAME -> (timeHeader - requestValidationTimeout.toSeconds - 10).toString,
-      MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> "invalid auth header"
-    ))
+    val res = service(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2,
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> (timeHeader - requestValidationTimeout.toSeconds - 10).toString,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> "invalid auth header"
+      )
+    )
 
     res.map(_.status).assertEquals(Status.Ok)
   }
 
   test("allow successfully authenticated request with both v1 and v2 headers, fallback to v1 if v2 failed") {
-    val res = service(Request[IO](GET,uri"/").withHeaders(
-      MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
-      MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> wrongAuthHeaderV2,
-      MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString,
-      MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
-    ))
+    val res = service(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> wrongAuthHeaderV2,
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
+      )
+    )
 
     res.map(_.status).assertEquals(Status.Ok)
   }
 
   test("reject request if validation times out") {
-    val res = service(Request[IO](GET,uri"/").withHeaders(
-      MAuthRequest.X_MWS_TIME_HEADER_NAME -> (timeHeader - requestValidationTimeout.toSeconds - 10).toString,
-      MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
-    ))
+    val res = service(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> (timeHeader - requestValidationTimeout.toSeconds - 10).toString,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
+      )
+    )
 
-    res.redeem({
-        case e if e.isInstanceOf[MAuthValidationException] => true // TODO: fix removing the throwing of random Exceptions
-        case _ => false // any other exception shouldn't be thrown
-      },
-      _ => false
-    ).assert
+    res
+      .redeem(
+        {
+          case e if e.isInstanceOf[MAuthValidationException] => true // TODO: fix removing the throwing of random Exceptions
+          case _                                             => false // any other exception shouldn't be thrown
+        },
+        _ => false
+      )
+      .assert
   }
 
   test("reject if public key cannot be found") {
@@ -133,102 +143,125 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
       override def getPublicKey(appUUID: UUID): Future[Option[PublicKey]] =
         if (appUUID == appUuid) {
           Future(none)
-        }
-        else Future.failed(new Throwable("Wrong app UUID"))
+        } else Future.failed(new Throwable("Wrong app UUID"))
       override def getPublicKeyIO(appUUID: UUID): IO[Option[PublicKey]] = ???
     }
 
     val localAuthenticator: RequestAuthenticator = new RequestAuthenticator(localClient, epochTimeProvider)
-    val localService = MAuthMiddleware.httpRoutes[IO](requestValidationTimeout)(route)(implicitly[Async[IO]], localAuthenticator,implicitly[ExecutionContext]).orNotFound
+    val localService =
+      MAuthMiddleware.httpRoutes[IO](requestValidationTimeout)(route)(implicitly[Async[IO]], localAuthenticator, implicitly[ExecutionContext]).orNotFound
 
-    val res = localService(Request[IO](GET,uri"/").withHeaders(
-      MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString,
-      MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
-    ))
+    val res = localService(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
+      )
+    )
 
     res.map(_.status).assertEquals(Status.Unauthorized)
   }
 
   test("reject if Authentication header is missing") {
-    val res = service(Request[IO](GET,uri"/").withHeaders(
-      MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString
-    ))
+    val res = service(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString
+      )
+    )
 
     res.map(_.status).assertEquals(Status.Unauthorized)
   }
 
   test("reject if Time header is missing") {
-    val res = service(Request[IO](GET,uri"/").withHeaders(
-      MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString
-    ))
+    val res = service(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString
+      )
+    )
 
     res.map(_.status).assertEquals(Status.Unauthorized)
   }
 
   test("allow successfully authenticated request when authenticator supports v2 only with both v1 and v2 headers, with V2 headers taking precedence") {
-    val res = serviceV2(Request[IO](GET,uri"/").withHeaders(
-      MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
-      MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2,
-      MAuthRequest.X_MWS_TIME_HEADER_NAME -> (timeHeader - requestValidationTimeout.toSeconds - 10).toString,
-      MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> "invalid auth header"
-    ))
+    val res = serviceV2(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2,
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> (timeHeader - requestValidationTimeout.toSeconds - 10).toString,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> "invalid auth header"
+      )
+    )
 
     res.map(_.status).assertEquals(Status.Ok)
   }
 
   test("allow successfully authenticated request with V2 headers") {
-    val res = serviceV2(Request[IO](GET,uri"/").withHeaders(
-      MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
-      MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2
-    ))
+    val res = serviceV2(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2
+      )
+    )
 
     res.map(_.status).assertEquals(Status.Ok)
   }
 
   test("allow successfully authenticated request with V2 headers uppercase'd") {
-    val res = serviceV2(Request[IO](GET,uri"/").withHeaders(
-      MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
-      MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME.toUpperCase -> authHeaderV2
-    ))
+    val res = serviceV2(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME.toUpperCase -> authHeaderV2
+      )
+    )
 
     res.map(_.status).assertEquals(Status.Ok)
   }
 
   test("reject v2 request if it times out") {
-    val res = serviceV2(Request[IO](GET,uri"/").withHeaders(
-      MAuthRequest.MCC_TIME_HEADER_NAME -> (timeHeader - requestValidationTimeout.toSeconds - 10).toString,
-      MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2
-    ))
+    val res = serviceV2(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_TIME_HEADER_NAME -> (timeHeader - requestValidationTimeout.toSeconds - 10).toString,
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2
+      )
+    )
 
-    res.redeem({
-      case e if e.isInstanceOf[MAuthValidationException] => true // TODO: fix removing the throwing of random Exceptions
-      case _ => false // any other exception shouldn't be thrown
-    },
-      _ => false
-    ).assert
+    res
+      .redeem(
+        {
+          case e if e.isInstanceOf[MAuthValidationException] => true // TODO: fix removing the throwing of random Exceptions
+          case _                                             => false // any other exception shouldn't be thrown
+        },
+        _ => false
+      )
+      .assert
   }
 
   test("reject v2 request if Authentication header is missing") {
-    val res = serviceV2(Request[IO](GET,uri"/").withHeaders(
-      MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString
-    ))
+    val res = serviceV2(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString
+      )
+    )
 
     res.map(_.status).assertEquals(Status.Unauthorized)
   }
 
   test("reject v2 request if Time header is missing") {
-    val res = serviceV2(Request[IO](GET,uri"/").withHeaders(
-      MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2
-    ))
+    val res = serviceV2(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2
+      )
+    )
 
     res.map(_.status).assertEquals(Status.Unauthorized)
   }
 
   test("reject if only v1 headers provided when authenticator is v2 only") {
-    val res = serviceV2(Request[IO](GET,uri"/").withHeaders(
-      MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString,
-      MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
-    ))
+    val res = serviceV2(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
+      )
+    )
 
     res.map(_.status).assertEquals(Status.Unauthorized)
   }

@@ -5,7 +5,7 @@ import cats.data.{Kleisli, OptionT}
 import cats.effect.Sync
 import cats.syntax.all._
 import cats.effect.kernel.Async
-import cats.{Monad, MonadThrow, ~>}
+import cats.{~>, Monad, MonadThrow}
 import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.scaladsl.Authenticator
 import org.http4s.{Http, HttpApp, HttpRoutes, Response, Status}
@@ -38,11 +38,11 @@ object HeaderVersion extends Enum[HeaderVersion] {
 
 object MAuthMiddleware {
   import HeaderVersion._
-  def apply[G[_]: Sync,F[_]](requestValidationTimeout: Duration, fk: F ~> G)(http: Http[G,F])(
-    implicit authenticator: Authenticator,
+  def apply[G[_]: Sync, F[_]](requestValidationTimeout: Duration, fk: F ~> G)(http: Http[G, F])(implicit
+    authenticator: Authenticator,
     ec: ExecutionContext,
     F: Async[F]
-  ): Http[G,F] =
+  ): Http[G, F] =
     Kleisli { request =>
       val logger = Slf4jLogger.getLogger[G]
 
@@ -51,20 +51,22 @@ object MAuthMiddleware {
           Response[F](status = Status.Unauthorized).pure[G]
 
       def extractHeader[A](headerName: CIString)(f: String => F[A]) =
-        request.headers.get(headerName).map(_.head)
-               .fold(F.raiseError[A](MdsolAuthMissingHeaderRejection(headerName.toString))) { header =>
-             f(header.value)
-           }
+        request.headers
+          .get(headerName)
+          .map(_.head)
+          .fold(F.raiseError[A](MdsolAuthMissingHeaderRejection(headerName.toString))) { header =>
+            f(header.value)
+          }
 
-      def extractAll(headerVersion:HeaderVersion) = {
-        val (ahn,thn) = headerVersion match {
-          case V1 => (V1.authHeaderName,V1.timeHeaderName)
-          case V2 => (V2.authHeaderName,V2.timeHeaderName)
+      def extractAll(headerVersion: HeaderVersion) = {
+        val (ahn, thn) = headerVersion match {
+          case V1 => (V1.authHeaderName, V1.timeHeaderName)
+          case V2 => (V2.authHeaderName, V2.timeHeaderName)
         }
         for {
           authHeadValue <- extractHeader(ahn)(s => s.pure[F])
           timeHeadValue <- extractHeader(thn)(s => Try(s.toLong).liftTo[F])
-        } yield (authHeadValue,timeHeadValue)
+        } yield (authHeadValue, timeHeadValue)
 
       }
 
@@ -78,8 +80,7 @@ object MAuthMiddleware {
           extractAll(V2) orElse extractAll(V1)
 
       fk(request.as[Array[Byte]].flatMap { byteArray =>
-
-        authHeaderTimeHeader.flatMap { case (authHeader,timeHeader) =>
+        authHeaderTimeHeader.flatMap { case (authHeader, timeHeader) =>
           val mAuthRequest: MAuthRequest = new MAuthRequest(
             authHeader,
             byteArray,
@@ -96,25 +97,23 @@ object MAuthMiddleware {
             mAuthRequest
           } else mAuthRequest
 
-          F.fromFuture(F.delay(authenticator.authenticate(req)(ec,requestValidationTimeout)))
+          F.fromFuture(F.delay(authenticator.authenticate(req)(ec, requestValidationTimeout)))
         }
       }).flatMap(b =>
         if (b) http(request)
         else logAndReturnDefaultUnauthorizedReq(s"Rejecting request as authentication failed")
-      ).recoverWith {
-        case MdsolAuthMissingHeaderRejection(hn) =>
-          logAndReturnDefaultUnauthorizedReq(s"Rejecting request as header ${hn} missing")
+      ).recoverWith { case MdsolAuthMissingHeaderRejection(hn) =>
+        logAndReturnDefaultUnauthorizedReq(s"Rejecting request as header $hn missing")
       }
     }
 
-  def httpRoutes[F[_]: Async](requestValidationTimeout: Duration)(httpRoutes: HttpRoutes[F])(
-    implicit authenticator: Authenticator,
+  def httpRoutes[F[_]: Async](requestValidationTimeout: Duration)(httpRoutes: HttpRoutes[F])(implicit
+    authenticator: Authenticator,
     ec: ExecutionContext
   ): HttpRoutes[F] = apply(requestValidationTimeout, OptionT.liftK[F])(httpRoutes)
 
-
-  def httpApp[F[_]: Async](requestValidationTimeout: Duration)(httpRoutes: HttpApp[F])(
-    implicit authenticator: Authenticator,
+  def httpApp[F[_]: Async](requestValidationTimeout: Duration)(httpRoutes: HttpApp[F])(implicit
+    authenticator: Authenticator,
     ec: ExecutionContext
   ): HttpApp[F] = apply(requestValidationTimeout, FunctionK.id[F])(httpRoutes)
 }
