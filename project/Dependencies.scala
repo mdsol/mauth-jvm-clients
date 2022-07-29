@@ -31,9 +31,9 @@ object Dependencies extends DependencyUtils {
   val sttpAkkaHttpBackend: ModuleID = "com.softwaremill.sttp.client3" %% "akka-http-backend"       % Version.sttp
   val scalaLibCompat: ModuleID = "org.scala-lang.modules"             %% "scala-collection-compat" % "2.4.3"
   val caffeine: ModuleID = "com.github.ben-manes.caffeine"             % "caffeine"                % "2.9.1"
-  val http4s: ModuleID = "org.http4s" %% "http4s-dsl" % Version.http4s
-  val enumeratum: ModuleID =  "com.beachape" %% "enumeratum" % Version.enumeratum
-  val log4cats = "org.typelevel" %% "log4cats-slf4j" % Version.log4cats
+  val http4s: ModuleID = "org.http4s"                                 %% "http4s-dsl"              % Version.http4s
+  val enumeratum: ModuleID = "com.beachape"                           %% "enumeratum"              % Version.enumeratum
+  val log4cats = "org.typelevel"                                      %% "log4cats-slf4j"          % Version.log4cats
 
   // TEST DEPENDENCIES
   val akkaHttpTestKit: Seq[ModuleID] = Seq(
@@ -47,8 +47,8 @@ object Dependencies extends DependencyUtils {
   val wiremock: ModuleID = "com.github.tomakehurst" % "wiremock"   % "2.27.2"
 
   val munitAndScalacheckForHttp4s: Seq[ModuleID] = Seq(
-    "org.typelevel" %% "discipline-munit" % "1.0.9",
-    "org.typelevel" %% "munit-cats-effect-3" % "1.0.7",
+    "org.typelevel" %% "discipline-munit"        % "1.0.9",
+    "org.typelevel" %% "munit-cats-effect-3"     % "1.0.7",
     "org.typelevel" %% "scalacheck-effect-munit" % "1.0.4"
   )
 

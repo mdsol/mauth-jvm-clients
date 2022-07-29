@@ -145,19 +145,18 @@ lazy val `mauth-authenticator-akka-http` = scalaModuleProject("mauth-authenticat
   )
 
 lazy val `mauth-authenticator-http4s` = (project in file("modules/mauth-authenticator-http4s")) // don't need to cross-compile
-  .dependsOn(`mauth-authenticator-scala`,`mauth-test-utils` % "test")
+  .dependsOn(`mauth-authenticator-scala`, `mauth-test-utils` % "test")
   .settings(
     basicSettings,
     moduleName := "mauth-authenticator-http4s",
     publishSettings,
     testFrameworks += new TestFramework("munit.Framework"),
-      libraryDependencies ++=
+    libraryDependencies ++=
       Dependencies.provided(http4s) ++
         Dependencies.compile(enumeratum) ++
         Dependencies.compile(log4cats) ++
         Dependencies.test(munitAndScalacheckForHttp4s: _*)
   )
-
 
 lazy val `mauth-jvm-clients` = (project in file("."))
   .aggregate(
