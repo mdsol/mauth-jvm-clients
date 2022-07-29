@@ -45,7 +45,7 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
   override def getPublicKey(appUUID: UUID): Future[Option[PublicKey]] =
     getPublicKeyIO(appUUID).unsafeToFuture()
 
-  override def getPublicKeyIO(appUUID: UUID): IO[Option[PublicKey]] = memoizeF(Some(configuration.getTimeToLive.seconds)) {
+  def getPublicKeyIO(appUUID: UUID): IO[Option[PublicKey]] = memoizeF(Some(configuration.getTimeToLive.seconds)) {
     val signedRequest = signer.signRequest(UnsignedRequest.noBody("GET", new URI(configuration.getBaseUrl + getRequestUrlPath(appUUID)), headers = Map.empty))
     retrievePublicKey()(IO.fromFuture(IO(HttpClient.call(signedRequest.toAkkaHttpRequest))))
   }

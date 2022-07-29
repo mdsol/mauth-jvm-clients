@@ -1,7 +1,5 @@
 package com.mdsol.mauth.scaladsl.utils
 
-import cats.effect.IO
-
 import java.security.PublicKey
 import java.util.UUID
 
@@ -15,6 +13,4 @@ trait ClientPublicKeyProvider {
     * @return Future of { @link PublicKey} registered in MAuth for the application with given appUUID.
     */
   def getPublicKey(appUUID: UUID): Future[Option[PublicKey]]
-
-  def getPublicKeyIO(appUUID: UUID): IO[Option[PublicKey]]
 }
