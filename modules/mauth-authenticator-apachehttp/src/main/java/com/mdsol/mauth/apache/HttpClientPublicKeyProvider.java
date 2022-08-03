@@ -31,6 +31,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpClientPublicKeyProvider.class);
 
+  private static final Object mutex = new Object();
   private final AuthenticatorConfiguration configuration;
   private final Signer signer;
   private final CloseableHttpClient httpclient;
@@ -49,8 +50,8 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
   private void setupCache() {
     publicKeyCache =
       Caffeine.newBuilder()
-        .expireAfterAccess(ttl, TimeUnit.SECONDS)
-        .build(this::getPublicKeyFromMauth);
+          .expireAfterWrite(ttl, TimeUnit.SECONDS)
+          .build(this::getPublicKeyFromMauth);
   }
 
   private PublicKey getPublicKeyFromMauth(UUID appUUID) {
@@ -65,12 +66,14 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
   @Override
   public PublicKey getPublicKey(UUID appUUID) {
     try {
-      if (publicKeyCache == null) {
-        // Lazy load public key cache so that we can set the ttl based on the first response max-age
-        // Do Eureka call first to set the ttl
-        PublicKey key = getPublicKeyFromMauth(appUUID);
-        setupCache();
-        publicKeyCache.put(appUUID, key);
+      synchronized (mutex) {
+        if (publicKeyCache == null) {
+          // Lazy load public key cache so that we can set the ttl based on the response max-age
+          // Do Eureka call first to set the ttl
+          PublicKey key = getPublicKeyFromMauth(appUUID);
+          setupCache();
+          publicKeyCache.put(appUUID, key);
+        }
       }
       return publicKeyCache.get(appUUID);
     } catch (Exception e) {
@@ -102,9 +105,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
     @Override
     public String handleResponse(HttpResponse response) throws IOException {
       if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-        if (ttl == null) {
-          ttl = getMaxAge(response).orElse(configuration.getTimeToLive());
-        }
+        ttl = getMaxAge(response).orElse(configuration.getTimeToLive());
 
         HttpEntity entity = response.getEntity();
         String responseAsString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
