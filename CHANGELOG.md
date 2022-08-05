@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- Enhanced the caching implementation of MAuth Authenticator Apachehttp
+- Fix caching to properly re-fetch from MAuth Service in MAuth Authenticator Apachehttp
 
 ## [9.0.0] - 2022-07-29
 

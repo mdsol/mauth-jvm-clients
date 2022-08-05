@@ -8,6 +8,7 @@ import com.mdsol.mauth.Signer;
 import com.mdsol.mauth.exception.HttpClientPublicKeyProviderException;
 import com.mdsol.mauth.util.MAuthKeysHelper;
 import com.mdsol.mauth.utils.ClientPublicKeyProvider;
+
 import org.apache.http.*;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -73,6 +74,11 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
           PublicKey key = getPublicKeyFromMauth(appUUID);
           setupCache();
           publicKeyCache.put(appUUID, key);
+        }
+        else {
+          if (publicKeyCache.policy().expireAfterWrite().isPresent()) {
+             publicKeyCache.policy().expireAfterWrite().get().setExpiresAfter(ttl, TimeUnit.SECONDS);
+           }
         }
       }
       return publicKeyCache.get(appUUID);
