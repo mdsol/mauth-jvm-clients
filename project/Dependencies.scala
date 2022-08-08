@@ -30,7 +30,7 @@ object Dependencies extends DependencyUtils {
   val sttp: ModuleID = "com.softwaremill.sttp.client3"                %% "core"                    % Version.sttp
   val sttpAkkaHttpBackend: ModuleID = "com.softwaremill.sttp.client3" %% "akka-http-backend"       % Version.sttp
   val scalaLibCompat: ModuleID = "org.scala-lang.modules"             %% "scala-collection-compat" % "2.4.3"
-  val caffeine: ModuleID = "com.github.ben-manes.caffeine"             % "caffeine"                % "2.9.1"
+  val caffeine: ModuleID = "com.github.ben-manes.caffeine"             % "caffeine"                % "3.1.1"
   val http4s: ModuleID = "org.http4s"                                 %% "http4s-dsl"              % Version.http4s
   val enumeratum: ModuleID = "com.beachape"                           %% "enumeratum"              % Version.enumeratum
   val log4cats = "org.typelevel"                                      %% "log4cats-slf4j"          % Version.log4cats

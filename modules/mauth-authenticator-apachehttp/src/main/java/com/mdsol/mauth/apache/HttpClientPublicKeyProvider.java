@@ -2,6 +2,7 @@ package com.mdsol.mauth.apache;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Expiry;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.mdsol.mauth.AuthenticatorConfiguration;
 import com.mdsol.mauth.Signer;
@@ -32,14 +33,11 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpClientPublicKeyProvider.class);
 
-  private static final Object mutex = new Object();
   private final AuthenticatorConfiguration configuration;
   private final Signer signer;
   private final CloseableHttpClient httpclient;
   private final PublicKeyResponseHandler publicKeyResponseHandler;
-
-  private LoadingCache<UUID, PublicKey> publicKeyCache;
-  private Long ttl;
+  private LoadingCache<UUID, PublicKeyData> publicKeyCache;
 
   public HttpClientPublicKeyProvider(AuthenticatorConfiguration configuration, Signer signer) {
     this.configuration = configuration;
@@ -49,39 +47,38 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
   }
 
   private void setupCache() {
-    publicKeyCache =
-      Caffeine.newBuilder()
-          .expireAfterWrite(ttl, TimeUnit.SECONDS)
-          .build(this::getPublicKeyFromMauth);
+    publicKeyCache = Caffeine.newBuilder()
+        .expireAfter(new Expiry<UUID, PublicKeyData>() {
+          public long expireAfterCreate(UUID key, PublicKeyData data, long currentTime) {
+            return TimeUnit.SECONDS.toNanos(data.getDuration());
+          }
+          public long expireAfterUpdate(UUID key, PublicKeyData data, long currentTime, long currentDuration) {
+            return currentDuration;
+          }
+          public long expireAfterRead(UUID key, PublicKeyData data, long currentTime, long currentDuration) {
+            return currentDuration;
+          }
+        })
+        .build(this::getPublicKeyFromMauth);
   }
 
-  private PublicKey getPublicKeyFromMauth(UUID appUUID) {
+  private PublicKeyData getPublicKeyFromMauth(UUID appUUID) {
     byte[] payload = new byte[0];
     String requestUrlPath = getRequestUrlPath(appUUID);
     Map<String, String> headers = signer.generateRequestHeaders("GET", requestUrlPath, payload, "");
     String requestUrl = configuration.getBaseUrl() + requestUrlPath;
-    String publicKeyAsString = get(requestUrl, headers, publicKeyResponseHandler);
-    return MAuthKeysHelper.getPublicKeyFromString(publicKeyAsString);
+    return get(requestUrl, headers, publicKeyResponseHandler);
   }
 
   @Override
   public PublicKey getPublicKey(UUID appUUID) {
     try {
-      synchronized (mutex) {
-        if (publicKeyCache == null) {
-          // Lazy load public key cache so that we can set the ttl based on the response max-age
-          // Do Eureka call first to set the ttl
-          PublicKey key = getPublicKeyFromMauth(appUUID);
-          setupCache();
-          publicKeyCache.put(appUUID, key);
-        }
-        else {
-          if (publicKeyCache.policy().expireAfterWrite().isPresent()) {
-             publicKeyCache.policy().expireAfterWrite().get().setExpiresAfter(ttl, TimeUnit.SECONDS);
-           }
-        }
+      if (publicKeyCache == null) {
+        PublicKeyData data = getPublicKeyFromMauth(appUUID);
+        setupCache();
+        publicKeyCache.put(appUUID, data);
       }
-      return publicKeyCache.get(appUUID);
+      return publicKeyCache.get(appUUID).getPublicKey();
     } catch (Exception e) {
       logger.error("Public key retrieval error", e);
       throw new HttpClientPublicKeyProviderException(e);
@@ -104,19 +101,21 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
     }
   }
 
-  private class PublicKeyResponseHandler implements ResponseHandler<String> {
+  private class PublicKeyResponseHandler implements ResponseHandler<PublicKeyData> {
     private static final String MAX_AGE = "max-age";
     private static final String PUBLIC_KEY_STR = "public_key_str";
 
     @Override
-    public String handleResponse(HttpResponse response) throws IOException {
+    public PublicKeyData handleResponse(HttpResponse response) throws IOException {
       if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-        ttl = getMaxAge(response).orElse(configuration.getTimeToLive());
+        Long timeToLive = getMaxAge(response).orElse(configuration.getTimeToLive());
 
         HttpEntity entity = response.getEntity();
         String responseAsString = EntityUtils.toString(entity, StandardCharsets.UTF_8);
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.readTree(responseAsString).findValue(PUBLIC_KEY_STR).asText();
+        String publicKeyString = mapper.readTree(responseAsString).findValue(PUBLIC_KEY_STR).asText();
+
+        return new PublicKeyData(MAuthKeysHelper.getPublicKeyFromString(publicKeyString), timeToLive);
       } else {
         throw new HttpClientPublicKeyProviderException("Invalid response code returned by server: "
           + response.getStatusLine().getStatusCode());
@@ -132,4 +131,23 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
           .findFirst());
     }
   }
+
+  private static class PublicKeyData {
+    private final PublicKey publicKey;
+    private final Long duration;
+
+    public PublicKeyData(PublicKey publicKey, Long duration) {
+      this.publicKey = publicKey;
+      this.duration = duration;
+    }
+
+    public PublicKey getPublicKey() {
+      return publicKey;
+    }
+
+    public Long getDuration() {
+      return duration;
+    }
+  }
+
 }
