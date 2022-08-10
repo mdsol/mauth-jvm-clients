@@ -50,7 +50,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
     publicKeyCache = Caffeine.newBuilder()
         .expireAfter(new Expiry<UUID, PublicKeyData>() {
           public long expireAfterCreate(UUID key, PublicKeyData data, long currentTime) {
-            return TimeUnit.SECONDS.toNanos(data.getDuration());
+            return TimeUnit.SECONDS.toNanos(data.getMaxAgeSeconds());
           }
           public long expireAfterUpdate(UUID key, PublicKeyData data, long currentTime, long currentDuration) {
             return currentDuration;
@@ -134,19 +134,19 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
 
   private static class PublicKeyData {
     private final PublicKey publicKey;
-    private final Long duration;
+    private final Long maxAgeSeconds;
 
-    public PublicKeyData(PublicKey publicKey, Long duration) {
+    public PublicKeyData(PublicKey publicKey, Long maxAgeSeconds) {
       this.publicKey = publicKey;
-      this.duration = duration;
+      this.maxAgeSeconds = maxAgeSeconds;
     }
 
     public PublicKey getPublicKey() {
       return publicKey;
     }
 
-    public Long getDuration() {
-      return duration;
+    public Long getMaxAgeSeconds() {
+      return maxAgeSeconds;
     }
   }
 
