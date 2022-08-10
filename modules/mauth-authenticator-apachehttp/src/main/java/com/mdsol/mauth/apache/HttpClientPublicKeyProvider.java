@@ -44,6 +44,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
     this.signer = signer;
     this.httpclient = HttpClients.createDefault();
     this.publicKeyResponseHandler = new PublicKeyResponseHandler();
+    setupCache();
   }
 
   private void setupCache() {
@@ -72,17 +73,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
 
   @Override
   public PublicKey getPublicKey(UUID appUUID) {
-    try {
-      if (publicKeyCache == null) {
-        PublicKeyData data = getPublicKeyFromMauth(appUUID);
-        setupCache();
-        publicKeyCache.put(appUUID, data);
-      }
-      return publicKeyCache.get(appUUID).getPublicKey();
-    } catch (Exception e) {
-      logger.error("Public key retrieval error", e);
-      throw new HttpClientPublicKeyProviderException(e);
-    }
+    return publicKeyCache.get(appUUID).getPublicKey();
   }
 
   private String getRequestUrlPath(UUID appUUID) {
@@ -97,6 +88,7 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
       }
       return httpclient.execute(httpGet, responseHandler);
     } catch (IOException ex) {
+      logger.error("Public key retrieval error", ex);
       throw new HttpClientPublicKeyProviderException(ex);
     }
   }
