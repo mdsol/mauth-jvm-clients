@@ -37,18 +37,18 @@ public class HttpClientPublicKeyProvider implements ClientPublicKeyProvider {
   private final Signer signer;
   private final CloseableHttpClient httpclient;
   private final PublicKeyResponseHandler publicKeyResponseHandler;
-  private LoadingCache<UUID, PublicKeyData> publicKeyCache;
+  private final LoadingCache<UUID, PublicKeyData> publicKeyCache;
 
   public HttpClientPublicKeyProvider(AuthenticatorConfiguration configuration, Signer signer) {
     this.configuration = configuration;
     this.signer = signer;
     this.httpclient = HttpClients.createDefault();
     this.publicKeyResponseHandler = new PublicKeyResponseHandler();
-    setupCache();
+    this.publicKeyCache = setupCache();
   }
 
-  private void setupCache() {
-    publicKeyCache = Caffeine.newBuilder()
+  private LoadingCache<UUID, PublicKeyData> setupCache() {
+    return Caffeine.newBuilder()
         .expireAfter(new Expiry<UUID, PublicKeyData>() {
           public long expireAfterCreate(UUID key, PublicKeyData data, long currentTime) {
             return TimeUnit.SECONDS.toNanos(data.getMaxAgeSeconds());
