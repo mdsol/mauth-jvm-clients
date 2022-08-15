@@ -6,8 +6,8 @@ import java.nio.charset.StandardCharsets
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
 import com.mdsol.mauth.http.Implicits._
-import com.mdsol.mauth.models.{SignedRequest => NewSignedRequest, UnsignedRequest => NewUnsignedRequest}
 import com.mdsol.mauth.{MAuthRequest, SignedRequest, UnsignedRequest}
+import com.mdsol.mauth.models.{SignedRequest => NewSignedRequest, UnsignedRequest => NewUnsignedRequest}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

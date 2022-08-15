@@ -2,7 +2,6 @@ package com.mdsol.mauth.akka.http
 
 import java.net.URI
 import java.security.Security
-
 import akka.actor.ActorSystem
 import com.mdsol.mauth.models.{SignedRequest, UnsignedRequest}
 import com.mdsol.mauth.test.utils.{FakeMAuthServer, PortFinder}

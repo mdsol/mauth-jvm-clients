@@ -4,7 +4,6 @@ import java.net.URI
 import akka.actor.ActorSystem
 import com.mdsol.mauth.http.HttpClient
 import com.mdsol.mauth.http.Implicits._
-import com.mdsol.mauth.models.UnsignedRequest
 import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.duration._
