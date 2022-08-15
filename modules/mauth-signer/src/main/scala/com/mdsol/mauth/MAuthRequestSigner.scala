@@ -1,14 +1,15 @@
 package com.mdsol.mauth
 
-import java.net.URI
-import java.security.PrivateKey
-import java.util.{List, UUID}
-
 import scala.jdk.CollectionConverters._
 import models.{SignedRequest => NewSignedRequest, UnsignedRequest => NewUnsignedRequest}
 import com.mdsol.mauth.util.{CurrentEpochTimeProvider, EpochTimeProvider, MAuthKeysHelper}
 
+import java.net.URI
+import java.security.PrivateKey
+import java.util.{List, UUID}
+
 import scala.util.{Failure, Success, Try}
+
 
 /** Library agnostic representation of the data required for a request signing
   *

@@ -54,7 +54,7 @@ lazy val `mauth-test-utils` = javaModuleProject("mauth-test-utils")
       Dependencies.compile(commonsIO, logbackClassic, wiremock).map(withExclusions)
   )
 
-lazy val `mauth-signer` = javaModuleProject("mauth-signer")
+lazy val `mauth-signer` = scalaModuleProject("mauth-signer")
   .dependsOn(`mauth-common`, `mauth-test-utils` % "test")
   .settings(
     publishSettings,
@@ -93,8 +93,21 @@ lazy val `mauth-signer-sttp` = scalaModuleProject("mauth-signer-sttp")
     publishSettings,
     libraryDependencies ++=
       Dependencies.compile(scalaLibCompat, sttp, scalaLogging).map(withExclusions) ++
-        Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions),
-    // TODO remove once published
+        Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions)
+  )
+
+lazy val `mauth-signer-http4s` = scalaModuleProject("mauth-signer-http4s")
+  .dependsOn(`mauth-signer`, `mauth-test-utils` % "test")
+  .settings(
+    basicSettings,
+    moduleName := "mauth-authenticator-http4s",
+    publishSettings,
+    testFrameworks += new TestFramework("munit.Framework"),
+    libraryDependencies ++=
+      Dependencies.provided(http4sClient) ++
+        Dependencies.compile(enumeratum) ++
+        Dependencies.compile(log4cats) ++
+        Dependencies.test(munitCatsEffect, http4sDsl),
     mimaPreviousArtifacts := Set.empty
   )
 
@@ -152,11 +165,10 @@ lazy val `mauth-authenticator-http4s` = (project in file("modules/mauth-authenti
     publishSettings,
     testFrameworks += new TestFramework("munit.Framework"),
     libraryDependencies ++=
-      Dependencies.provided(http4s) ++
+      Dependencies.provided(http4sDsl) ++
         Dependencies.compile(enumeratum) ++
         Dependencies.compile(log4cats) ++
-        Dependencies.test(munitCatsEffect),
-    mimaPreviousArtifacts := Set.empty
+        Dependencies.test(munitCatsEffect)
   )
 
 lazy val `mauth-jvm-clients` = (project in file("."))
@@ -168,6 +180,7 @@ lazy val `mauth-jvm-clients` = (project in file("."))
     `mauth-common`,
     `mauth-signer`,
     `mauth-signer-akka-http`,
+    `mauth-signer-http4s`,
     `mauth-signer-sttp`,
     `mauth-signer-apachehttp`,
     `mauth-sender-sttp-akka-http`,

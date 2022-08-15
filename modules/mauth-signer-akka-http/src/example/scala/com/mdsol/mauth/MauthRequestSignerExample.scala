@@ -1,10 +1,10 @@
 package com.mdsol.mauth
 
 import java.net.URI
-
 import akka.actor.ActorSystem
 import com.mdsol.mauth.http.HttpClient
 import com.mdsol.mauth.http.Implicits._
+import com.mdsol.mauth.models.UnsignedRequest
 import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.duration._
@@ -26,7 +26,7 @@ object MauthRequestSignerExample {
     val httpMethod = "GET"
     val uri = URI.create("https://api.mdsol.com/v1/countries")
 
-    val signedRequest = MAuthRequestSigner(configuration).signRequest(models.UnsignedRequest(httpMethod, uri, body = Array.empty, headers = Map.empty))
+    val signedRequest = MAuthRequestSigner(configuration).signRequest(UnsignedRequest(httpMethod, uri, body = Array.empty, headers = Map.empty))
     Await.result(
       HttpClient.call(signedRequest.toAkkaHttpRequest).map(response => println(s"response code: ${response._1.value}, response: ${response._3.toString}")),
       10.seconds
