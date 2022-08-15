@@ -17,7 +17,7 @@ import org.http4s.Method._
 
 import java.security.{PublicKey, Security}
 import java.util.UUID
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class MAuthMiddlewareSuite extends CatsEffectSuite {
@@ -75,11 +75,11 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
 
   private implicit val authenticator: RequestAuthenticator = new RequestAuthenticator(client, epochTimeProvider)
 
-  private val service = MAuthMiddleware.httpRoutes[IO](requestValidationTimeout)(route).orNotFound
+  private val service = MAuthMiddleware.httpRoutes[IO](requestValidationTimeout, authenticator)(route).orNotFound
 
   val authenticatorV2: RequestAuthenticator = new RequestAuthenticator(client, epochTimeProvider, v2OnlyAuthenticate = true)
   val serviceV2 =
-    MAuthMiddleware.httpRoutes[IO](requestValidationTimeout)(route)(implicitly[Async[IO]], authenticatorV2, implicitly[ExecutionContext]).orNotFound
+    MAuthMiddleware.httpRoutes[IO](requestValidationTimeout,authenticatorV2)(route).orNotFound
 
   test("allow successfully authenticated request") {
     val res = service(
@@ -147,7 +147,7 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
 
     val localAuthenticator: RequestAuthenticator = new RequestAuthenticator(localClient, epochTimeProvider)
     val localService =
-      MAuthMiddleware.httpRoutes[IO](requestValidationTimeout)(route)(implicitly[Async[IO]], localAuthenticator, implicitly[ExecutionContext]).orNotFound
+      MAuthMiddleware.httpRoutes[IO](requestValidationTimeout,localAuthenticator)(route).orNotFound
 
     val res = localService(
       Request[IO](GET, uri"/").withHeaders(
