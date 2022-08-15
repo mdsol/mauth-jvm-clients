@@ -10,7 +10,6 @@ import java.util.{List, UUID}
 
 import scala.util.{Failure, Success, Try}
 
-
 /** Library agnostic representation of the data required for a request signing
   *
   * @param httpMethod The HTTP verb of this API call

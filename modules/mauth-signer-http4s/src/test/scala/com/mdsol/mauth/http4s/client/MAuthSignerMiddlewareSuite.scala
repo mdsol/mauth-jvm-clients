@@ -14,7 +14,6 @@ import com.mdsol.mauth.util.EpochTimeProvider
 import java.net.URI
 import java.util.UUID
 
-
 class MAuthSignerMiddlewareSuite extends CatsEffectSuite {
 
   private val CONST_EPOCH_TIME_PROVIDER: EpochTimeProvider = new EpochTimeProvider() { override def inSeconds(): Long = EXPECTED_TIME_HEADER_1.toLong }
@@ -33,15 +32,14 @@ class MAuthSignerMiddlewareSuite extends CatsEffectSuite {
     java.util.Arrays.asList[MAuthVersion](MAuthVersion.MWS)
   )
 
-
-  private def route(headers: Map[String,String]) = HttpRoutes.of[IO] {
-    case req @ POST -> Root / "v1" / "test" =>
+  private def route(headers: Map[String, String]) = HttpRoutes
+    .of[IO] { case req @ POST -> Root / "v1" / "test" =>
       if (headers.forall(h => req.headers.headers.map(h => h.name.toString -> h.value).contains(h)))
         Response[IO](Status.Ok).pure[IO]
       else
         Response[IO](Status.InternalServerError).pure[IO]
-  }.orNotFound
-
+    }
+    .orNotFound
 
   test("correctly send a customized content-type header for v2") {
 
@@ -60,11 +58,15 @@ class MAuthSignerMiddlewareSuite extends CatsEffectSuite {
 
     val mAuthedClient = MAuthSigner(signerV2)(client)
 
-    mAuthedClient.status(Request[IO](
-      method = POST,
-      uri = Uri.unsafeFromString(s"/v1/test"),
-      headers = Headers(signedReq.mauthHeaders.toList ++ List("Content-Type" -> "application/json") )
-    )).assertEquals(Status.Ok)
+    mAuthedClient
+      .status(
+        Request[IO](
+          method = POST,
+          uri = Uri.unsafeFromString(s"/v1/test"),
+          headers = Headers(signedReq.mauthHeaders.toList ++ List("Content-Type" -> "application/json"))
+        )
+      )
+      .assertEquals(Status.Ok)
   }
 
   test("correctly send a customized content-type header for v1") {
@@ -84,10 +86,14 @@ class MAuthSignerMiddlewareSuite extends CatsEffectSuite {
 
     val mAuthedClient = MAuthSigner(signerV1)(client)
 
-    mAuthedClient.status(Request[IO](
-      method = POST,
-      uri = Uri.unsafeFromString(s"/v1/test"),
-      headers = Headers(signedReq.mauthHeaders.toList ++ List("Content-Type" -> "application/json"))
-    )).assertEquals(Status.Ok)
+    mAuthedClient
+      .status(
+        Request[IO](
+          method = POST,
+          uri = Uri.unsafeFromString(s"/v1/test"),
+          headers = Headers(signedReq.mauthHeaders.toList ++ List("Content-Type" -> "application/json"))
+        )
+      )
+      .assertEquals(Status.Ok)
   }
 }

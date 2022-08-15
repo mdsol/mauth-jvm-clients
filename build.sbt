@@ -59,7 +59,8 @@ lazy val `mauth-signer` = scalaModuleProject("mauth-signer")
   .settings(
     publishSettings,
     libraryDependencies ++=
-      Dependencies.test(scalaMock, scalaTest).map(withExclusions)
+      Dependencies.compile(scalaLibCompat) ++
+        Dependencies.test(scalaMock, scalaTest).map(withExclusions)
   )
 
 lazy val `mauth-signer-apachehttp` = javaModuleProject("mauth-signer-apachehttp")
