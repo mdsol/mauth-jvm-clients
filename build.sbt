@@ -198,6 +198,7 @@ lazy val `mauth-jvm-clients` = (project in file("."))
     `mauth-common`,
     `mauth-signer`,
     `mauth-signer-akka-http`,
+    `mauth-signer-scala-core`,
     `mauth-signer-http4s`,
     `mauth-signer-sttp`,
     `mauth-signer-apachehttp`,
