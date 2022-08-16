@@ -110,7 +110,6 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers {
       .mauthHeaders(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTHENTICATION_HEADER
   }
 
-
   "MAuthRequestSigner with V1 only required" should "add mauth headers to a request for V1 only " in {
     val authHeaders = signerV1.signRequest(simpleNewUnsignedRequest).mauthHeaders
     authHeaders.size shouldEqual 2
