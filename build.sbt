@@ -78,7 +78,6 @@ lazy val `mauth-signer-scala-core` = scalaModuleProject("mauth-signer-scala-core
   .dependsOn(`mauth-signer`, `mauth-test-utils` % "test")
   .settings(
     publishSettings,
-    moduleName := "mauth-signer-scala-core",
     libraryDependencies ++=
       Dependencies.compile(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.compile(scalaLogging, scalaLibCompat).map(withExclusions) ++
@@ -114,7 +113,6 @@ lazy val `mauth-signer-http4s` = scalaModuleProject("mauth-signer-http4s")
   .dependsOn(`mauth-signer`, `mauth-signer-scala-core`, `mauth-test-utils` % "test")
   .settings(
     basicSettings,
-    moduleName := "mauth-authenticator-http4s",
     publishSettings,
     testFrameworks += new TestFramework("munit.Framework"),
     libraryDependencies ++=
