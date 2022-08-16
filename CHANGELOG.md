@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [10.0.0] - 2022-08-16
 ### Changed
 - Fix caching to properly re-fetch from MAuth Service in MAuth Authenticator Apachehttp
 
