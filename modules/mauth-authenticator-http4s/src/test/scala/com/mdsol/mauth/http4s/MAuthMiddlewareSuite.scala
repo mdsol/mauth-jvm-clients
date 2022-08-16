@@ -79,7 +79,7 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
 
   val authenticatorV2: RequestAuthenticator = new RequestAuthenticator(client, epochTimeProvider, v2OnlyAuthenticate = true)
   val serviceV2 =
-    MAuthMiddleware.httpRoutes[IO](requestValidationTimeout,authenticatorV2)(route).orNotFound
+    MAuthMiddleware.httpRoutes[IO](requestValidationTimeout, authenticatorV2)(route).orNotFound
 
   test("allow successfully authenticated request") {
     val res = service(
@@ -147,7 +147,7 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
 
     val localAuthenticator: RequestAuthenticator = new RequestAuthenticator(localClient, epochTimeProvider)
     val localService =
-      MAuthMiddleware.httpRoutes[IO](requestValidationTimeout,localAuthenticator)(route).orNotFound
+      MAuthMiddleware.httpRoutes[IO](requestValidationTimeout, localAuthenticator)(route).orNotFound
 
     val res = localService(
       Request[IO](GET, uri"/").withHeaders(
