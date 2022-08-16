@@ -4,25 +4,12 @@ import java.net.URI
 import java.security.Security
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model._
-import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, equalTo, post, urlPathEqualTo}
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
-import com.mdsol.mauth.http.HttpClient
-import com.mdsol.mauth.http.Implicits._
 import com.mdsol.mauth.models.{UnsignedRequest => NewUnsignedRequest}
 import com.mdsol.mauth.test.utils.TestFixtures._
 import com.mdsol.mauth.util.EpochTimeProvider
-import org.apache.http.HttpStatus
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.concurrent.PatienceConfiguration.Timeout
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-
-import scala.concurrent.duration._
 
 class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers {
 

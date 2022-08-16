@@ -77,13 +77,11 @@ lazy val `mauth-signer-apachehttp` = javaModuleProject("mauth-signer-apachehttp"
 lazy val `mauth-signer-scala-core` = scalaModuleProject("mauth-signer-scala-core")
   .dependsOn(`mauth-signer`, `mauth-test-utils` % "test")
   .settings(
-    noPublishSettings,
+    publishSettings,
     moduleName := "mauth-signer-scala-core",
-    testFrameworks += new TestFramework("munit.Framework"),
     libraryDependencies ++=
       Dependencies.compile(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.compile(scalaLogging, scalaLibCompat).map(withExclusions) ++
-        //Dependencies.example(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.test(scalaMock, scalaTest, wiremock).map(withExclusions),
     mimaPreviousArtifacts := Set.empty
   )
@@ -98,7 +96,8 @@ lazy val `mauth-signer-akka-http` = scalaModuleProject("mauth-signer-akka-http")
       Dependencies.provided(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.compile(scalaLogging, scalaLibCompat).map(withExclusions) ++
         Dependencies.example(akkaHttp, akkaStream).map(withExclusions) ++
-        Dependencies.test(scalaMock, scalaTest, wiremock).map(withExclusions)
+        Dependencies.test(scalaMock, scalaTest, wiremock).map(withExclusions),
+    mimaPreviousArtifacts := Set.empty
   )
 
 lazy val `mauth-signer-sttp` = scalaModuleProject("mauth-signer-sttp")
@@ -107,7 +106,8 @@ lazy val `mauth-signer-sttp` = scalaModuleProject("mauth-signer-sttp")
     publishSettings,
     libraryDependencies ++=
       Dependencies.compile(scalaLibCompat, sttp, scalaLogging).map(withExclusions) ++
-        Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions)
+        Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions),
+    mimaPreviousArtifacts := Set.empty
   )
 
 lazy val `mauth-signer-http4s` = scalaModuleProject("mauth-signer-http4s")
@@ -134,7 +134,8 @@ lazy val `mauth-sender-sttp-akka-http` = scalaModuleProject("mauth-sender-sttp-a
     publishSettings,
     libraryDependencies ++=
       Dependencies.compile(catsEffect, akkaHttp, akkaStream, scalaLibCompat, sttp, scalaLogging).map(withExclusions) ++
-        Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions)
+        Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions),
+    mimaPreviousArtifacts := Set.empty
   )
 
 lazy val `mauth-authenticator` = javaModuleProject("mauth-authenticator")
@@ -149,7 +150,8 @@ lazy val `mauth-authenticator-scala` = scalaModuleProject("mauth-authenticator-s
     publishSettings,
     libraryDependencies ++=
       Dependencies.test(logbackClassic, scalaMock, scalaTest, scalaLibCompat).map(withExclusions) ++
-        Dependencies.compile(catsEffect).map(withExclusions)
+        Dependencies.compile(catsEffect).map(withExclusions),
+    mimaPreviousArtifacts := Set.empty
   )
 
 lazy val `mauth-authenticator-apachehttp` = javaModuleProject("mauth-authenticator-apachehttp")
@@ -158,7 +160,8 @@ lazy val `mauth-authenticator-apachehttp` = javaModuleProject("mauth-authenticat
     publishSettings,
     libraryDependencies ++=
       Dependencies.compile(jacksonDataBind, guava, slf4jApi).map(withExclusions) ++
-        Dependencies.test(scalaMock, scalaTest, wiremock).map(withExclusions)
+        Dependencies.test(scalaMock, scalaTest, wiremock).map(withExclusions),
+    mimaPreviousArtifacts := Set.empty
   )
 
 lazy val `mauth-authenticator-akka-http` = scalaModuleProject("mauth-authenticator-akka-http")
@@ -168,7 +171,8 @@ lazy val `mauth-authenticator-akka-http` = scalaModuleProject("mauth-authenticat
     libraryDependencies ++=
       Dependencies.provided(akkaHttp, akkaStream) ++
         Dependencies.compile(jacksonDataBind, scalaCache).map(withExclusions) ++
-        Dependencies.test(scalaTest, scalaMock, wiremock) ++ Dependencies.test(akkaHttpTestKit: _*).map(withExclusions)
+        Dependencies.test(scalaTest, scalaMock, wiremock) ++ Dependencies.test(akkaHttpTestKit: _*).map(withExclusions),
+    mimaPreviousArtifacts := Set.empty
   )
 
 lazy val `mauth-authenticator-http4s` = (project in file("modules/mauth-authenticator-http4s")) // don't need to cross-compile
