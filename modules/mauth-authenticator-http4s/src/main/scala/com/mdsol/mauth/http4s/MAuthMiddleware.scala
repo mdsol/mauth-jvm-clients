@@ -38,8 +38,7 @@ object HeaderVersion extends Enum[HeaderVersion] {
 
 object MAuthMiddleware {
   import HeaderVersion._
-  def apply[G[_]: Sync, F[_]](requestValidationTimeout: Duration, fk: F ~> G)(http: Http[G, F])(implicit
-    authenticator: Authenticator,
+  def apply[G[_]: Sync, F[_]](requestValidationTimeout: Duration, authenticator: Authenticator, fk: F ~> G)(http: Http[G, F])(implicit
     ec: ExecutionContext,
     F: Async[F]
   ): Http[G, F] =
@@ -107,13 +106,11 @@ object MAuthMiddleware {
       }
     }
 
-  def httpRoutes[F[_]: Async](requestValidationTimeout: Duration)(httpRoutes: HttpRoutes[F])(implicit
-    authenticator: Authenticator,
+  def httpRoutes[F[_]: Async](requestValidationTimeout: Duration, authenticator: Authenticator)(httpRoutes: HttpRoutes[F])(implicit
     ec: ExecutionContext
-  ): HttpRoutes[F] = apply(requestValidationTimeout, OptionT.liftK[F])(httpRoutes)
+  ): HttpRoutes[F] = apply(requestValidationTimeout, authenticator, OptionT.liftK[F])(httpRoutes)
 
-  def httpApp[F[_]: Async](requestValidationTimeout: Duration)(httpRoutes: HttpApp[F])(implicit
-    authenticator: Authenticator,
+  def httpApp[F[_]: Async](requestValidationTimeout: Duration, authenticator: Authenticator)(httpRoutes: HttpApp[F])(implicit
     ec: ExecutionContext
-  ): HttpApp[F] = apply(requestValidationTimeout, FunctionK.id[F])(httpRoutes)
+  ): HttpApp[F] = apply(requestValidationTimeout, authenticator, FunctionK.id[F])(httpRoutes)
 }

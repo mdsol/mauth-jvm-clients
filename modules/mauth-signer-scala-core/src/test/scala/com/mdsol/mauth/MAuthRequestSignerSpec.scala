@@ -24,10 +24,7 @@ import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 
-class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers with HttpClient with BeforeAndAfterAll with ScalaFutures {
-
-  implicit val system: ActorSystem = ActorSystem()
-  var service = new WireMockServer(wireMockConfig.dynamicPort)
+class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers {
 
   Security.addProvider(new BouncyCastleProvider)
 
@@ -53,12 +50,6 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers with HttpClient w
     CONST_EPOCH_TIME_PROVIDER,
     java.util.Arrays.asList[MAuthVersion](MAuthVersion.MWS)
   )
-
-  override protected def beforeAll(): Unit =
-    service.start()
-
-  override protected def afterAll(): Unit =
-    service.stop()
 
   val simpleUnsignedRequest: UnsignedRequest = UnsignedRequest(uri = URI_EMPTY_PATH)
   val simpleNewUnsignedRequest: NewUnsignedRequest =
@@ -132,42 +123,6 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers with HttpClient w
       .mauthHeaders(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTHENTICATION_HEADER
   }
 
-  it should "correctly send a customized content-type header" in {
-    service.stubFor(
-      post(urlPathEqualTo(s"/v1/test"))
-        .willReturn(aResponse().withStatus(HttpStatus.SC_OK))
-        .withHeader("Content-type", equalTo("application/json"))
-    )
-
-    val simpleNewUnsignedRequest =
-      NewUnsignedRequest
-        .fromStringBodyUtf8(
-          httpMethod = "POST",
-          uri = new URI(s"${service.baseUrl()}/v1/test"),
-          body = "",
-          headers = Map("Content-Type" -> ContentTypes.`application/json`.toString())
-        )
-
-    whenReady(HttpClient.call(signerV2.signRequest(simpleNewUnsignedRequest).toAkkaHttpRequest), timeout = Timeout(5.seconds)) { response =>
-      response.status shouldBe StatusCodes.OK
-    }
-  }
-
-  it should "correctly send the default content type (text/plain UTF-8) when content type not specified" in {
-    service.stubFor(
-      post(urlPathEqualTo(s"/v1/test"))
-        .willReturn(aResponse().withStatus(HttpStatus.SC_OK))
-        .withHeader("Content-type", equalTo(ContentTypes.`text/plain(UTF-8)`.toString()))
-    )
-
-    val simpleNewUnsignedRequest =
-      NewUnsignedRequest
-        .fromStringBodyUtf8(httpMethod = "POST", uri = new URI(s"${service.baseUrl()}/v1/test"), body = "", headers = Map())
-
-    whenReady(HttpClient.call(signerV2.signRequest(simpleNewUnsignedRequest).toAkkaHttpRequest), timeout = Timeout(5.seconds)) { response =>
-      response.status shouldBe StatusCodes.OK
-    }
-  }
 
   "MAuthRequestSigner with V1 only required" should "add mauth headers to a request for V1 only " in {
     val authHeaders = signerV1.signRequest(simpleNewUnsignedRequest).mauthHeaders
