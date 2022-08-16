@@ -77,13 +77,12 @@ lazy val `mauth-signer-apachehttp` = javaModuleProject("mauth-signer-apachehttp"
 lazy val `mauth-signer-scala-core` = scalaModuleProject("mauth-signer-scala-core")
   .dependsOn(`mauth-signer`, `mauth-test-utils` % "test")
   .settings(
-    noPublishSettings,
+    publishSettings,
     moduleName := "mauth-signer-scala-core",
     testFrameworks += new TestFramework("munit.Framework"),
     libraryDependencies ++=
       Dependencies.compile(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.compile(scalaLogging, scalaLibCompat).map(withExclusions) ++
-        //Dependencies.example(akkaHttp, akkaStream).map(withExclusions) ++
         Dependencies.test(scalaMock, scalaTest, wiremock).map(withExclusions),
     mimaPreviousArtifacts := Set.empty
   )
@@ -121,8 +120,7 @@ lazy val `mauth-signer-http4s` = scalaModuleProject("mauth-signer-http4s")
       Dependencies.provided(http4sClient) ++
         Dependencies.compile(enumeratum) ++
         Dependencies.compile(log4cats) ++
-        Dependencies.test(munitCatsEffect, http4sDsl),
-    mimaPreviousArtifacts := Set.empty
+        Dependencies.test(munitCatsEffect, http4sDsl)
   )
 
 // A separate module to sign and send sttp request using akka-http backend
