@@ -10,8 +10,8 @@ import xerial.sbt.Sonatype._
 
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
-  val scala212 = "2.12.13"
-  val scala213 = "2.13.5"
+  val scala212 = "2.12.17"
+  val scala213 = "2.13.10"
 
   lazy val basicSettings = Seq(
     homepage := Some(new URL("https://github.com/mdsol/mauth-jvm-clients")),
