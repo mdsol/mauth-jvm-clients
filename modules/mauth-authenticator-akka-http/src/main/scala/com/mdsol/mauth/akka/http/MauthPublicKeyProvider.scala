@@ -30,7 +30,7 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
   ec: ExecutionContext,
   system: ActorSystem,
   materializer: Materializer
-) extends ClientPublicKeyProvider
+) extends ClientPublicKeyProvider[Future]
     with StrictLogging {
 
   private val cCache = Caffeine.newBuilder().build[String, Entry[Option[PublicKey]]]()
@@ -70,12 +70,12 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
             logger.error(s"Unexpected response returned by server -- status: ${response.status} response: $body")
             None
           }
-        }.handleError { error: Throwable =>
+        }.handleError { (error: Throwable) =>
           logger.error("Request to get MAuth public key couldn't be signed", error)
           None
         }
       }
-      .handleError { error: Throwable =>
+      .handleError { (error: Throwable) =>
         logger.error("Request to get MAuth public key couldn't be completed", error)
         None
       }

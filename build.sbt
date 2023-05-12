@@ -23,7 +23,7 @@ def scalaModuleProject(modName: String): Project = {
     .settings(
       basicSettings,
       moduleName := modName,
-      crossScalaVersions := Seq(scala212, scala213)
+      crossScalaVersions := Seq(scala212, scala213, scala31)
     )
 }
 
@@ -174,7 +174,7 @@ lazy val `mauth-authenticator-akka-http` = scalaModuleProject("mauth-authenticat
   )
 
 lazy val `mauth-authenticator-http4s` = (project in file("modules/mauth-authenticator-http4s")) // don't need to cross-compile
-  .dependsOn(`mauth-authenticator-scala`, `mauth-test-utils` % "test")
+  .dependsOn(`mauth-signer-http4s`, `mauth-authenticator-scala`, `mauth-test-utils` % "test")
   .settings(
     basicSettings,
     moduleName := "mauth-authenticator-http4s",
@@ -182,8 +182,10 @@ lazy val `mauth-authenticator-http4s` = (project in file("modules/mauth-authenti
     testFrameworks += new TestFramework("munit.Framework"),
     libraryDependencies ++=
       Dependencies.provided(http4sDsl) ++
+        Dependencies.provided(http4sClient) ++
         Dependencies.compile(enumeratum) ++
         Dependencies.compile(log4cats) ++
+        Dependencies.compile(jacksonDataBind, scalaCache) ++
         Dependencies.test(munitCatsEffect)
   )
 

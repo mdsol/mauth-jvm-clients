@@ -15,7 +15,6 @@ import enumeratum._
 import org.typelevel.ci._
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.util.Try
 
@@ -24,7 +23,7 @@ final case class MdsolAuthMissingHeaderRejection(headerName: String) extends Thr
 sealed trait HeaderVersion extends EnumEntry
 
 object HeaderVersion extends Enum[HeaderVersion] {
-  val values = findValues
+  val values: IndexedSeq[HeaderVersion] = findValues
 
   case object V1 extends HeaderVersion {
     val authHeaderName = ci"${MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME}"
@@ -38,10 +37,9 @@ object HeaderVersion extends Enum[HeaderVersion] {
 
 object MAuthMiddleware {
   import HeaderVersion._
-  def apply[G[_]: Sync, F[_]](requestValidationTimeout: Duration, authenticator: Authenticator, fk: F ~> G)(http: Http[G, F])(implicit
-    ec: ExecutionContext,
-    F: Async[F]
-  ): Http[G, F] =
+  def apply[G[_]: Sync, F[_]](requestValidationTimeout: Duration, authenticator: Authenticator[F], fk: F ~> G)(
+    http: Http[G, F]
+  )(implicit F: Async[F]): Http[G, F] =
     Kleisli { request =>
       val logger = Slf4jLogger.getLogger[G]
 
@@ -96,7 +94,7 @@ object MAuthMiddleware {
             mAuthRequest
           } else mAuthRequest
 
-          F.fromFuture(F.delay(authenticator.authenticate(req)(ec, requestValidationTimeout)))
+          authenticator.authenticate(req)(requestValidationTimeout)
         }
       }).flatMap(b =>
         if (b) http(request)
@@ -106,11 +104,11 @@ object MAuthMiddleware {
       }
     }
 
-  def httpRoutes[F[_]: Async](requestValidationTimeout: Duration, authenticator: Authenticator)(httpRoutes: HttpRoutes[F])(implicit
-    ec: ExecutionContext
+  def httpRoutes[F[_]: Async](requestValidationTimeout: Duration, authenticator: Authenticator[F])(
+    httpRoutes: HttpRoutes[F]
   ): HttpRoutes[F] = apply(requestValidationTimeout, authenticator, OptionT.liftK[F])(httpRoutes)
 
-  def httpApp[F[_]: Async](requestValidationTimeout: Duration, authenticator: Authenticator)(httpRoutes: HttpApp[F])(implicit
-    ec: ExecutionContext
+  def httpApp[F[_]: Async](requestValidationTimeout: Duration, authenticator: Authenticator[F])(
+    httpRoutes: HttpApp[F]
   ): HttpApp[F] = apply(requestValidationTimeout, authenticator, FunctionK.id[F])(httpRoutes)
 }

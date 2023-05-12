@@ -12,13 +12,14 @@ object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
   val scala212 = "2.12.17"
   val scala213 = "2.13.10"
+  val scala31 = "3.2.2"
 
   lazy val basicSettings = Seq(
     homepage := Some(new URL("https://github.com/mdsol/mauth-jvm-clients")),
     organization := "com.mdsol",
     organizationHomepage := Some(new URL("http://mdsol.com")),
     description := "MAuth clients",
-    scalaVersion := scala213,
+    scalaVersion := scala31,
     resolvers += Resolver.mavenLocal,
     resolvers += Resolver.sonatypeRepo("releases"),
     javacOptions ++= Seq("-encoding", "UTF-8"),
@@ -67,9 +68,9 @@ object BuildSettings {
     ),
     sonatypeProjectHosting := Some(GitHubHosting("austek", "mauth-jvm-clients", "austek@mdsol.com")),
     publishTo := sonatypePublishToBundle.value,
-    releaseTagComment := s"Releasing ${(version in ThisBuild).value} [ci skip]",
-    releaseCommitMessage := s"Setting version to ${(version in ThisBuild).value} [ci skip]",
-    releaseNextCommitMessage := s"Setting version to ${(version in ThisBuild).value} [ci skip]",
+    releaseTagComment := s"Releasing ${(ThisBuild / version ).value} [ci skip]",
+    releaseCommitMessage := s"Setting version to ${( ThisBuild / version).value} [ci skip]",
+    releaseNextCommitMessage := s"Setting version to ${(ThisBuild / version).value} [ci skip]",
     releasePublishArtifactsAction := PgpKeys.publishSigned.value,
     releaseCrossBuild := false, // true if you cross-build the project for multiple Scala versions
     releaseProcess := releaseSteps,
