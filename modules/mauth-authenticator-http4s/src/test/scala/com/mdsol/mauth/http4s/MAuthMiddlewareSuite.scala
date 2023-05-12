@@ -63,11 +63,10 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
 
   private val client = new ClientPublicKeyProvider[IO] {
 
-    override def getPublicKey(appUUID: UUID): IO[Option[PublicKey]] = {
+    override def getPublicKey(appUUID: UUID): IO[Option[PublicKey]] =
       if (appUUID == appUuid) {
         IO.pure(publicKey.some)
       } else IO.raiseError(new Throwable("Wrong app UUID"))
-    }
   }
 
   private val epochTimeProvider = new EpochTimeProvider {

@@ -31,7 +31,6 @@ trait Authenticator[F[_]] {
 
   def logger: Logger
 
-
   // Check epoch time is not older than specified interval.
   protected def validateTime(requestTime: Long)(requestValidationTimeout: Duration): Boolean =
     (epochTimeProvider.inSeconds - requestTime) < requestValidationTimeout.toSeconds
@@ -39,7 +38,6 @@ trait Authenticator[F[_]] {
   // Check V2 header if only V2 is required
   protected def validateMauthVersion(mAuthRequest: MAuthRequest, v2OnlyAuthenticate: Boolean): Boolean =
     !v2OnlyAuthenticate || mAuthRequest.getMauthVersion == MAuthVersion.MWSV2
-
 
   // check signature for V1
   protected def validateSignatureV1(mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): Boolean = {
@@ -59,7 +57,6 @@ trait Authenticator[F[_]] {
         throw new MAuthValidationException(message, ex)
     }
   }
-
 
   // check signature for V2
   protected def validateSignatureV2(mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): Boolean = {
@@ -98,7 +95,6 @@ trait Authenticator[F[_]] {
     }
     isValidated
   }
-
 
   private def logAuthenticationRequest(mAuthRequest: MAuthRequest): Unit = {
     val msgFormat = "Mauth-client attempting to authenticate request from app with mauth app uuid %s using version %s."

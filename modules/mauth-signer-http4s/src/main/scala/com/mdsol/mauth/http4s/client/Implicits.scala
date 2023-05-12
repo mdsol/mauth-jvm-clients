@@ -2,7 +2,7 @@ package com.mdsol.mauth.http4s.client
 
 import com.mdsol.mauth.models.SignedRequest
 import org.http4s.headers.`Content-Type`
-import org.http4s.{Header, Headers, Method, Request, Uri, headers}
+import org.http4s.{headers, Header, Headers, Method, Request, Uri}
 import org.typelevel.ci.CIString
 
 import scala.annotation.nowarn
@@ -13,7 +13,7 @@ object Implicits {
   implicit class NewSignedRequestOps(val signedRequest: SignedRequest) extends AnyVal {
 
     /** Create an akka-http request from a [[models.SignedRequest]]
-     */
+      */
     def toHttp4sRequest[F[_]]: Request[F] = {
       val contentType: Option[`Content-Type`] = extractContentTypeFromHeaders(signedRequest.req.headers)
       val headersWithoutContentType: Map[String, String] = removeContentTypeFromHeaders(signedRequest.req.headers)
@@ -31,11 +31,10 @@ object Implicits {
       ).withContentTypeOption(contentType)
     }
 
-    private def extractContentTypeFromHeaders(requestHeaders: Map[String, String]): Option[`Content-Type`] = {
+    private def extractContentTypeFromHeaders(requestHeaders: Map[String, String]): Option[`Content-Type`] =
       requestHeaders
         .get(headers.`Content-Type`.toString)
         .flatMap(str => `Content-Type`.parse(str).toOption)
-    }
 
     @nowarn("msg=.*Unused import.*") // compat import only needed for 2.12
     private def removeContentTypeFromHeaders(requestHeaders: Map[String, String]): Map[String, String] = {

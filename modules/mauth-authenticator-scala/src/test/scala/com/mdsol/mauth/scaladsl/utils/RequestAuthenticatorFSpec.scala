@@ -62,7 +62,7 @@ class RequestAuthenticatorFSpec extends AnyFlatSpec with RequestAuthenticatorBas
 
     whenReady(authenticator.authenticate(getRequestWithUnicodeCharactersInBody).unsafeToFuture().failed) {
       case e: MAuthValidationException => e.getMessage shouldBe "MAuth request validation failed because of timeout 10 seconds"
-      case _ => fail("should not be here")
+      case _                           => fail("should not be here")
     }
   }
 
@@ -98,7 +98,7 @@ class RequestAuthenticatorFSpec extends AnyFlatSpec with RequestAuthenticatorBas
 
     whenReady(authenticator.authenticate(getSimpleRequest).unsafeToFuture().failed) {
       case e: MAuthValidationException => e.getMessage shouldBe "The service requires mAuth v2 authentication headers."
-      case _ => fail("should not be here")
+      case _                           => fail("should not be here")
     }
   }
 

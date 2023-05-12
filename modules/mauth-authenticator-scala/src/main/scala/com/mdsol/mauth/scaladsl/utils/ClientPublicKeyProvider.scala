@@ -3,7 +3,6 @@ package com.mdsol.mauth.scaladsl.utils
 import java.security.PublicKey
 import java.util.UUID
 
-
 trait ClientPublicKeyProvider[F[_]] {
 
   /** Returns the associated public key for a given application UUID.

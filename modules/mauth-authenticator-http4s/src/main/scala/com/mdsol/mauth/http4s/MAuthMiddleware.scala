@@ -37,7 +37,9 @@ object HeaderVersion extends Enum[HeaderVersion] {
 
 object MAuthMiddleware {
   import HeaderVersion._
-  def apply[G[_]: Sync, F[_]](requestValidationTimeout: Duration, authenticator: Authenticator[F], fk: F ~> G)(http: Http[G, F])(implicit F: Async[F]): Http[G, F] =
+  def apply[G[_]: Sync, F[_]](requestValidationTimeout: Duration, authenticator: Authenticator[F], fk: F ~> G)(
+    http: Http[G, F]
+  )(implicit F: Async[F]): Http[G, F] =
     Kleisli { request =>
       val logger = Slf4jLogger.getLogger[G]
 
