@@ -44,7 +44,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
   private implicit val timeout: FiniteDuration = 30.seconds
   private implicit val requestValidationTimeout: Duration = 10.seconds
-  private val client = mock[ClientPublicKeyProvider]
+  private val client = mock[ClientPublicKeyProvider[Future]]
   private val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
   private val authenticator: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
   private val authenticatorV2: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider, v2OnlyAuthenticate = true)

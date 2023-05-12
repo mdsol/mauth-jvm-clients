@@ -30,7 +30,7 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
   ec: ExecutionContext,
   system: ActorSystem,
   materializer: Materializer
-) extends ClientPublicKeyProvider
+) extends ClientPublicKeyProvider[Future]
     with StrictLogging {
 
   private val cCache = Caffeine.newBuilder().build[String, Entry[Option[PublicKey]]]()

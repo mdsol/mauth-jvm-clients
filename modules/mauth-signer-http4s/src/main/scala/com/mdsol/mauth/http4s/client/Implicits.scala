@@ -2,7 +2,7 @@ package com.mdsol.mauth.http4s.client
 
 import com.mdsol.mauth.models.SignedRequest
 import org.http4s.headers.`Content-Type`
-import org.http4s.{Header, Headers, MediaType, Method, ParseResult, Request, Uri, headers}
+import org.http4s.{Header, Headers, Method, Request, Uri, headers}
 import org.typelevel.ci.CIString
 
 import scala.annotation.nowarn
@@ -32,12 +32,9 @@ object Implicits {
     }
 
     private def extractContentTypeFromHeaders(requestHeaders: Map[String, String]): Option[`Content-Type`] = {
-      MediaType
-        .parse(requestHeaders(headers.`Content-Type`.toString))
-        .fold(
-          _ => None,
-          res => Some(`Content-Type`(res))
-        )
+      requestHeaders
+        .get(headers.`Content-Type`.toString)
+        .flatMap(str => `Content-Type`.parse(str).toOption)
     }
 
     @nowarn("msg=.*Unused import.*") // compat import only needed for 2.12

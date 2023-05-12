@@ -4,7 +4,7 @@ import cats.effect._
 import cats.syntax.all._
 import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.exception.MAuthValidationException
-import com.mdsol.mauth.scaladsl.RequestAuthenticator
+import com.mdsol.mauth.scaladsl.RequestAuthenticatorF
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
 import com.mdsol.mauth.test.utils.TestFixtures
 import com.mdsol.mauth.util.{EpochTimeProvider, MAuthKeysHelper}
@@ -17,7 +17,6 @@ import org.http4s.Method._
 
 import java.security.{PublicKey, Security}
 import java.util.UUID
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class MAuthMiddlewareSuite extends CatsEffectSuite {
@@ -62,22 +61,24 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
   private val timeHeader: Long = 1509041057L
   private val publicKey = MAuthKeysHelper.getPublicKeyFromString(TestFixtures.PUBLIC_KEY_1)
 
-  private val client = new ClientPublicKeyProvider {
-    override def getPublicKey(appUUID: UUID): Future[Option[PublicKey]] =
+  private val client = new ClientPublicKeyProvider[IO] {
+
+    override def getPublicKey(appUUID: UUID): IO[Option[PublicKey]] = {
       if (appUUID == appUuid) {
-        Future(publicKey.some)
-      } else Future.failed(new Throwable("Wrong app UUID"))
+        IO.pure(publicKey.some)
+      } else IO.raiseError(new Throwable("Wrong app UUID"))
+    }
   }
 
   private val epochTimeProvider = new EpochTimeProvider {
     override def inSeconds(): Long = timeHeader
   }
 
-  private implicit val authenticator: RequestAuthenticator = new RequestAuthenticator(client, epochTimeProvider)
+  private implicit val authenticator: RequestAuthenticatorF[IO] = new RequestAuthenticatorF(client, epochTimeProvider)
 
   private val service = MAuthMiddleware.httpRoutes[IO](requestValidationTimeout, authenticator)(route).orNotFound
 
-  val authenticatorV2: RequestAuthenticator = new RequestAuthenticator(client, epochTimeProvider, v2OnlyAuthenticate = true)
+  val authenticatorV2: RequestAuthenticatorF[IO] = new RequestAuthenticatorF(client, epochTimeProvider, v2OnlyAuthenticate = true)
   val serviceV2 =
     MAuthMiddleware.httpRoutes[IO](requestValidationTimeout, authenticatorV2)(route).orNotFound
 
@@ -138,14 +139,14 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
   }
 
   test("reject if public key cannot be found") {
-    val localClient = new ClientPublicKeyProvider {
-      override def getPublicKey(appUUID: UUID): Future[Option[PublicKey]] =
+    val localClient = new ClientPublicKeyProvider[IO] {
+      override def getPublicKey(appUUID: UUID): IO[Option[PublicKey]] =
         if (appUUID == appUuid) {
-          Future(none)
-        } else Future.failed(new Throwable("Wrong app UUID"))
+          IO.pure(none)
+        } else IO.raiseError(new Throwable("Wrong app UUID"))
     }
 
-    val localAuthenticator: RequestAuthenticator = new RequestAuthenticator(localClient, epochTimeProvider)
+    val localAuthenticator: RequestAuthenticatorF[IO] = new RequestAuthenticatorF(localClient, epochTimeProvider)
     val localService =
       MAuthMiddleware.httpRoutes[IO](requestValidationTimeout, localAuthenticator)(route).orNotFound
 
