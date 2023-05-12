@@ -67,8 +67,8 @@ object BuildSettings {
     ),
     sonatypeProjectHosting := Some(GitHubHosting("austek", "mauth-jvm-clients", "austek@mdsol.com")),
     publishTo := sonatypePublishToBundle.value,
-    releaseTagComment := s"Releasing ${(ThisBuild / version ).value} [ci skip]",
-    releaseCommitMessage := s"Setting version to ${( ThisBuild / version).value} [ci skip]",
+    releaseTagComment := s"Releasing ${(ThisBuild / version).value} [ci skip]",
+    releaseCommitMessage := s"Setting version to ${(ThisBuild / version).value} [ci skip]",
     releaseNextCommitMessage := s"Setting version to ${(ThisBuild / version).value} [ci skip]",
     releasePublishArtifactsAction := PgpKeys.publishSigned.value,
     releaseCrossBuild := false, // true if you cross-build the project for multiple Scala versions
