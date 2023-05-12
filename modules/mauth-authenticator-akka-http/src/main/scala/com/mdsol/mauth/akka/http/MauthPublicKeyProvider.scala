@@ -70,12 +70,12 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
             logger.error(s"Unexpected response returned by server -- status: ${response.status} response: $body")
             None
           }
-        }.handleError { error: Throwable =>
+        }.handleError { (error: Throwable) =>
           logger.error("Request to get MAuth public key couldn't be signed", error)
           None
         }
       }
-      .handleError { error: Throwable =>
+      .handleError { (error: Throwable) =>
         logger.error("Request to get MAuth public key couldn't be completed", error)
         None
       }

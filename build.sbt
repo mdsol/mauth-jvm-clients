@@ -23,7 +23,7 @@ def scalaModuleProject(modName: String): Project = {
     .settings(
       basicSettings,
       moduleName := modName,
-      crossScalaVersions := Seq(scala212, scala213)
+      crossScalaVersions := Seq(scala212, scala213, scala31)
     )
 }
 

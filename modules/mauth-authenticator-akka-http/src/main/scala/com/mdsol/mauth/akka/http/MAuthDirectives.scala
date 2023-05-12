@@ -44,7 +44,7 @@ trait MAuthDirectives extends StrictLogging {
     * @return Directive to authenticate the request
     */
   def authenticate(implicit authenticator: Authenticator[Future], timeout: FiniteDuration, requestValidationTimeout: Duration): Directive0 = {
-    extractLatestAuthenticationHeaders(authenticator.isV2OnlyAuthenticate).flatMap { mauthHeaderValues: MauthHeaderValues =>
+    extractLatestAuthenticationHeaders(authenticator.isV2OnlyAuthenticate).flatMap { (mauthHeaderValues: MauthHeaderValues) =>
       toStrictEntity(timeout) &
         extractRequest.flatMap { req =>
           val isAuthed: Directive[Unit] = req.entity match {
@@ -167,7 +167,7 @@ trait MAuthDirectives extends StrictLogging {
     *         the request is rejected with a MdsolAuthMissingHeaderRejection if the expected header is not present
     */
   def extractLatestAuthenticationHeaders(v2OnlyAuthenticate: Boolean): Directive1[MauthHeaderValues] = {
-    extractRequest.flatMap { request: HttpRequest =>
+    extractRequest.flatMap { (request: HttpRequest) =>
       // Try to extract and verify V2 headers
       val authenticationHeaderStr = extractRequestHeader(request, MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME)
       if (authenticationHeaderStr.nonEmpty) {
