@@ -1,24 +1,31 @@
-package com.mdsol.mauth.scaladsl.utils
-
-import java.util.UUID
+package com.mdsol.mauth.akka.http
 
 import com.mdsol.mauth.RequestAuthenticatorBaseSpec
 import com.mdsol.mauth.exception.MAuthValidationException
-import com.mdsol.mauth.scaladsl.RequestAuthenticator
+import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
 import com.mdsol.mauth.test.utils.FakeMAuthServer.EXISTING_CLIENT_APP_UUID
-import com.mdsol.mauth.util.MAuthKeysHelper
+import com.mdsol.mauth.util.{EpochTimeProvider, MAuthKeysHelper}
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
+import java.security.Security
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBaseSpec with Matchers with ScalaFutures with MockFactory {
+class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBaseSpec with BeforeAndAfterAll with Matchers with ScalaFutures with MockFactory {
 
   private implicit val requestValidationTimeout: Duration = 10.seconds
+  private val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
+  override protected def beforeAll(): Unit = {
+    Security.addProvider(new BouncyCastleProvider)
+    ()
+  }
 
   behavior of "RequestAuthenticator Scala"
 

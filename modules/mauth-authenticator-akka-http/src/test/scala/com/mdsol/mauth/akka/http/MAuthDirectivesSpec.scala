@@ -9,7 +9,6 @@ import akka.http.scaladsl.server._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.http.{`X-MWS-Authentication`, `X-MWS-Time`}
-import com.mdsol.mauth.scaladsl.RequestAuthenticator
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
 import com.mdsol.mauth.test.utils.TestFixtures
 import com.mdsol.mauth.util.{EpochTimeProvider, MAuthKeysHelper}

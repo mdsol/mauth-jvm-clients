@@ -1,5 +1,6 @@
 package com.mdsol.mauth.http4s.client
 
+import cats.effect.Async
 import com.mdsol.mauth.models.SignedRequest
 import org.http4s.headers.`Content-Type`
 import org.http4s.{headers, Header, Headers, Method, Request, Uri}
@@ -7,14 +8,13 @@ import org.typelevel.ci.CIString
 
 import scala.annotation.nowarn
 import scala.collection.immutable
-
 object Implicits {
 
   implicit class NewSignedRequestOps(val signedRequest: SignedRequest) extends AnyVal {
 
-    /** Create an akka-http request from a [[models.SignedRequest]]
+    /** Create a http4s request from a [[models.SignedRequest]]
       */
-    def toHttp4sRequest[F[_]]: Request[F] = {
+    def toHttp4sRequest[F[_]: Async]: Request[F] = {
       val contentType: Option[`Content-Type`] = extractContentTypeFromHeaders(signedRequest.req.headers)
       val headersWithoutContentType: Map[String, String] = removeContentTypeFromHeaders(signedRequest.req.headers)
 
@@ -25,7 +25,7 @@ object Implicits {
 
       Request[F](
         method = Method.fromString(signedRequest.req.httpMethod).getOrElse(Method.GET),
-        uri = Uri(path = Uri.Path.unsafeFromString(signedRequest.req.uri.toString)),
+        uri = Uri.unsafeFromString(signedRequest.req.uri.toString),
         body = fs2.Stream.emits(signedRequest.req.body),
         headers = Headers(allHeaders)
       ).withContentTypeOption(contentType)

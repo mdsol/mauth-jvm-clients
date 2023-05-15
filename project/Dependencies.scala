@@ -10,6 +10,7 @@ object Dependencies extends DependencyUtils {
     val http4s = "0.23.16"
     val enumeratum = "1.7.0"
     val log4cats = "2.5.0"
+    val circe = "0.14.3"
   }
 
   val akkaHttp: ModuleID = "com.typesafe.akka"                        %% "akka-http"               % Version.akkaHttp
@@ -34,7 +35,14 @@ object Dependencies extends DependencyUtils {
   val http4sDsl: ModuleID = "org.http4s"                              %% "http4s-dsl"              % Version.http4s
   val http4sClient: ModuleID = "org.http4s"                           %% "http4s-client"           % Version.http4s
   val enumeratum: ModuleID = "com.beachape"                           %% "enumeratum"              % Version.enumeratum
-  val log4cats = "org.typelevel"                                      %% "log4cats-slf4j"          % Version.log4cats
+  val log4cats: ModuleID = "org.typelevel"                            %% "log4cats-slf4j"          % Version.log4cats
+
+  lazy val circeBasic: Seq[ModuleID] = Seq(
+    "io.circe"   %% "circe-core"           % Version.circe,
+    "io.circe"   %% "circe-parser"         % Version.circe,
+    "io.circe"   %% "circe-generic-extras" % Version.circe,
+    "org.http4s" %% "http4s-circe"         % Version.http4s
+  )
 
   // TEST DEPENDENCIES
   val akkaHttpTestKit: Seq[ModuleID] = Seq(
