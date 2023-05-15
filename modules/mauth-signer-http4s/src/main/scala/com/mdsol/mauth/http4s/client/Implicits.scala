@@ -3,8 +3,9 @@ package com.mdsol.mauth.http4s.client
 import cats.effect.Async
 import com.mdsol.mauth.models.SignedRequest
 import org.http4s.headers.`Content-Type`
-import org.http4s.{headers, Header, Headers, Method, Request, Uri}
+import org.http4s.{Header, Headers, Method, Request, Uri, headers}
 import org.typelevel.ci.CIString
+import cats.syntax.all._
 
 import scala.annotation.nowarn
 import scala.collection.immutable
@@ -14,7 +15,7 @@ object Implicits {
 
     /** Create a http4s request from a [[models.SignedRequest]]
       */
-    def toHttp4sRequest[F[_]: Async]: Request[F] = {
+    def toHttp4sRequest[F[_]: Async]: F[Request[F]] = {
       val contentType: Option[`Content-Type`] = extractContentTypeFromHeaders(signedRequest.req.headers)
       val headersWithoutContentType: Map[String, String] = removeContentTypeFromHeaders(signedRequest.req.headers)
 
@@ -23,12 +24,16 @@ object Implicits {
           Header.Raw(CIString(name), value)
         }
 
-      Request[F](
-        method = Method.fromString(signedRequest.req.httpMethod).getOrElse(Method.GET),
-        uri = Uri.unsafeFromString(signedRequest.req.uri.toString),
-        body = fs2.Stream.emits(signedRequest.req.body),
-        headers = Headers(allHeaders)
-      ).withContentTypeOption(contentType)
+      Uri.fromString(signedRequest.req.uri.toString)
+        .liftTo[F]
+        .map { uri =>
+          Request[F](
+            method = Method.fromString(signedRequest.req.httpMethod).getOrElse(Method.GET),
+            uri = uri,
+            body = fs2.Stream.emits(signedRequest.req.body),
+            headers = Headers(allHeaders)
+          ).withContentTypeOption(contentType)
+        }
     }
 
     private def extractContentTypeFromHeaders(requestHeaders: Map[String, String]): Option[`Content-Type`] =

@@ -1,7 +1,6 @@
 package com.mdsol.mauth.http4s
 
-import cats.effect.{Async, Sync}
-import com.fasterxml.jackson.databind.ObjectMapper
+import cats.effect.Async
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.mdsol.mauth.http4s.client.Implicits.NewSignedRequestOps
 import com.mdsol.mauth.models.UnsignedRequest
@@ -31,7 +30,6 @@ class MauthPublicKeyProvider[F[_]: Async](configuration: AuthenticatorConfigurat
   private val logger = Slf4jLogger.getLogger[F]
   private val cCache = Caffeine.newBuilder().build[String, Entry[Option[PublicKey]]]()
   implicit val caffeineCache: Cache[F, String, Option[PublicKey]] = CaffeineCache[F, String, Option[PublicKey]](underlying = cCache)
-  protected val mapper = new ObjectMapper
 
   /** Returns the associated public key for a given application UUID.
     *
@@ -41,7 +39,9 @@ class MauthPublicKeyProvider[F[_]: Async](configuration: AuthenticatorConfigurat
   override def getPublicKey(appUUID: UUID): F[Option[PublicKey]] = memoizeF(Some(configuration.getTimeToLive.seconds)) {
     val uri = new URI(configuration.getBaseUrl + getRequestUrlPath(appUUID))
     val signedRequest = signer.signRequest(UnsignedRequest.noBody("GET", uri, headers = Map.empty))
-    client.run(signedRequest.toHttp4sRequest[F]).use(retrievePublicKey)
+    signedRequest
+      .toHttp4sRequest[F]
+      .flatMap(req => client.run(req).use(retrievePublicKey))
   }
 
   private def retrievePublicKey(mauthPublicKeyFetcher: Response[F]): F[Option[PublicKey]] = {
@@ -49,26 +49,25 @@ class MauthPublicKeyProvider[F[_]: Async](configuration: AuthenticatorConfigurat
       mauthPublicKeyFetcher
         .attemptAs[SecurityToken]
         .bimap(
-          error => {
-            logger.error(error)("Converting json to SecurityToken failed")
-            None
-          },
+          error => logger.error(error)("Converting json to SecurityToken failed") *> error.raiseError[F, Option[PublicKey]],
           securityToken =>
             Try(
               MAuthKeysHelper.getPublicKeyFromString(securityToken.publicKeyStr)
             ) match {
-              case Success(publicKey) => Some(publicKey)
+              case Success(publicKey) => Async[F].pure[Option[PublicKey]](Some(publicKey))
               case Failure(error) =>
-                logger.error(error)("Converting string to Public Key failed")
-                None
+                logger.error(error)("Converting string to Public Key failed") *> error.raiseError[F, Option[PublicKey]]
             }
         )
         .toOption
         .value
-        .map(_.flatten)
+        .flatMap {
+          case Some(v) => v
+          case None    => Async[F].pure(None)
+        }
     } else {
-      logger.error(s"Unexpected response returned by server -- status: ${mauthPublicKeyFetcher.status} response: ${mauthPublicKeyFetcher.body}")
-      Async[F].pure[Option[PublicKey]](None)
+      logger.error(s"Unexpected response returned by server -- status: ${mauthPublicKeyFetcher.status} response: ${mauthPublicKeyFetcher.body}") *> Async[F]
+        .pure[Option[PublicKey]](None)
     }
   }
 

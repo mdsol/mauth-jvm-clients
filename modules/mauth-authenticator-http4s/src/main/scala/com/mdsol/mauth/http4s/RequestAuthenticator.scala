@@ -1,6 +1,6 @@
 package com.mdsol.mauth.http4s
 
-import cats.effect.{Async, Sync}
+import cats.effect.Async
 import cats.implicits._
 import com.mdsol.mauth.{MAuthRequest, MAuthVersion}
 import com.mdsol.mauth.exception.MAuthValidationException
@@ -41,12 +41,10 @@ class RequestAuthenticator[F[_]: Async](
   override def authenticate(mAuthRequest: MAuthRequest)(implicit requestValidationTimeout: Duration): F[Boolean] = {
     if (!validateTime(mAuthRequest.getRequestTime, epochTimeProvider)(requestValidationTimeout)) {
       val message = s"MAuth request validation failed because of timeout $requestValidationTimeout"
-      logger.error(message)
-      Async[F].raiseError(new MAuthValidationException(message))
+      logger.error(message) *> Async[F].raiseError(new MAuthValidationException(message))
     } else if (!validateMauthVersion(mAuthRequest, v2OnlyAuthenticate)) {
       val message = "The service requires mAuth v2 authentication headers."
-      logger.error(message)
-      Async[F].raiseError(new MAuthValidationException(message))
+      logger.error(message) *> Async[F].raiseError(new MAuthValidationException(message))
     } else {
       getPublicKey(mAuthRequest)
     }
@@ -148,7 +146,10 @@ object RequestAuthenticator {
   }
 
   private def logAuthenticationRequest[F[_]](mAuthRequest: MAuthRequest)(implicit logger: SelfAwareStructuredLogger[F]): Unit = {
-    val msgFormat = "Mauth-client attempting to authenticate request from app with mauth app uuid %s using version %s."
-    logger.info(String.format(msgFormat, mAuthRequest.getAppUUID, mAuthRequest.getMauthVersion.getValue))
+    val msgFormat = "Mauth-client attempting to authenticate request from app with mauth app uuid %s using version %s.".format(
+      mAuthRequest.getAppUUID,
+      mAuthRequest.getMauthVersion.getValue
+    )
+    logger.info(msgFormat)
   }
 }
