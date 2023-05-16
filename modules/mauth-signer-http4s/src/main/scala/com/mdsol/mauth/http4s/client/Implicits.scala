@@ -3,7 +3,7 @@ package com.mdsol.mauth.http4s.client
 import cats.MonadThrow
 import com.mdsol.mauth.models.SignedRequest
 import org.http4s.headers.`Content-Type`
-import org.http4s.{Header, Headers, Method, Request, Uri, headers}
+import org.http4s.{headers, Header, Headers, Method, Request, Uri}
 import org.typelevel.ci.CIString
 import cats.syntax.all._
 

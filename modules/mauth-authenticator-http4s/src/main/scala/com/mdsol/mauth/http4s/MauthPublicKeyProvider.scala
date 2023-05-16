@@ -69,7 +69,6 @@ class MauthPublicKeyProvider[F[_]: Concurrent: Logger](configuration: Authentica
 
 object MauthPublicKeyProvider {
 
-
   final case class SecurityToken(appName: String, appUuid: UUID, publicKeyStr: String)
   object SecurityToken {
     implicit val securityTokenDecoderInstance: Decoder[SecurityToken] = (c: HCursor) => {
@@ -83,7 +82,7 @@ object MauthPublicKeyProvider {
 
   // this provides a default implementation of the cache to be used with the public key provider, and frees the user to
   // inject their own cache
-  implicit def defaultCache[F[_]: Sync]:  Cache[F, String, Option[PublicKey]] =
+  implicit def defaultCache[F[_]: Sync]: Cache[F, String, Option[PublicKey]] =
     CaffeineCache[F, String, Option[PublicKey]](
       Caffeine.newBuilder().build[String, Entry[Option[PublicKey]]]()
     )
