@@ -1,7 +1,6 @@
 package com.mdsol.mauth.http4s
 
-import cats.ApplicativeThrow
-import cats.effect.Async
+import cats.{ApplicativeThrow, MonadThrow}
 import cats.implicits._
 import com.mdsol.mauth.{MAuthRequest, MAuthVersion}
 import com.mdsol.mauth.exception.MAuthValidationException
@@ -16,7 +15,7 @@ import java.security.PublicKey
 import java.util
 import scala.concurrent.duration._
 
-class RequestAuthenticator[F[_]: Async: Logger](
+class RequestAuthenticator[F[_]: MonadThrow: Logger](
   val publicKeyProvider: ClientPublicKeyProvider[F],
   override val epochTimeProvider: EpochTimeProvider,
   v2OnlyAuthenticate: Boolean
@@ -37,13 +36,13 @@ class RequestAuthenticator[F[_]: Async: Logger](
     * @return True or false indicating if the request is valid or not with respect to mAuth.
     */
   override def authenticate(mAuthRequest: MAuthRequest)(implicit requestValidationTimeout: Duration): F[Boolean] = {
-    validateTime(mAuthRequest.getRequestTime, epochTimeProvider)(requestValidationTimeout)
+    validateTime[F](mAuthRequest.getRequestTime, epochTimeProvider)(requestValidationTimeout)
       .flatMap {
         case false =>
           val message = s"MAuth request validation failed because of timeout $requestValidationTimeout"
           Logger[F].error(message) *> ApplicativeThrow[F].raiseError(new MAuthValidationException(message))
         case true =>
-          validateMauthVersion(mAuthRequest, v2OnlyAuthenticate).flatMap {
+          validateMauthVersion[F](mAuthRequest, v2OnlyAuthenticate).flatMap {
             case false =>
               val message = "The service requires mAuth v2 authentication headers."
               Logger[F].error(message) *> ApplicativeThrow[F].raiseError(new MAuthValidationException(message))
@@ -62,9 +61,9 @@ class RequestAuthenticator[F[_]: Async: Logger](
           case MAuthVersion.MWS =>
             Logger[F].warn("MAuth v1 client was used to authenticate this request which is deprecated") *>
               validateSignatureV1[F](mAuthRequest, clientPublicKey)
-          case MAuthVersion.MWSV2 if isV2OnlyAuthenticate => validateSignatureV2(mAuthRequest, clientPublicKey)
+          case MAuthVersion.MWSV2 if isV2OnlyAuthenticate => validateSignatureV2[F](mAuthRequest, clientPublicKey)
           case MAuthVersion.MWSV2 =>
-            validateSignatureV2(mAuthRequest, clientPublicKey).flatMap {
+            validateSignatureV2[F](mAuthRequest, clientPublicKey).flatMap {
               case true  => true.pure[F]
               case false => fallbackValidateSignatureV1[F](mAuthRequest, clientPublicKey)
             }
@@ -75,15 +74,15 @@ class RequestAuthenticator[F[_]: Async: Logger](
 }
 
 object RequestAuthenticator {
-  def apply[F[_]: Async: Logger](publicKeyProvider: ClientPublicKeyProvider[F], epochTimeProvider: EpochTimeProvider) =
+  def apply[F[_]: MonadThrow: Logger](publicKeyProvider: ClientPublicKeyProvider[F], epochTimeProvider: EpochTimeProvider) =
     new RequestAuthenticator(publicKeyProvider, epochTimeProvider, v2OnlyAuthenticate = false)
 
   // Check epoch time is not older than specified interval.
-  private def validateTime[F[_]: Async](requestTime: Long, epochTimeProvider: EpochTimeProvider)(requestValidationTimeout: Duration): F[Boolean] =
+  private def validateTime[F[_]: ApplicativeThrow](requestTime: Long, epochTimeProvider: EpochTimeProvider)(requestValidationTimeout: Duration): F[Boolean] =
     ((epochTimeProvider.inSeconds - requestTime) < requestValidationTimeout.toSeconds).pure[F]
 
   // Check V2 header if only V2 is required
-  private def validateMauthVersion[F[_]: Async](mAuthRequest: MAuthRequest, v2OnlyAuthenticate: Boolean): F[Boolean] =
+  private def validateMauthVersion[F[_]: ApplicativeThrow](mAuthRequest: MAuthRequest, v2OnlyAuthenticate: Boolean): F[Boolean] =
     (!v2OnlyAuthenticate || mAuthRequest.getMauthVersion == MAuthVersion.MWSV2).pure[F]
 
   // check signature for V1
@@ -103,7 +102,7 @@ object RequestAuthenticator {
   }
 
   // check signature for V2
-  private def validateSignatureV2[F[_]: Async: Logger](mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): F[Boolean] = {
+  private def validateSignatureV2[F[_]: ApplicativeThrow: Logger](mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): F[Boolean] = {
     logAuthenticationRequest(mAuthRequest)
     // Recreate the plain text signature, based on the incoming request parameters, and hash it.
     val unencryptedRequestString = MAuthSignatureHelper.generateStringToSignV2(mAuthRequest)

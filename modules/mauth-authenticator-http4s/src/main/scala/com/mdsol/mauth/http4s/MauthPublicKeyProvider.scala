@@ -56,8 +56,8 @@ class MauthPublicKeyProvider[F[_]: Async: Logger](configuration: AuthenticatorCo
           }
       case _ =>
         Logger[F]
-          .error(s"Unexpected response returned by server -- status: ${mauthPublicKeyFetcher.status} response: ${mauthPublicKeyFetcher.body}") *> Async[F]
-          .pure[Option[PublicKey]](None)
+          .error(s"Unexpected response returned by server -- status: ${mauthPublicKeyFetcher.status} response: ${mauthPublicKeyFetcher.body}") *>
+          none[PublicKey].pure[F]
     }
   }
 
