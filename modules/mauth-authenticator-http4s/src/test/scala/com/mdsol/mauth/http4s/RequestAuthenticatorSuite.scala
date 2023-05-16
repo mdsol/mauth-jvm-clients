@@ -61,8 +61,6 @@ class RequestAuthenticatorSuite extends CatsEffectSuite with RequestAuthenticato
 
     val authenticator = RequestAuthenticator(client, mockEpochTimeProvider(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE.toLong + 600))
 
-    import cats.implicits._
-
     authenticator
       .authenticate(getRequestWithUnicodeCharactersInBody)
       .interceptMessage[MAuthValidationException]("MAuth request validation failed because of timeout 10 seconds")

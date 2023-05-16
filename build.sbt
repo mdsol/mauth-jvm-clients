@@ -168,7 +168,7 @@ lazy val `mauth-authenticator-akka-http` = scalaModuleProject("mauth-authenticat
     publishSettings,
     libraryDependencies ++=
       Dependencies.provided(akkaHttp, akkaStream) ++
-        Dependencies.compile(jacksonDataBind, scalaCache).map(withExclusions) ++
+        Dependencies.compile(jacksonDataBind, scalaCacheCaffeine).map(withExclusions) ++
         Dependencies.test(scalaTest, scalaMock, wiremock) ++
         Dependencies.test(akkaHttpTestKit *).map(withExclusions),
     mimaPreviousArtifacts := Set.empty
@@ -187,8 +187,9 @@ lazy val `mauth-authenticator-http4s` = (project in file("modules/mauth-authenti
         Dependencies.compile(enumeratum) ++
         Dependencies.compile(log4cats) ++
         Dependencies.compile(circeBasic *) ++
-        Dependencies.compile(jacksonDataBind, scalaCache) ++
+        Dependencies.compile(jacksonDataBind, scalaCacheCore) ++
         Dependencies.test(munitCatsEffect) ++
+        Dependencies.test(scalaCacheCaffeine) ++
         Dependencies.test(log4catsNoop)
   )
 

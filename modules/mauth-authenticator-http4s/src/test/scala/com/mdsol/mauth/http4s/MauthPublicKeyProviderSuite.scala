@@ -1,6 +1,7 @@
 package com.mdsol.mauth.http4s
 
 import cats.effect.IO
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.mdsol.mauth.test.utils.{FakeMAuthServer, PortFinder, TestFixtures}
 import com.mdsol.mauth.util.MAuthKeysHelper
 import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequestSigner}
@@ -10,6 +11,8 @@ import org.http4s.implicits._
 import org.http4s._
 import org.http4s.client.Client
 import org.typelevel.log4cats.noop.NoOpLogger
+import scalacache.caffeine.CaffeineCache
+import scalacache.{Cache, Entry}
 
 import java.security.PublicKey
 
@@ -20,6 +23,14 @@ class MauthPublicKeyProviderSuite extends CatsEffectSuite {
   private val MAUTH_BASE_URL = s"http://localhost:$MAUTH_PORT"
   private val MAUTH_URL_PATH = "/mauth/v1"
   private val SECURITY_TOKENS_PATH = "/security_tokens/%s.json"
+
+  private val cCache = Caffeine.newBuilder().build[String, Entry[Option[PublicKey]]]()
+  implicit val caffeineCache: Cache[IO, String, Option[PublicKey]] = CaffeineCache[IO, String, Option[PublicKey]](underlying = cCache)
+
+  override def beforeEach(context: BeforeEach): Unit = {
+    super.beforeEach(context)
+    cCache.invalidateAll()
+  }
   def executeRequest(uuid: String, response: IO[Response[IO]]): HttpApp[IO] =
     HttpRoutes
       .of[IO] {

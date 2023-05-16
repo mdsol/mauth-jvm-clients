@@ -2,7 +2,6 @@ package com.mdsol.mauth.http4s
 
 import cats.ApplicativeThrow
 import cats.effect.Async
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.mdsol.mauth.http4s.client.Implicits.NewSignedRequestOps
 import com.mdsol.mauth.models.UnsignedRequest
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
@@ -10,9 +9,8 @@ import com.mdsol.mauth.util.MAuthKeysHelper
 import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequestSigner}
 import org.http4s.client.Client
 import org.http4s.{EntityDecoder, Response, Status}
-import scalacache.caffeine.CaffeineCache
 import scalacache.memoization.memoizeF
-import scalacache.{Cache, Entry}
+import scalacache.Cache
 
 import java.net.URI
 import java.security.PublicKey
@@ -24,11 +22,9 @@ import io.circe.{Decoder, HCursor}
 import org.http4s.circe.jsonOf
 import org.typelevel.log4cats.Logger
 
-class MauthPublicKeyProvider[F[_]: Async: Logger](configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, val client: Client[F])
-    extends ClientPublicKeyProvider[F] {
-
-  private val cCache = Caffeine.newBuilder().build[String, Entry[Option[PublicKey]]]()
-  implicit val caffeineCache: Cache[F, String, Option[PublicKey]] = CaffeineCache[F, String, Option[PublicKey]](underlying = cCache)
+class MauthPublicKeyProvider[F[_]: Async: Logger](configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, val client: Client[F])(implicit
+  val caffeineCache: Cache[F, String, Option[PublicKey]]
+) extends ClientPublicKeyProvider[F] {
 
   /** Returns the associated public key for a given application UUID.
     *

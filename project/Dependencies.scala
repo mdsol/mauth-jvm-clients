@@ -25,7 +25,7 @@ object Dependencies extends DependencyUtils {
   val logbackCore: ModuleID = "ch.qos.logback"                         % "logback-core"            % Version.logback
   val slf4jApi: ModuleID = "org.slf4j"                                 % "slf4j-api"               % "1.7.36"
   val typeSafeConfig: ModuleID = "com.typesafe"                        % "config"                  % "1.4.2"
-  val scalaCache: ModuleID = "com.github.cb372"                       %% "scalacache-caffeine"     % "1.0.0-M6"
+  val scalaCacheCore: ModuleID = "com.github.cb372"                   %% "scalacache-core"         % "1.0.0-M6"
   val scalaLogging: ModuleID = "com.typesafe.scala-logging"           %% "scala-logging"           % "3.9.5"
   val catsEffect: ModuleID = "org.typelevel"                          %% "cats-effect"             % "3.4.0"
   val sttp: ModuleID = "com.softwaremill.sttp.client3"                %% "core"                    % Version.sttp
@@ -50,12 +50,13 @@ object Dependencies extends DependencyUtils {
     "com.typesafe.akka" %% "akka-testkit"        % Version.akka,
     "com.typesafe.akka" %% "akka-stream-testkit" % Version.akka
   )
-  val commonsIO: ModuleID = "commons-io"            % "commons-io"          % "2.11.0"
-  val scalaMock: ModuleID = "org.scalamock"        %% "scalamock"           % "5.2.0"
-  val scalaTest: ModuleID = "org.scalatest"        %% "scalatest"           % "3.2.14"
-  val wiremock: ModuleID = "com.github.tomakehurst" % "wiremock"            % "2.27.2"
-  val munitCatsEffect: ModuleID = "org.typelevel"  %% "munit-cats-effect-3" % "1.0.7"
-  val log4catsNoop: ModuleID = "org.typelevel"     %% "log4cats-noop"       % Version.log4cats
+  val commonsIO: ModuleID = "commons-io"                 % "commons-io"          % "2.11.0"
+  val scalaMock: ModuleID = "org.scalamock"             %% "scalamock"           % "5.2.0"
+  val scalaTest: ModuleID = "org.scalatest"             %% "scalatest"           % "3.2.14"
+  val wiremock: ModuleID = "com.github.tomakehurst"      % "wiremock"            % "2.27.2"
+  val munitCatsEffect: ModuleID = "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"
+  val log4catsNoop: ModuleID = "org.typelevel"          %% "log4cats-noop"       % Version.log4cats
+  val scalaCacheCaffeine: ModuleID = "com.github.cb372" %% "scalacache-caffeine" % "1.0.0-M6"
 
   // Dependency Conflict Resolution
   val exclusions = Seq()
