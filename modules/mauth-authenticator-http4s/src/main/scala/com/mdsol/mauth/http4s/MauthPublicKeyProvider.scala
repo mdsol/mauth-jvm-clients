@@ -23,7 +23,7 @@ import org.http4s.circe.jsonOf
 import org.typelevel.log4cats.Logger
 
 class MauthPublicKeyProvider[F[_]: Async: Logger](configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, val client: Client[F])(implicit
-  val caffeineCache: Cache[F, String, Option[PublicKey]]
+  val cache: Cache[F, String, Option[PublicKey]]
 ) extends ClientPublicKeyProvider[F] {
 
   /** Returns the associated public key for a given application UUID.
