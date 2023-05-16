@@ -9,7 +9,6 @@ import akka.http.scaladsl.server._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.http.{`X-MWS-Authentication`, `X-MWS-Time`}
-import com.mdsol.mauth.scaladsl.RequestAuthenticator
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
 import com.mdsol.mauth.test.utils.TestFixtures
 import com.mdsol.mauth.util.{EpochTimeProvider, MAuthKeysHelper}
@@ -44,7 +43,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
   private implicit val timeout: FiniteDuration = 30.seconds
   private implicit val requestValidationTimeout: Duration = 10.seconds
-  private val client = mock[ClientPublicKeyProvider]
+  private val client = mock[ClientPublicKeyProvider[Future]]
   private val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
   private val authenticator: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
   private val authenticatorV2: RequestAuthenticator = new RequestAuthenticator(client, mockEpochTimeProvider, v2OnlyAuthenticate = true)

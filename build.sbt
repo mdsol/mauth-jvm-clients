@@ -163,18 +163,19 @@ lazy val `mauth-authenticator-apachehttp` = javaModuleProject("mauth-authenticat
   )
 
 lazy val `mauth-authenticator-akka-http` = scalaModuleProject("mauth-authenticator-akka-http")
-  .dependsOn(`mauth-authenticator-scala`, `mauth-signer-akka-http`, `mauth-test-utils` % "test")
+  .dependsOn(`mauth-authenticator-scala` % "test->test;compile->compile", `mauth-signer-akka-http`, `mauth-test-utils` % "test")
   .settings(
     publishSettings,
     libraryDependencies ++=
       Dependencies.provided(akkaHttp, akkaStream) ++
-        Dependencies.compile(jacksonDataBind, scalaCache).map(withExclusions) ++
-        Dependencies.test(scalaTest, scalaMock, wiremock) ++ Dependencies.test(akkaHttpTestKit: _*).map(withExclusions),
+        Dependencies.compile(jacksonDataBind, scalaCacheCaffeine).map(withExclusions) ++
+        Dependencies.test(scalaTest, scalaMock, wiremock) ++
+        Dependencies.test(akkaHttpTestKit *).map(withExclusions),
     mimaPreviousArtifacts := Set.empty
   )
 
 lazy val `mauth-authenticator-http4s` = (project in file("modules/mauth-authenticator-http4s")) // don't need to cross-compile
-  .dependsOn(`mauth-authenticator-scala`, `mauth-test-utils` % "test")
+  .dependsOn(`mauth-signer-http4s`, `mauth-authenticator-scala` % "test->test;compile->compile", `mauth-test-utils` % "test")
   .settings(
     basicSettings,
     moduleName := "mauth-authenticator-http4s",
@@ -182,9 +183,14 @@ lazy val `mauth-authenticator-http4s` = (project in file("modules/mauth-authenti
     testFrameworks += new TestFramework("munit.Framework"),
     libraryDependencies ++=
       Dependencies.provided(http4sDsl) ++
+        Dependencies.provided(http4sClient) ++
         Dependencies.compile(enumeratum) ++
         Dependencies.compile(log4cats) ++
-        Dependencies.test(munitCatsEffect)
+        Dependencies.compile(circeBasic *) ++
+        Dependencies.compile(jacksonDataBind, scalaCacheCore) ++
+        Dependencies.test(munitCatsEffect) ++
+        Dependencies.test(scalaCacheCaffeine) ++
+        Dependencies.test(log4catsNoop)
   )
 
 lazy val `mauth-jvm-clients` = (project in file("."))

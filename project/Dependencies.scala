@@ -10,6 +10,7 @@ object Dependencies extends DependencyUtils {
     val http4s = "0.23.16"
     val enumeratum = "1.7.0"
     val log4cats = "2.5.0"
+    val circe = "0.14.3"
   }
 
   val akkaHttp: ModuleID = "com.typesafe.akka"                        %% "akka-http"               % Version.akkaHttp
@@ -24,7 +25,7 @@ object Dependencies extends DependencyUtils {
   val logbackCore: ModuleID = "ch.qos.logback"                         % "logback-core"            % Version.logback
   val slf4jApi: ModuleID = "org.slf4j"                                 % "slf4j-api"               % "1.7.36"
   val typeSafeConfig: ModuleID = "com.typesafe"                        % "config"                  % "1.4.2"
-  val scalaCache: ModuleID = "com.github.cb372"                       %% "scalacache-caffeine"     % "1.0.0-M6"
+  val scalaCacheCore: ModuleID = "com.github.cb372"                   %% "scalacache-core"         % "1.0.0-M6"
   val scalaLogging: ModuleID = "com.typesafe.scala-logging"           %% "scala-logging"           % "3.9.5"
   val catsEffect: ModuleID = "org.typelevel"                          %% "cats-effect"             % "3.4.0"
   val sttp: ModuleID = "com.softwaremill.sttp.client3"                %% "core"                    % Version.sttp
@@ -34,7 +35,14 @@ object Dependencies extends DependencyUtils {
   val http4sDsl: ModuleID = "org.http4s"                              %% "http4s-dsl"              % Version.http4s
   val http4sClient: ModuleID = "org.http4s"                           %% "http4s-client"           % Version.http4s
   val enumeratum: ModuleID = "com.beachape"                           %% "enumeratum"              % Version.enumeratum
-  val log4cats = "org.typelevel"                                      %% "log4cats-slf4j"          % Version.log4cats
+  val log4cats: ModuleID = "org.typelevel"                            %% "log4cats-slf4j"          % Version.log4cats
+
+  lazy val circeBasic: Seq[ModuleID] = Seq(
+    "io.circe"   %% "circe-core"           % Version.circe,
+    "io.circe"   %% "circe-parser"         % Version.circe,
+    "io.circe"   %% "circe-generic-extras" % Version.circe,
+    "org.http4s" %% "http4s-circe"         % Version.http4s
+  )
 
   // TEST DEPENDENCIES
   val akkaHttpTestKit: Seq[ModuleID] = Seq(
@@ -42,11 +50,13 @@ object Dependencies extends DependencyUtils {
     "com.typesafe.akka" %% "akka-testkit"        % Version.akka,
     "com.typesafe.akka" %% "akka-stream-testkit" % Version.akka
   )
-  val commonsIO: ModuleID = "commons-io"            % "commons-io"          % "2.11.0"
-  val scalaMock: ModuleID = "org.scalamock"        %% "scalamock"           % "5.2.0"
-  val scalaTest: ModuleID = "org.scalatest"        %% "scalatest"           % "3.2.14"
-  val wiremock: ModuleID = "com.github.tomakehurst" % "wiremock"            % "2.27.2"
-  val munitCatsEffect: ModuleID = "org.typelevel"  %% "munit-cats-effect-3" % "1.0.7"
+  val commonsIO: ModuleID = "commons-io"                 % "commons-io"          % "2.11.0"
+  val scalaMock: ModuleID = "org.scalamock"             %% "scalamock"           % "5.2.0"
+  val scalaTest: ModuleID = "org.scalatest"             %% "scalatest"           % "3.2.14"
+  val wiremock: ModuleID = "com.github.tomakehurst"      % "wiremock"            % "2.27.2"
+  val munitCatsEffect: ModuleID = "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"
+  val log4catsNoop: ModuleID = "org.typelevel"          %% "log4cats-noop"       % Version.log4cats
+  val scalaCacheCaffeine: ModuleID = "com.github.cb372" %% "scalacache-caffeine" % "1.0.0-M6"
 
   // Dependency Conflict Resolution
   val exclusions = Seq()

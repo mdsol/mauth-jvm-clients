@@ -1,26 +1,35 @@
-package com.mdsol.mauth.scaladsl
+package com.mdsol.mauth.akka.http
+
+import com.mdsol.mauth.{MAuthRequest, MAuthVersion}
+import com.mdsol.mauth.exception.MAuthValidationException
+import com.mdsol.mauth.scaladsl.Authenticator
+import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
+import com.mdsol.mauth.util.{EpochTimeProvider, MAuthSignatureHelper}
+import org.slf4j.{Logger, LoggerFactory}
 
 import java.nio.charset.StandardCharsets
 import java.security.PublicKey
 import java.util
-
-import com.mdsol.mauth.MAuthRequest
-import com.mdsol.mauth.MAuthVersion
-import com.mdsol.mauth.exception.MAuthValidationException
-import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
-import com.mdsol.mauth.util.{EpochTimeProvider, MAuthSignatureHelper}
-import org.slf4j.LoggerFactory
-
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
-class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTimeProvider: EpochTimeProvider, v2OnlyAuthenticate: Boolean)
-    extends Authenticator {
+class RequestAuthenticator(
+  val publicKeyProvider: ClientPublicKeyProvider[Future],
+  override val epochTimeProvider: EpochTimeProvider,
+  v2OnlyAuthenticate: Boolean
+)(implicit val executionContext: ExecutionContext)
+    extends Authenticator[Future] {
 
-  private val logger = LoggerFactory.getLogger(classOf[RequestAuthenticator])
+  val logger: Logger = LoggerFactory.getLogger(classOf[RequestAuthenticator])
 
-  def this(publicKeyProvider: ClientPublicKeyProvider, epochTimeProvider: EpochTimeProvider) =
-    this(publicKeyProvider, epochTimeProvider, false)
+  def this(publicKeyProvider: ClientPublicKeyProvider[Future], epochTimeProvider: EpochTimeProvider)(implicit executionContext: ExecutionContext) =
+    this(publicKeyProvider, epochTimeProvider, false)(executionContext)
+
+  /** check if mauth v2 only authenticate is enabled or not
+    *
+    * @return True or false identifying if v2 only authenticate is enabled or not.
+    */
+  override val isV2OnlyAuthenticate: Boolean = v2OnlyAuthenticate
 
   /** Performs the validation of an incoming HTTP request.
     *
@@ -30,8 +39,7 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
     * @param mAuthRequest Data from the incoming HTTP request necessary to perform the validation.
     * @return True or false indicating if the request is valid or not with respect to mAuth.
     */
-  override def authenticate(mAuthRequest: MAuthRequest)(implicit ex: ExecutionContext, requestValidationTimeout: Duration): Future[Boolean] = {
-
+  override def authenticate(mAuthRequest: MAuthRequest)(implicit requestValidationTimeout: Duration): Future[Boolean] = {
     val promise = Promise[Boolean]()
     if (!validateTime(mAuthRequest.getRequestTime)(requestValidationTimeout)) {
       val message = s"MAuth request validation failed because of timeout $requestValidationTimeout"
@@ -43,41 +51,41 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
       promise.failure(new MAuthValidationException(message))
     } else {
       promise.completeWith(
-        publicKeyProvider.getPublicKey(mAuthRequest.getAppUUID).map {
-          case None =>
-            logger.error("Public Key couldn't be retrieved")
-            false
-          case Some(clientPublicKey) =>
-            // Decrypt the signature with public key from requesting application.
-            mAuthRequest.getMauthVersion match {
-              case MAuthVersion.MWS =>
-                validateSignatureV1(mAuthRequest, clientPublicKey)
-              case MAuthVersion.MWSV2 =>
-                val v2IsValidated = validateSignatureV2(mAuthRequest, clientPublicKey)
-                if (v2OnlyAuthenticate)
-                  v2IsValidated
-                else if (v2IsValidated)
-                  v2IsValidated
-                else
-                  fallbackValidateSignatureV1(mAuthRequest, clientPublicKey)
-            }
-        }
+        getPublicKey(mAuthRequest)
       )
     }
     promise.future
   }
 
-  /** check if mauth v2 only authenticate is enabled or not
-    * @return True or false identifying if v2 only authenticate is enabled or not.
-    */
-  override val isV2OnlyAuthenticate: Boolean = v2OnlyAuthenticate
+  private def getPublicKey(mAuthRequest: MAuthRequest): Future[Boolean] = {
+    publicKeyProvider.getPublicKey(mAuthRequest.getAppUUID).map {
+      case None =>
+        logger.error("Public Key couldn't be retrieved")
+        false
+      case Some(clientPublicKey) =>
+        // Decrypt the signature with public key from requesting application.
+        mAuthRequest.getMauthVersion match {
+          case MAuthVersion.MWS =>
+            logger.warn("MAuth v1 client was used to authenticate this request which is deprecated")
+            validateSignatureV1(mAuthRequest, clientPublicKey)
+          case MAuthVersion.MWSV2 =>
+            val v2IsValidated = validateSignatureV2(mAuthRequest, clientPublicKey)
+            if (v2OnlyAuthenticate)
+              v2IsValidated
+            else if (v2IsValidated)
+              v2IsValidated
+            else
+              fallbackValidateSignatureV1(mAuthRequest, clientPublicKey)
+        }
+    }
+  }
 
   // Check epoch time is not older than specified interval.
-  protected def validateTime(requestTime: Long)(requestValidationTimeout: Duration): Boolean =
+  private def validateTime(requestTime: Long)(requestValidationTimeout: Duration): Boolean =
     (epochTimeProvider.inSeconds - requestTime) < requestValidationTimeout.toSeconds
 
   // Check V2 header if only V2 is required
-  protected def validateMauthVersion(mAuthRequest: MAuthRequest, v2OnlyAuthenticate: Boolean): Boolean =
+  private def validateMauthVersion(mAuthRequest: MAuthRequest, v2OnlyAuthenticate: Boolean): Boolean =
     !v2OnlyAuthenticate || mAuthRequest.getMauthVersion == MAuthVersion.MWSV2
 
   // check signature for V1
@@ -116,7 +124,7 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
 
   }
 
-  private def fallbackValidateSignatureV1(mAuthRequest: MAuthRequest, clientPublicKey: PublicKey) = {
+  private def fallbackValidateSignatureV1(mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): Boolean = {
     var isValidated = false
     if (mAuthRequest.getMessagePayload == null) {
       logger.warn("V1 authentication fallback is not available because the full request body is not available in memory.")
@@ -141,5 +149,4 @@ class RequestAuthenticator(publicKeyProvider: ClientPublicKeyProvider, epochTime
     val msgFormat = "Mauth-client attempting to authenticate request from app with mauth app uuid %s using version %s."
     logger.info(String.format(msgFormat, mAuthRequest.getAppUUID, mAuthRequest.getMauthVersion.getValue))
   }
-
 }

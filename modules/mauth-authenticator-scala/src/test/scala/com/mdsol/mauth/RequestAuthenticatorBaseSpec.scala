@@ -1,18 +1,12 @@
 package com.mdsol.mauth
 
 import java.nio.charset.StandardCharsets
-import java.security.Security
 
 import com.mdsol.mauth.test.utils.FakeMAuthServer.EXISTING_CLIENT_APP_UUID
 import com.mdsol.mauth.test.utils.TestFixtures
-import com.mdsol.mauth.util.EpochTimeProvider
 import org.apache.http.client.methods.{HttpGet, HttpPost}
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.flatspec.AnyFlatSpec
 
-trait RequestAuthenticatorBaseSpec extends AnyFlatSpec with BeforeAndAfterAll with MockFactory {
+trait RequestAuthenticatorBaseSpec {
 
   val CLIENT_X_MWS_TIME_HEADER_VALUE = "1444672122"
   val CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE = "1444748974"
@@ -62,18 +56,11 @@ trait RequestAuthenticatorBaseSpec extends AnyFlatSpec with BeforeAndAfterAll wi
       |2rBY2KRNJmPBaAV5ss30FC146jfyg7b8I9fenyauaw==""".stripMargin
   val CLIENT_REQUEST_AUTHENTICATION_HEADER_V2: String = "MWSV2 " + EXISTING_CLIENT_APP_UUID.toString + ":" + CLIENT_REQUEST_SIGNATURE_V2 + ";"
 
-  val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
-
   private val CLIENT_REQUEST_HEADERS = new java.util.HashMap[String, String]()
   CLIENT_REQUEST_HEADERS.put(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, CLIENT_REQUEST_AUTHENTICATION_HEADER)
   CLIENT_REQUEST_HEADERS.put(MAuthRequest.X_MWS_TIME_HEADER_NAME, CLIENT_X_MWS_TIME_HEADER_VALUE)
   CLIENT_REQUEST_HEADERS.put(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
   CLIENT_REQUEST_HEADERS.put(MAuthRequest.MCC_TIME_HEADER_NAME, CLIENT_MCC_TIME_HEADER_VALUE)
-
-  override protected def beforeAll(): Unit = {
-    Security.addProvider(new BouncyCastleProvider)
-    ()
-  }
 
   def getSimpleRequest: MAuthRequest = {
     MAuthRequest.Builder.get

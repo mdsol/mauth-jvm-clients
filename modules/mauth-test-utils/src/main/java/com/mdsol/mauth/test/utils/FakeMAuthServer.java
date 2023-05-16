@@ -47,7 +47,7 @@ public class FakeMAuthServer {
         .willReturn(WireMock.aResponse().withStatus(401).withBody("Invalid headers")));
   }
 
-  private static String mockedMauthTokenResponse() {
+  public static String mockedMauthTokenResponse() {
     String response = null;
     final ObjectMapper mapper = new ObjectMapper();
     try {

@@ -15,6 +15,7 @@ import com.mdsol.mauth.http.{`X-MWS-Authentication`, `X-MWS-Time`, HttpVerbOps}
 import com.mdsol.mauth.scaladsl.Authenticator
 import com.typesafe.scalalogging.StrictLogging
 
+import scala.concurrent.Future
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
@@ -42,45 +43,43 @@ trait MAuthDirectives extends StrictLogging {
     * @param requestValidationTimeout request validation timeout duration, defaults to 10 seconds
     * @return Directive to authenticate the request
     */
-  def authenticate(implicit authenticator: Authenticator, timeout: FiniteDuration, requestValidationTimeout: Duration): Directive0 = {
-    extractExecutionContext.flatMap { implicit ec =>
-      extractLatestAuthenticationHeaders(authenticator.isV2OnlyAuthenticate).flatMap { mauthHeaderValues: MauthHeaderValues =>
-        toStrictEntity(timeout) &
-          extractRequest.flatMap { req =>
-            val isAuthed: Directive[Unit] = req.entity match {
-              case entity: HttpEntity.Strict =>
-                val mAuthRequest: MAuthRequest = new MAuthRequest(
-                  mauthHeaderValues.authenticator,
-                  entity.data.toArray[Byte],
-                  HttpVerbOps.httpVerb(req.method),
-                  mauthHeaderValues.time.toString,
-                  req.uri.path.toString,
-                  getQueryString(req)
-                )
-                if (!authenticator.isV2OnlyAuthenticate) {
-                  // store V1 headers for fallback to V1 authentication if V2 failed
-                  val xmwsAuthenticationHeader = extractRequestHeader(req, MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME)
-                  val xmwsTimeHeader = extractRequestHeader(req, MAuthRequest.X_MWS_TIME_HEADER_NAME)
-                  if (xmwsAuthenticationHeader.nonEmpty && xmwsTimeHeader.nonEmpty) {
-                    mAuthRequest.setXmwsSignature(xmwsAuthenticationHeader)
-                    mAuthRequest.setXmwsTime(xmwsTimeHeader)
-                  }
+  def authenticate(implicit authenticator: Authenticator[Future], timeout: FiniteDuration, requestValidationTimeout: Duration): Directive0 = {
+    extractLatestAuthenticationHeaders(authenticator.isV2OnlyAuthenticate).flatMap { mauthHeaderValues: MauthHeaderValues =>
+      toStrictEntity(timeout) &
+        extractRequest.flatMap { req =>
+          val isAuthed: Directive[Unit] = req.entity match {
+            case entity: HttpEntity.Strict =>
+              val mAuthRequest: MAuthRequest = new MAuthRequest(
+                mauthHeaderValues.authenticator,
+                entity.data.toArray[Byte],
+                HttpVerbOps.httpVerb(req.method),
+                mauthHeaderValues.time.toString,
+                req.uri.path.toString,
+                getQueryString(req)
+              )
+              if (!authenticator.isV2OnlyAuthenticate) {
+                // store V1 headers for fallback to V1 authentication if V2 failed
+                val xmwsAuthenticationHeader = extractRequestHeader(req, MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME)
+                val xmwsTimeHeader = extractRequestHeader(req, MAuthRequest.X_MWS_TIME_HEADER_NAME)
+                if (xmwsAuthenticationHeader.nonEmpty && xmwsTimeHeader.nonEmpty) {
+                  mAuthRequest.setXmwsSignature(xmwsAuthenticationHeader)
+                  mAuthRequest.setXmwsTime(xmwsTimeHeader)
                 }
-                onComplete(
-                  authenticator.authenticate(
-                    mAuthRequest
-                  )(ec, requestValidationTimeout)
-                ).flatMap[Unit] {
-                  case Success(true) => pass
-                  case _             => reject(MdsolAuthFailedRejection)
-                }
-              case _ =>
-                logger.error(s"MAUTH: Non-Strict Entity in Request")
-                reject(MdsolAuthFailedRejection)
-            }
-            isAuthed
+              }
+              onComplete(
+                authenticator.authenticate(
+                  mAuthRequest
+                )(requestValidationTimeout)
+              ).flatMap[Unit] {
+                case Success(true) => pass
+                case _             => reject(MdsolAuthFailedRejection)
+              }
+            case _ =>
+              logger.error(s"MAUTH: Non-Strict Entity in Request")
+              reject(MdsolAuthFailedRejection)
           }
-      }
+          isAuthed
+        }
     }
   }
 

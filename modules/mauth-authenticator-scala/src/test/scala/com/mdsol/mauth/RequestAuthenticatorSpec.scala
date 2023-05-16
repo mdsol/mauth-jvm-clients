@@ -1,16 +1,17 @@
 package com.mdsol.mauth
 
 import java.util.UUID
-
 import com.mdsol.mauth.exception.MAuthValidationException
 import com.mdsol.mauth.test.utils.FakeMAuthServer.EXISTING_CLIENT_APP_UUID
-import com.mdsol.mauth.util.MAuthKeysHelper
+import com.mdsol.mauth.util.{EpochTimeProvider, MAuthKeysHelper}
 import com.mdsol.mauth.utils.ClientPublicKeyProvider
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBaseSpec with Matchers with MockFactory {
+
+  val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
 
   val mockClientPublicKeyProvider: ClientPublicKeyProvider = mock[ClientPublicKeyProvider]
   val authenticator: RequestAuthenticator = new RequestAuthenticator(mockClientPublicKeyProvider, REQUEST_VALIDATION_TIMEOUT_SECONDS, mockEpochTimeProvider)
