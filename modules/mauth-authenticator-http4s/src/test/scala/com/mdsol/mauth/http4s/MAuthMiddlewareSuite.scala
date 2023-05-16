@@ -17,9 +17,11 @@ import org.http4s.Method._
 import java.security.{PublicKey, Security}
 import java.util.UUID
 import scala.concurrent.duration._
+import org.typelevel.log4cats.noop.NoOpLogger
 
 class MAuthMiddlewareSuite extends CatsEffectSuite {
 
+  implicit val logger = NoOpLogger[IO]
   private val route: HttpRoutes[IO] =
     HttpRoutes.of {
       case req if req.uri.path === path"/" =>

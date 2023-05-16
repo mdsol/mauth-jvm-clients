@@ -1,5 +1,6 @@
 package com.mdsol.mauth.http4s
 
+import cats.ApplicativeThrow
 import cats.effect.Async
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.mdsol.mauth.http4s.client.Implicits.NewSignedRequestOps
@@ -17,17 +18,15 @@ import java.net.URI
 import java.security.PublicKey
 import java.util.UUID
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
 import cats.implicits._
 import com.mdsol.mauth.http4s.MauthPublicKeyProvider.SecurityToken
 import io.circe.{Decoder, HCursor}
-import org.typelevel.log4cats.slf4j.Slf4jLogger
 import org.http4s.circe.jsonOf
+import org.typelevel.log4cats.Logger
 
-class MauthPublicKeyProvider[F[_]: Async](configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, val client: Client[F])
+class MauthPublicKeyProvider[F[_]: Async: Logger](configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, val client: Client[F])
     extends ClientPublicKeyProvider[F] {
 
-  private val logger = Slf4jLogger.getLogger[F]
   private val cCache = Caffeine.newBuilder().build[String, Entry[Option[PublicKey]]]()
   implicit val caffeineCache: Cache[F, String, Option[PublicKey]] = CaffeineCache[F, String, Option[PublicKey]](underlying = cCache)
 
@@ -43,31 +42,26 @@ class MauthPublicKeyProvider[F[_]: Async](configuration: AuthenticatorConfigurat
       .toHttp4sRequest[F]
       .flatMap(req => client.run(req).use(retrievePublicKey))
   }
-
   private def retrievePublicKey(mauthPublicKeyFetcher: Response[F]): F[Option[PublicKey]] = {
-    if (mauthPublicKeyFetcher.status == Status.Ok) {
-      mauthPublicKeyFetcher
-        .attemptAs[SecurityToken]
-        .bimap(
-          error => logger.error(error)("Converting json to SecurityToken failed") *> error.raiseError[F, Option[PublicKey]],
-          securityToken =>
-            Try(
-              MAuthKeysHelper.getPublicKeyFromString(securityToken.publicKeyStr)
-            ) match {
-              case Success(publicKey) => Async[F].pure[Option[PublicKey]](Some(publicKey))
-              case Failure(error) =>
-                logger.error(error)("Converting string to Public Key failed") *> error.raiseError[F, Option[PublicKey]]
-            }
-        )
-        .toOption
-        .value
-        .flatMap {
-          case Some(v) => v
-          case None    => Async[F].pure(None)
-        }
-    } else {
-      logger.error(s"Unexpected response returned by server -- status: ${mauthPublicKeyFetcher.status} response: ${mauthPublicKeyFetcher.body}") *> Async[F]
-        .pure[Option[PublicKey]](None)
+    mauthPublicKeyFetcher.status match {
+      case Status.Ok =>
+        mauthPublicKeyFetcher
+          .as[SecurityToken]
+          .flatMap { securityToken =>
+            ApplicativeThrow[F]
+              .catchNonFatal(MAuthKeysHelper.getPublicKeyFromString(securityToken.publicKeyStr))
+              .map(_.some)
+              .recoverWith { case error =>
+                Logger[F].error(error)("Converting string to Public Key failed") *> none[PublicKey].pure[F]
+              }
+          }
+          .recoverWith { case error =>
+            Logger[F].error(error)("Converting json to SecurityToken failed") *> none[PublicKey].pure[F]
+          }
+      case _ =>
+        Logger[F]
+          .error(s"Unexpected response returned by server -- status: ${mauthPublicKeyFetcher.status} response: ${mauthPublicKeyFetcher.body}") *> Async[F]
+          .pure[Option[PublicKey]](None)
     }
   }
 

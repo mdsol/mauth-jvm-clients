@@ -188,7 +188,8 @@ lazy val `mauth-authenticator-http4s` = (project in file("modules/mauth-authenti
         Dependencies.compile(log4cats) ++
         Dependencies.compile(circeBasic *) ++
         Dependencies.compile(jacksonDataBind, scalaCache) ++
-        Dependencies.test(munitCatsEffect)
+        Dependencies.test(munitCatsEffect) ++
+        Dependencies.test(log4catsNoop)
   )
 
 lazy val `mauth-jvm-clients` = (project in file("."))

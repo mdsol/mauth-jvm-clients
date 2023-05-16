@@ -3,7 +3,7 @@ package com.mdsol.mauth.http4s.client
 import cats.effect.Async
 import com.mdsol.mauth.models.SignedRequest
 import org.http4s.headers.`Content-Type`
-import org.http4s.{Header, Headers, Method, Request, Uri, headers}
+import org.http4s.{headers, Header, Headers, Method, Request, Uri}
 import org.typelevel.ci.CIString
 import cats.syntax.all._
 
@@ -24,16 +24,15 @@ object Implicits {
           Header.Raw(CIString(name), value)
         }
 
-      Uri.fromString(signedRequest.req.uri.toString)
-        .liftTo[F]
-        .map { uri =>
-          Request[F](
-            method = Method.fromString(signedRequest.req.httpMethod).getOrElse(Method.GET),
-            uri = uri,
-            body = fs2.Stream.emits(signedRequest.req.body),
-            headers = Headers(allHeaders)
-          ).withContentTypeOption(contentType)
-        }
+      for {
+        uri <- Uri.fromString(signedRequest.req.uri.toString).liftTo[F]
+        method <- Method.fromString(signedRequest.req.httpMethod).liftTo[F]
+      } yield Request[F](
+        method = method,
+        uri = uri,
+        body = fs2.Stream.emits(signedRequest.req.body),
+        headers = Headers(allHeaders)
+      ).withContentTypeOption(contentType)
     }
 
     private def extractContentTypeFromHeaders(requestHeaders: Map[String, String]): Option[`Content-Type`] =

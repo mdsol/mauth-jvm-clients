@@ -9,11 +9,13 @@ import org.http4s.dsl.io._
 import org.http4s.implicits._
 import org.http4s._
 import org.http4s.client.Client
+import org.typelevel.log4cats.noop.NoOpLogger
 
 import java.security.PublicKey
 
 class MauthPublicKeyProviderSuite extends CatsEffectSuite {
 
+  implicit val logger = NoOpLogger[IO]
   private val MAUTH_PORT = PortFinder.findFreePort()
   private val MAUTH_BASE_URL = s"http://localhost:$MAUTH_PORT"
   private val MAUTH_URL_PATH = "/mauth/v1"

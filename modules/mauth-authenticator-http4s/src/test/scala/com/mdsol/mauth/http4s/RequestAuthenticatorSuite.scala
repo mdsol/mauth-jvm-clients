@@ -8,12 +8,14 @@ import com.mdsol.mauth.test.utils.FakeMAuthServer.EXISTING_CLIENT_APP_UUID
 import com.mdsol.mauth.util.{EpochTimeProvider, MAuthKeysHelper}
 import munit.CatsEffectSuite
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.typelevel.log4cats.SelfAwareStructuredLogger
+import org.typelevel.log4cats.noop.NoOpLogger
 
 import java.security.Security
 import java.util.UUID
 import scala.concurrent.duration._
 
-class RequestAuthenticatorSpec extends CatsEffectSuite with RequestAuthenticatorBaseSpec {
+class RequestAuthenticatorSuite extends CatsEffectSuite with RequestAuthenticatorBaseSpec {
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -22,7 +24,7 @@ class RequestAuthenticatorSpec extends CatsEffectSuite with RequestAuthenticator
   }
 
   private implicit val requestValidationTimeout: Duration = 10.seconds
-
+  private implicit val logger: SelfAwareStructuredLogger[IO] = NoOpLogger[IO]
   def mockEpochTimeProvider(seconds: Long): EpochTimeProvider = () => seconds
 
   private val client: ClientPublicKeyProvider[IO] = (appUUID: UUID) =>
@@ -59,11 +61,12 @@ class RequestAuthenticatorSpec extends CatsEffectSuite with RequestAuthenticator
 
     val authenticator = RequestAuthenticator(client, mockEpochTimeProvider(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE.toLong + 600))
 
-    authenticator.authenticate(getRequestWithUnicodeCharactersInBody).handleErrorWith {
-      case e: MAuthValidationException =>
-        IO.pure(assertEquals(e.getMessage, "MAuth request validation failed because of timeout 10 seconds"))
-      case _ => fail("should not be here")
-    }
+    import cats.implicits._
+
+    authenticator
+      .authenticate(getRequestWithUnicodeCharactersInBody)
+      .interceptMessage[MAuthValidationException]("MAuth request validation failed because of timeout 10 seconds")
+
   }
 
   test("authenticate a valid request with V2 headers") {
@@ -88,11 +91,7 @@ class RequestAuthenticatorSpec extends CatsEffectSuite with RequestAuthenticator
     val client: ClientPublicKeyProvider[IO] = _ => IO.none
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3), true)
 
-    authenticator.authenticate(getSimpleRequest).attempt.handleErrorWith {
-      case e: MAuthValidationException =>
-        IO.pure(assertEquals(e.getMessage, "The service requires mAuth v2 authentication headers."))
-      case _ => fail("should not be here")
-    }
+    authenticator.authenticate(getSimpleRequest).interceptMessage[MAuthValidationException]("The service requires mAuth v2 authentication headers.")
   }
 
   test("authenticate a valid request with binary payload") {

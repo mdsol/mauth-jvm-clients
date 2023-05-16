@@ -55,6 +55,7 @@ object Dependencies extends DependencyUtils {
   val scalaTest: ModuleID = "org.scalatest"        %% "scalatest"           % "3.2.14"
   val wiremock: ModuleID = "com.github.tomakehurst" % "wiremock"            % "2.27.2"
   val munitCatsEffect: ModuleID = "org.typelevel"  %% "munit-cats-effect-3" % "1.0.7"
+  val log4catsNoop: ModuleID = "org.typelevel"     %% "log4cats-noop"       % Version.log4cats
 
   // Dependency Conflict Resolution
   val exclusions = Seq()
