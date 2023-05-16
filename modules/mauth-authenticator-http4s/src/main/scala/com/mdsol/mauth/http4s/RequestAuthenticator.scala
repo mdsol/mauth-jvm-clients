@@ -63,10 +63,10 @@ class RequestAuthenticator[F[_]: MonadThrow: Logger](
               validateSignatureV1[F](mAuthRequest, clientPublicKey)
           case MAuthVersion.MWSV2 if isV2OnlyAuthenticate => validateSignatureV2[F](mAuthRequest, clientPublicKey)
           case MAuthVersion.MWSV2 =>
-            validateSignatureV2[F](mAuthRequest, clientPublicKey).flatMap {
-              case true  => true.pure[F]
-              case false => fallbackValidateSignatureV1[F](mAuthRequest, clientPublicKey)
-            }
+            validateSignatureV2[F](mAuthRequest, clientPublicKey).ifM(
+              true.pure[F],
+              fallbackValidateSignatureV1[F](mAuthRequest, clientPublicKey)
+            )
         }
     }
   }
