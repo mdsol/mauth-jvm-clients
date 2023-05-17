@@ -1,28 +1,30 @@
 package com.mdsol.mauth.http4s
 
 import cats.ApplicativeThrow
-import cats.effect.Async
+import cats.effect.{Concurrent, Sync}
 import com.mdsol.mauth.http4s.client.Implicits.NewSignedRequestOps
 import com.mdsol.mauth.models.UnsignedRequest
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
 import com.mdsol.mauth.util.MAuthKeysHelper
 import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequestSigner}
 import org.http4s.client.Client
-import org.http4s.{EntityDecoder, Response, Status}
+import org.http4s.{Response, Status}
 import scalacache.memoization.memoizeF
-import scalacache.Cache
+import scalacache.{Cache, Entry}
+import scalacache.caffeine.CaffeineCache
 
 import java.net.URI
 import java.security.PublicKey
 import java.util.UUID
 import scala.concurrent.duration._
 import cats.implicits._
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.mdsol.mauth.http4s.MauthPublicKeyProvider.SecurityToken
 import io.circe.{Decoder, HCursor}
-import org.http4s.circe.jsonOf
+import org.http4s.circe.CirceEntityDecoder._
 import org.typelevel.log4cats.Logger
 
-class MauthPublicKeyProvider[F[_]: Async: Logger](configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, val client: Client[F])(implicit
+class MauthPublicKeyProvider[F[_]: Concurrent: Logger](configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, val client: Client[F])(implicit
   val cache: Cache[F, String, Option[PublicKey]]
 ) extends ClientPublicKeyProvider[F] {
 
@@ -67,14 +69,22 @@ class MauthPublicKeyProvider[F[_]: Async: Logger](configuration: AuthenticatorCo
 
 object MauthPublicKeyProvider {
 
-  implicit val securityTokenDecoderInstance: Decoder[SecurityToken] = (c: HCursor) => {
-    for {
-      appName <- c.downField("security_token").downField("app_name").as[String]
-      appUuid <- c.downField("security_token").downField("app_uuid").as[UUID]
-      publicKeyStr <- c.downField("security_token").downField("public_key_str").as[String]
-    } yield SecurityToken(appName, appUuid, publicKeyStr)
-  }
-  implicit def entityDecoder[F[_]: Async]: EntityDecoder[F, SecurityToken] = jsonOf[F, SecurityToken]
   final case class SecurityToken(appName: String, appUuid: UUID, publicKeyStr: String)
+  object SecurityToken {
+    implicit val securityTokenDecoderInstance: Decoder[SecurityToken] = (c: HCursor) => {
+      for {
+        appName <- c.downField("security_token").downField("app_name").as[String]
+        appUuid <- c.downField("security_token").downField("app_uuid").as[UUID]
+        publicKeyStr <- c.downField("security_token").downField("public_key_str").as[String]
+      } yield SecurityToken(appName, appUuid, publicKeyStr)
+    }
+  }
+
+  // this provides a default implementation of the cache to be used with the public key provider, and frees the user to
+  // inject their own cache
+  implicit def defaultCache[F[_]: Sync]: Cache[F, String, Option[PublicKey]] =
+    CaffeineCache[F, String, Option[PublicKey]](
+      Caffeine.newBuilder().build[String, Entry[Option[PublicKey]]]()
+    )
 
 }

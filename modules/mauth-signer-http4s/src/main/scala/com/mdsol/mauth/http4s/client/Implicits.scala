@@ -1,6 +1,6 @@
 package com.mdsol.mauth.http4s.client
 
-import cats.effect.Async
+import cats.MonadThrow
 import com.mdsol.mauth.models.SignedRequest
 import org.http4s.headers.`Content-Type`
 import org.http4s.{headers, Header, Headers, Method, Request, Uri}
@@ -15,7 +15,7 @@ object Implicits {
 
     /** Create a http4s request from a [[models.SignedRequest]]
       */
-    def toHttp4sRequest[F[_]: Async]: F[Request[F]] = {
+    def toHttp4sRequest[F[_]: MonadThrow]: F[Request[F]] = {
       val contentType: Option[`Content-Type`] = extractContentTypeFromHeaders(signedRequest.req.headers)
       val headersWithoutContentType: Map[String, String] = removeContentTypeFromHeaders(signedRequest.req.headers)
 
