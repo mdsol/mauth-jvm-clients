@@ -1,7 +1,7 @@
 package com.mdsol.mauth.http4s
 
 import cats.{ApplicativeThrow, MonadThrow}
-import cats.implicits._
+import cats.syntax.all._
 import com.mdsol.mauth.{MAuthRequest, MAuthVersion}
 import com.mdsol.mauth.exception.MAuthValidationException
 import com.mdsol.mauth.http4s.RequestAuthenticator.{fallbackValidateSignatureV1, validateMauthVersion, validateSignatureV1, validateSignatureV2, validateTime}
@@ -37,18 +37,17 @@ class RequestAuthenticator[F[_]: MonadThrow: Logger](
     */
   override def authenticate(mAuthRequest: MAuthRequest)(implicit requestValidationTimeout: Duration): F[Boolean] = {
     validateTime[F](mAuthRequest.getRequestTime, epochTimeProvider)(requestValidationTimeout)
-      .flatMap {
-        case false =>
+      .ifM(
+        validateMauthVersion[F](mAuthRequest, v2OnlyAuthenticate).ifM(
+          getPublicKey(mAuthRequest), {
+            val message = "The service requires mAuth v2 authentication headers."
+            Logger[F].error(message) *> ApplicativeThrow[F].raiseError(new MAuthValidationException(message))
+          }
+        ), {
           val message = s"MAuth request validation failed because of timeout $requestValidationTimeout"
           Logger[F].error(message) *> ApplicativeThrow[F].raiseError(new MAuthValidationException(message))
-        case true =>
-          validateMauthVersion[F](mAuthRequest, v2OnlyAuthenticate).flatMap {
-            case false =>
-              val message = "The service requires mAuth v2 authentication headers."
-              Logger[F].error(message) *> ApplicativeThrow[F].raiseError(new MAuthValidationException(message))
-            case _ => getPublicKey(mAuthRequest)
-          }
-      }
+        }
+      )
   }
 
   private def getPublicKey(mAuthRequest: MAuthRequest): F[Boolean] = {
@@ -86,58 +85,59 @@ object RequestAuthenticator {
     (!v2OnlyAuthenticate || mAuthRequest.getMauthVersion == MAuthVersion.MWSV2).pure[F]
 
   // check signature for V1
-  private def validateSignatureV1[F[_]: ApplicativeThrow: Logger](mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): F[Boolean] = {
-    logAuthenticationRequest(mAuthRequest)
-    val decryptedSignature = MAuthSignatureHelper.decryptSignature(clientPublicKey, mAuthRequest.getRequestSignature)
-    // Recreate the plain text signature, based on the incoming request parameters, and hash it.
-    ApplicativeThrow[F]
-      .catchNonFatal {
-        val messageDigest_bytes = MAuthSignatureHelper.generateDigestedMessageV1(mAuthRequest).getBytes(StandardCharsets.UTF_8)
-        util.Arrays.equals(messageDigest_bytes, decryptedSignature)
-      }
-      .recoverWith { case ex: Exception =>
-        val message = "MAuth request validation failed for V1."
-        Logger[F].error(ex)(message) *> ApplicativeThrow[F].raiseError(new MAuthValidationException(message, ex))
-      }
+  private def validateSignatureV1[F[_]: MonadThrow: Logger](mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): F[Boolean] = {
+    logAuthenticationRequest(mAuthRequest) *>
+      // Recreate the plain text signature, based on the incoming request parameters, and hash it.
+      ApplicativeThrow[F]
+        .catchNonFatal {
+          val messageDigest_bytes = MAuthSignatureHelper
+            .generateDigestedMessageV1(mAuthRequest)
+            .getBytes(StandardCharsets.UTF_8)
+          util.Arrays.equals(messageDigest_bytes, MAuthSignatureHelper.decryptSignature(clientPublicKey, mAuthRequest.getRequestSignature))
+        }
+        .recoverWith { case ex: Exception =>
+          val message = "MAuth request validation failed for V1."
+          Logger[F].error(ex)(message) *> ApplicativeThrow[F].raiseError(new MAuthValidationException(message, ex))
+        }
+
   }
 
   // check signature for V2
   private def validateSignatureV2[F[_]: ApplicativeThrow: Logger](mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): F[Boolean] = {
-    logAuthenticationRequest(mAuthRequest)
-    // Recreate the plain text signature, based on the incoming request parameters, and hash it.
-    val unencryptedRequestString = MAuthSignatureHelper.generateStringToSignV2(mAuthRequest)
-
-    // Compare the decrypted signature and the recreated signature hashes.
-    ApplicativeThrow[F]
-      .catchNonFatal(MAuthSignatureHelper.verifyRSA(unencryptedRequestString, mAuthRequest.getRequestSignature, clientPublicKey))
-      .recoverWith { case ex: Exception =>
-        val message = "MAuth request validation failed for V2."
-        Logger[F].error(ex)(message) *> ApplicativeThrow[F].raiseError(new MAuthValidationException(message, ex))
-      }
+    logAuthenticationRequest(mAuthRequest) *>
+      // Recreate the plain text signature, based on the incoming request parameters, and hash it.
+      // Compare the decrypted signature and the recreated signature hashes.
+      ApplicativeThrow[F]
+        .catchNonFatal(
+          MAuthSignatureHelper.verifyRSA(MAuthSignatureHelper.generateStringToSignV2(mAuthRequest), mAuthRequest.getRequestSignature, clientPublicKey)
+        )
+        .recoverWith { case ex: Exception =>
+          val message = "MAuth request validation failed for V2."
+          Logger[F].error(ex)(message) *> ApplicativeThrow[F].raiseError(new MAuthValidationException(message, ex))
+        }
 
   }
 
-  private def fallbackValidateSignatureV1[F[_]: ApplicativeThrow: Logger](mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): F[Boolean] = {
-    var isValidated = false.pure[F]
-    if (mAuthRequest.getMessagePayload == null) {
-      Logger[F].warn("V1 authentication fallback is not available because the full request body is not available in memory.")
-    } else if (mAuthRequest.getXmwsSignature != null && mAuthRequest.getXmwsTime != null) {
-      val mAuthRequestV1 = new MAuthRequest(
-        mAuthRequest.getXmwsSignature,
-        mAuthRequest.getMessagePayload,
-        mAuthRequest.getHttpMethod,
-        mAuthRequest.getXmwsTime,
-        mAuthRequest.getResourcePath,
-        mAuthRequest.getQueryParameters
-      )
-      isValidated = validateSignatureV1[F](mAuthRequestV1, clientPublicKey).map {
-        case true =>
-          Logger[F].warn("Completed successful authentication attempt after fallback to V1")
-          true
-        case _ => false
-      }
+  private def fallbackValidateSignatureV1[F[_]: MonadThrow: Logger](mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): F[Boolean] = {
+    Option(mAuthRequest.getMessagePayload).fold(
+      Logger[F].warn("V1 authentication fallback is not available because the full request body is not available in memory.") *> false.pure[F]
+    ) { _ =>
+      (Option(mAuthRequest.getXmwsSignature), Option(mAuthRequest.getXmwsTime)).tupled.void
+        .map { _ =>
+          val mAuthRequestV1 = new MAuthRequest(
+            mAuthRequest.getXmwsSignature,
+            mAuthRequest.getMessagePayload,
+            mAuthRequest.getHttpMethod,
+            mAuthRequest.getXmwsTime,
+            mAuthRequest.getResourcePath,
+            mAuthRequest.getQueryParameters
+          )
+          validateSignatureV1[F](mAuthRequestV1, clientPublicKey).flatTap(
+            if (_) Logger[F].warn("Completed successful authentication attempt after fallback to V1") else ().pure[F]
+          )
+        }
+        .getOrElse(Logger[F].warn("V1 authentication fallback is not available because the full request body is not available in memory.") *> false.pure[F])
     }
-    isValidated
   }
 
   private def logAuthenticationRequest[F[_]: Logger](mAuthRequest: MAuthRequest): F[Unit] = {
