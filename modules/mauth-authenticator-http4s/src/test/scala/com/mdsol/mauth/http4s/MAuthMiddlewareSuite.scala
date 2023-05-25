@@ -90,7 +90,8 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
     MAuthMiddleware.httpRoutes[IO](requestValidationTimeout, authenticatorV2)(route).orNotFound
 
   val authedService: Kleisli[IO, Request[IO], Response[IO]] = MAuthMiddleware
-    .httpAuthRoutes(requestValidationTimeout, authenticator)(authedRoutes).orNotFound
+    .httpAuthRoutes(requestValidationTimeout, authenticator)(authedRoutes)
+    .orNotFound
 
   val authedServiceV2: Kleisli[IO, Request[IO], Response[IO]] =
     MAuthMiddleware.httpAuthRoutes[IO](requestValidationTimeout, authenticatorV2)(authedRoutes).orNotFound
@@ -326,7 +327,7 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
       .redeem(
         {
           case e if e.isInstanceOf[MAuthValidationException] => true // TODO: fix removing the throwing of random Exceptions
-          case _ => false // any other exception shouldn't be thrown
+          case _                                             => false // any other exception shouldn't be thrown
         },
         _ => false
       )
@@ -375,7 +376,9 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
     res.map(_.status).assertEquals(Status.Unauthorized)
   }
 
-  test("allow successfully authenticated request when authenticator supports v2 only with both v1 and v2 headers, with V2 headers taking precedence via AuthedRoutes") {
+  test(
+    "allow successfully authenticated request when authenticator supports v2 only with both v1 and v2 headers, with V2 headers taking precedence via AuthedRoutes"
+  ) {
     val res = authedServiceV2(
       Request[IO](GET, uri"/").withHeaders(
         MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
@@ -422,7 +425,7 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
       .redeem(
         {
           case e if e.isInstanceOf[MAuthValidationException] => true // TODO: fix removing the throwing of random Exceptions
-          case _ => false // any other exception shouldn't be thrown
+          case _                                             => false // any other exception shouldn't be thrown
         },
         _ => false
       )
