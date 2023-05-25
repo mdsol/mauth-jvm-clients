@@ -8,7 +8,7 @@ import cats.effect.kernel.Async
 import cats.~>
 import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.scaladsl.Authenticator
-import org.http4s.{Http, HttpApp, HttpRoutes, Response, Status}
+import org.http4s._
 import org.http4s.EntityDecoder._
 import org.typelevel.ci.CIString
 import enumeratum._
@@ -35,10 +35,12 @@ object HeaderVersion extends Enum[HeaderVersion] {
   }
 }
 
+final case class MAuthContext(authHeader: String, timeHeader: Long)
+
 object MAuthMiddleware {
   import HeaderVersion._
   def apply[G[_]: Sync, F[_]](requestValidationTimeout: Duration, authenticator: Authenticator[F], fk: F ~> G)(
-    http: Http[G, F]
+    http: Kleisli[G, AuthedRequest[F, MAuthContext], Response[F]]
   )(implicit F: Async[F]): Http[G, F] =
     Kleisli { request =>
       val logger = Slf4jLogger.getLogger[G]
@@ -63,7 +65,7 @@ object MAuthMiddleware {
         for {
           authHeadValue <- extractHeader(ahn)(s => s.pure[F])
           timeHeadValue <- extractHeader(thn)(s => Try(s.toLong).liftTo[F])
-        } yield (authHeadValue, timeHeadValue)
+        } yield MAuthContext(authHeadValue, timeHeadValue)
 
       }
 
@@ -77,12 +79,12 @@ object MAuthMiddleware {
           extractAll(V2) orElse extractAll(V1)
 
       fk(request.as[Array[Byte]].flatMap { byteArray =>
-        authHeaderTimeHeader.flatMap { case (authHeader, timeHeader) =>
+        authHeaderTimeHeader.flatMap { authCtx: MAuthContext =>
           val mAuthRequest: MAuthRequest = new MAuthRequest(
-            authHeader,
+            authCtx.authHeader,
             byteArray,
             request.method.name,
-            timeHeader.toString,
+            authCtx.timeHeader.toString,
             request.uri.path.renderString,
             request.uri.query.renderString
           )
@@ -94,21 +96,25 @@ object MAuthMiddleware {
             mAuthRequest
           } else mAuthRequest
 
-          authenticator.authenticate(req)(requestValidationTimeout)
+          authenticator.authenticate(req)(requestValidationTimeout).map(res => (res, authCtx))
         }
-      }).flatMap(b =>
-        if (b) http(request)
+      }).flatMap { case (b, ctx) =>
+        if (b) http(AuthedRequest(ctx, request))
         else logAndReturnDefaultUnauthorizedReq(s"Rejecting request as authentication failed")
-      ).recoverWith { case MdsolAuthMissingHeaderRejection(hn) =>
+      }.recoverWith { case MdsolAuthMissingHeaderRejection(hn) =>
         logAndReturnDefaultUnauthorizedReq(s"Rejecting request as header $hn missing")
       }
     }
 
   def httpRoutes[F[_]: Async](requestValidationTimeout: Duration, authenticator: Authenticator[F])(
     httpRoutes: HttpRoutes[F]
+  ): HttpRoutes[F] = apply(requestValidationTimeout, authenticator, OptionT.liftK[F])(Kleisli(contextRequest => httpRoutes(contextRequest.req)))
+
+  def httpAuthRoutes[F[_]: Async](requestValidationTimeout: Duration, authenticator: Authenticator[F])(
+    httpRoutes: AuthedRoutes[MAuthContext, F]
   ): HttpRoutes[F] = apply(requestValidationTimeout, authenticator, OptionT.liftK[F])(httpRoutes)
 
   def httpApp[F[_]: Async](requestValidationTimeout: Duration, authenticator: Authenticator[F])(
-    httpRoutes: HttpApp[F]
+    httpRoutes: Kleisli[F, AuthedRequest[F, MAuthContext], Response[F]]
   ): HttpApp[F] = apply(requestValidationTimeout, authenticator, FunctionK.id[F])(httpRoutes)
 }
