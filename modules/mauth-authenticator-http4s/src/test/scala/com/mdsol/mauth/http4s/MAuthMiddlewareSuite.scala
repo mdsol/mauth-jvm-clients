@@ -1,5 +1,6 @@
 package com.mdsol.mauth.http4s
 
+import cats.data.Kleisli
 import cats.effect._
 import cats.syntax.all._
 import com.mdsol.mauth.MAuthRequest
@@ -26,6 +27,12 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
     HttpRoutes.of {
       case req if req.uri.path === path"/" =>
         Response[IO](Status.Ok).withEntity("pong").pure[IO]
+    }
+
+  private val authedRoutes: AuthedRoutes[MAuthContext, IO] =
+    AuthedRoutes.of {
+      case req if req.req.uri.path === path"/" =>
+        Response[IO](Status.Ok).withEntity(s"pong ${req.context}").pure[IO]
     }
 
   Security.addProvider(new BouncyCastleProvider)
@@ -79,8 +86,14 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
   private val service = MAuthMiddleware.httpRoutes[IO](requestValidationTimeout, authenticator)(route).orNotFound
 
   val authenticatorV2: RequestAuthenticator[IO] = new RequestAuthenticator(client, epochTimeProvider, v2OnlyAuthenticate = true)
-  val serviceV2 =
+  val serviceV2: Kleisli[IO, Request[IO], Response[IO]] =
     MAuthMiddleware.httpRoutes[IO](requestValidationTimeout, authenticatorV2)(route).orNotFound
+
+  val authedService: Kleisli[IO, Request[IO], Response[IO]] = MAuthMiddleware
+    .httpAuthRoutes(requestValidationTimeout, authenticator)(authedRoutes).orNotFound
+
+  val authedServiceV2: Kleisli[IO, Request[IO], Response[IO]] =
+    MAuthMiddleware.httpAuthRoutes[IO](requestValidationTimeout, authenticatorV2)(authedRoutes).orNotFound
 
   test("allow successfully authenticated request") {
     val res = service(
@@ -261,7 +274,188 @@ class MAuthMiddlewareSuite extends CatsEffectSuite {
         MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
       )
     )
+    res.map(_.status).assertEquals(Status.Unauthorized)
+  }
 
+  test("allow successfully authenticated request via AuthedRoutes") {
+    val res = authedService(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
+      )
+    )
+
+    res.map(_.status).assertEquals(Status.Ok)
+  }
+
+  test("allow successfully authenticated request with both v1 and v2 headers, with V2 headers taking precedence via AuthedRoutes") {
+    val res = authedService(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2,
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> (timeHeader - requestValidationTimeout.toSeconds - 10).toString,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> "invalid auth header"
+      )
+    )
+
+    res.map(_.status).assertEquals(Status.Ok)
+  }
+
+  test("allow successfully authenticated request with both v1 and v2 headers, fallback to v1 if v2 failed via AuthedRoutes") {
+    val res = authedService(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> wrongAuthHeaderV2,
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
+      )
+    )
+
+    res.map(_.status).assertEquals(Status.Ok)
+  }
+
+  test("reject request if validation times out via AuthedRoutes") {
+    val res = authedService(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> (timeHeader - requestValidationTimeout.toSeconds - 10).toString,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
+      )
+    )
+
+    res
+      .redeem(
+        {
+          case e if e.isInstanceOf[MAuthValidationException] => true // TODO: fix removing the throwing of random Exceptions
+          case _ => false // any other exception shouldn't be thrown
+        },
+        _ => false
+      )
+      .assert
+  }
+
+  test("reject if public key cannot be found via AuthedRoutes") {
+    val localClient = new ClientPublicKeyProvider[IO] {
+      override def getPublicKey(appUUID: UUID): IO[Option[PublicKey]] =
+        if (appUUID == appUuid) {
+          IO.pure(none)
+        } else IO.raiseError(new Throwable("Wrong app UUID"))
+    }
+
+    val localAuthenticator: RequestAuthenticator[IO] = RequestAuthenticator(localClient, epochTimeProvider)
+    val localService =
+      MAuthMiddleware.httpAuthRoutes[IO](requestValidationTimeout, localAuthenticator)(authedRoutes).orNotFound
+
+    val res = localService(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
+      )
+    )
+
+    res.map(_.status).assertEquals(Status.Unauthorized)
+  }
+
+  test("reject if Authentication header is missing via AuthedRoutes") {
+    val res = authedService(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString
+      )
+    )
+
+    res.map(_.status).assertEquals(Status.Unauthorized)
+  }
+
+  test("reject if Time header is missing via AuthedRoutes") {
+    val res = authedService(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString
+      )
+    )
+
+    res.map(_.status).assertEquals(Status.Unauthorized)
+  }
+
+  test("allow successfully authenticated request when authenticator supports v2 only with both v1 and v2 headers, with V2 headers taking precedence via AuthedRoutes") {
+    val res = authedServiceV2(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2,
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> (timeHeader - requestValidationTimeout.toSeconds - 10).toString,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> "invalid auth header"
+      )
+    )
+
+    res.map(_.status).assertEquals(Status.Ok)
+  }
+
+  test("allow successfully authenticated request with V2 headers via AuthedRoutes") {
+    val res = authedServiceV2(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2
+      )
+    )
+
+    res.map(_.status).assertEquals(Status.Ok)
+  }
+
+  test("allow successfully authenticated request with V2 headers uppercase'd via AuthedRoutes") {
+    val res = authedServiceV2(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME.toUpperCase -> authHeaderV2
+      )
+    )
+
+    res.map(_.status).assertEquals(Status.Ok)
+  }
+
+  test("reject v2 request if it times out via AuthedRoutes") {
+    val res = authedServiceV2(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_TIME_HEADER_NAME -> (timeHeader - requestValidationTimeout.toSeconds - 10).toString,
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2
+      )
+    )
+
+    res
+      .redeem(
+        {
+          case e if e.isInstanceOf[MAuthValidationException] => true // TODO: fix removing the throwing of random Exceptions
+          case _ => false // any other exception shouldn't be thrown
+        },
+        _ => false
+      )
+      .assert
+  }
+
+  test("reject v2 request if Authentication header is missing via AuthedRoutes") {
+    val res = authedServiceV2(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_TIME_HEADER_NAME -> timeHeader.toString
+      )
+    )
+
+    res.map(_.status).assertEquals(Status.Unauthorized)
+  }
+
+  test("reject v2 request if Time header is missing via AuthedRoutes") {
+    val res = authedServiceV2(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME -> authHeaderV2
+      )
+    )
+
+    res.map(_.status).assertEquals(Status.Unauthorized)
+  }
+
+  test("reject if only v1 headers provided when authenticator is v2 only via AuthedRoutes") {
+    val res = authedServiceV2(
+      Request[IO](GET, uri"/").withHeaders(
+        MAuthRequest.X_MWS_TIME_HEADER_NAME -> timeHeader.toString,
+        MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME -> authHeader
+      )
+    )
     res.map(_.status).assertEquals(Status.Unauthorized)
   }
 }
