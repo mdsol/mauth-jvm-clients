@@ -1,7 +1,7 @@
 package com.mdsol.mauth.http4s
 
 import cats.ApplicativeThrow
-import cats.effect.{Async, Concurrent, Outcome, Sync}
+import cats.effect.{Async, Outcome, Sync}
 import com.mdsol.mauth.http4s.client.Implicits.NewSignedRequestOps
 import com.mdsol.mauth.models.UnsignedRequest
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
@@ -9,7 +9,6 @@ import com.mdsol.mauth.util.MAuthKeysHelper
 import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequestSigner}
 import org.http4s.client.Client
 import org.http4s.{Response, Status}
-import scalacache.memoization.memoizeF
 import scalacache.{Cache, Entry}
 import scalacache.caffeine.CaffeineCache
 
@@ -25,8 +24,8 @@ import org.http4s.circe.CirceEntityDecoder._
 import org.typelevel.log4cats.Logger
 import cats.effect.implicits._
 
-class MauthPublicKeyProvider[F[_]: Async: Concurrent: Logger](configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, val client: Client[F])(
-  implicit val cache: Cache[F, UUID, F[Option[PublicKey]]]
+class MauthPublicKeyProvider[F[_]: Async: Logger](configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, val client: Client[F])(implicit
+  val cache: Cache[F, UUID, F[Option[PublicKey]]]
 ) extends ClientPublicKeyProvider[F] {
 
   /** Returns the associated public key for a given application UUID.

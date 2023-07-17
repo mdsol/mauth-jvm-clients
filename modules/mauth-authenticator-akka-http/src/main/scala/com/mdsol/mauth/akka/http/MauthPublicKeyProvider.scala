@@ -72,12 +72,12 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
               None
             }
           }
-          .recover { error: Throwable =>
+          .recover[Option[PublicKey]] { case error: Throwable =>
             logger.error("Request to get MAuth public key couldn't be signed", error)
             None
           }
       }
-      .recover { error: Throwable =>
+      .recover[Option[PublicKey]] { case error: Throwable =>
         logger.error("Request to get MAuth public key couldn't be completed", error)
         None
       }
