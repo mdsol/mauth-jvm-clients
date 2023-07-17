@@ -3,26 +3,29 @@ package com.mdsol.mauth.akka.http
 import java.net.URI
 import java.security.Security
 import akka.actor.ActorSystem
+import cats.effect.unsafe.IORuntime
 import com.mdsol.mauth.models.{SignedRequest, UnsignedRequest}
 import com.mdsol.mauth.test.utils.{FakeMAuthServer, PortFinder}
 import com.mdsol.mauth.{AuthenticatorConfiguration, MAuthRequest, MAuthRequestSigner}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-
-import scala.concurrent.ExecutionContext.Implicits.global
+import cats.implicits._
+import org.scalatest.wordspec.AnyWordSpec
 
 class MauthPublicKeyProviderSpec
-    extends AnyFlatSpec
+    extends AnyWordSpec
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with ScalaFutures
     with IntegrationPatience
     with Matchers
     with MockFactory {
+
+  implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
+  implicit val ioRuntime: IORuntime = cats.effect.unsafe.implicits.global
 
   implicit val system: ActorSystem = ActorSystem()
   private val EXPECTED_TIME_HEADER_VALUE = "1444672125"
@@ -53,48 +56,82 @@ class MauthPublicKeyProviderSpec
 
   private def getMAuthConfiguration = new AuthenticatorConfiguration(MAUTH_BASE_URL, MAUTH_URL_PATH, SECURITY_TOKENS_PATH)
 
-  "MauthPublicKeyProvider" should "retrieve PublicKey from MAuth Server" in {
-    FakeMAuthServer.return200()
-    val mockedSigner = mock[MAuthRequestSigner]
-    val unsignedRequest = UnsignedRequest(
-      "GET",
-      URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.EXISTING_CLIENT_APP_UUID.toString)),
-      body = Array.empty,
-      headers = Map.empty
-    )
-    val mockedResponse = SignedRequest(
-      unsignedRequest,
-      mauthHeaders = Map(
-        "not_testing_signer_behaviour" -> "So any header is ok"
+  "MauthPublicKeyProvider" should {
+    "retrieve PublicKey from MAuth Server" in {
+      FakeMAuthServer.return200()
+      val mockedSigner = mock[MAuthRequestSigner]
+      val unsignedRequest = UnsignedRequest(
+        "GET",
+        URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.EXISTING_CLIENT_APP_UUID.toString)),
+        body = Array.empty,
+        headers = Map.empty
       )
-    )
-    (mockedSigner.signRequest(_: UnsignedRequest)).expects(*).returns(mockedResponse)
+      val mockedResponse = SignedRequest(
+        unsignedRequest,
+        mauthHeaders = Map(
+          "not_testing_signer_behaviour" -> "So any header is ok"
+        )
+      )
+      (mockedSigner.signRequest(_: UnsignedRequest)).expects(*).returns(mockedResponse)
 
-    whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) { result =>
-      result.toString should not be empty
+      whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) { result =>
+        result.toString should not be empty
+      }
     }
-  }
-
-  it should "fail on invalid response from MAuth Server" in {
-    FakeMAuthServer.return401()
-    val mockedSigner = mock[MAuthRequestSigner]
-    val unsignedRequest = UnsignedRequest(
-      "GET",
-      URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.NON_EXISTING_CLIENT_APP_UUID.toString)),
-      body = Array.empty,
-      headers = Map.empty
-    )
-    val mockedResponse = SignedRequest(
-      unsignedRequest,
-      mauthHeaders = Map(
-        "not_testing_signer_behaviour" -> "So any header is ok"
+    "only make one call to mAuth when multiple calls happen in parallel and the cache is empty" in {
+      FakeMAuthServer.return200()
+      val mockedSigner = mock[MAuthRequestSigner]
+      val unsignedRequest = UnsignedRequest(
+        "GET",
+        URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.EXISTING_CLIENT_APP_UUID.toString)),
+        body = Array.empty,
+        headers = Map.empty
       )
-    )
-    (mockedSigner.signRequest(_: UnsignedRequest)).expects(*).returns(mockedResponse)
+      val mockedResponse = SignedRequest(
+        unsignedRequest,
+        mauthHeaders = Map(
+          "not_testing_signer_behaviour" -> "So any header is ok"
+        )
+      )
+      (mockedSigner.signRequest(_: UnsignedRequest)).expects(*).returns(mockedResponse).anyNumberOfTimes() //No?
 
-    whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) {
-      case Some(_) => fail("returned a public key, expected None")
-      case None    =>
+      val provider = new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner)
+      FakeMAuthServer.verifyNumberOfRequests(1)
+
+      whenReady(
+        List
+          .fill(100)(provider.getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID))
+          .sequence
+      ) {
+        _.map { result =>
+          result.toString should not be empty
+        }
+      }
+
+      FakeMAuthServer.verifyNumberOfRequests(2)
+
+    }
+    "fail on invalid response from MAuth Server" in {
+      FakeMAuthServer.return401()
+      val mockedSigner = mock[MAuthRequestSigner]
+      val unsignedRequest = UnsignedRequest(
+        "GET",
+        URI.create(MAUTH_BASE_URL + getRequestUrlPath(FakeMAuthServer.NON_EXISTING_CLIENT_APP_UUID.toString)),
+        body = Array.empty,
+        headers = Map.empty
+      )
+      val mockedResponse = SignedRequest(
+        unsignedRequest,
+        mauthHeaders = Map(
+          "not_testing_signer_behaviour" -> "So any header is ok"
+        )
+      )
+      (mockedSigner.signRequest(_: UnsignedRequest)).expects(*).returns(mockedResponse)
+
+      whenReady(new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner).getPublicKey(FakeMAuthServer.EXISTING_CLIENT_APP_UUID)) {
+        case Some(_) => fail("returned a public key, expected None")
+        case None    =>
+      }
     }
   }
 

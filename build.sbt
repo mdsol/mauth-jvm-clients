@@ -160,8 +160,8 @@ lazy val `mauth-authenticator-akka-http` = scalaModuleProject("mauth-authenticat
   .settings(
     publishSettings,
     libraryDependencies ++=
-      Dependencies.provided(akkaHttp, akkaStream) ++
-        Dependencies.compile(jacksonDataBind, scalaCacheCaffeine).map(withExclusions) ++
+      Dependencies.provided(akkaHttp, akkaStream, akkaHttpCache) ++
+        Dependencies.compile(jacksonDataBind).map(withExclusions) ++
         Dependencies.test(scalaTest, scalaMock, wiremock) ++
         Dependencies.test(akkaHttpTestKit *).map(withExclusions)
   )

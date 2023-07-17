@@ -42,6 +42,9 @@ public class FakeMAuthServer {
           .withHeader(HttpHeaders.CACHE_CONTROL, "max-age=3600, private")));
   }
 
+  public static void verifyNumberOfRequests(int count) {
+    WireMock.verify(count, WireMock.getRequestedFor(WireMock.urlPathEqualTo("/mauth/v1/security_tokens/" + EXISTING_CLIENT_APP_UUID.toString() + ".json")));
+  }
   public static void return401() {
     WireMock.stubFor(WireMock.get(WireMock.urlPathEqualTo("/mauth/v1/security_tokens/" + NON_EXISTING_CLIENT_APP_UUID.toString() + ".json"))
         .willReturn(WireMock.aResponse().withStatus(401).withBody("Invalid headers")));

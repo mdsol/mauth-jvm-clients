@@ -14,6 +14,7 @@ object Dependencies extends DependencyUtils {
   }
 
   val akkaHttp: ModuleID = "com.typesafe.akka"                        %% "akka-http"               % Version.akkaHttp
+  val akkaHttpCache: ModuleID = "com.typesafe.akka"                   %% "akka-http-caching"       % Version.akkaHttp
   val akkaStream: ModuleID = "com.typesafe.akka"                      %% "akka-stream"             % Version.akka
   val apacheHttpClient: ModuleID = "org.apache.httpcomponents"         % "httpclient"              % "4.5.13"
   val bouncyCastlePkix: ModuleID = "org.bouncycastle"                  % "bcpkix-jdk15on"          % "1.70"
