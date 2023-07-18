@@ -97,9 +97,9 @@ object MauthPublicKeyProvider {
 
   // this provides a default implementation of the cache to be used with the public key provider, and frees the user to
   // inject their own cache
-  implicit def defaultCache[F[_]: Sync]: Cache[F, UUID, Option[PublicKey]] =
-    CaffeineCache[F, UUID, Option[PublicKey]](
-      Caffeine.newBuilder().build[UUID, Entry[Option[PublicKey]]]()
+  implicit def defaultCache[F[_]: Sync]: Cache[F, UUID, F[Option[PublicKey]]] =
+    CaffeineCache[F, UUID, F[Option[PublicKey]]](
+      Caffeine.newBuilder().build[UUID, Entry[F[Option[PublicKey]]]]()
     )
 
 }
