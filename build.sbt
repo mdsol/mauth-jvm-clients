@@ -206,5 +206,4 @@ lazy val `mauth-jvm-clients` = (project in file("."))
     basicSettings,
     publishSettings,
     publish / skip := false,
-    smartReleaseAggregateProjectSettings
   )
