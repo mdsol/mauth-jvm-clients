@@ -22,6 +22,7 @@ import java.util.List;
 
 public class ProtocolTestSuiteHelper {
 
+
   final static String TEST_SUITE_RELATIVE_PATH = "../../mauth-protocol-test-suite/";
   final static String MWSV2_TEST_CASE_PATH = getFullFilePath("protocols/MWSV2/");
 
@@ -31,7 +32,8 @@ public class ProtocolTestSuiteHelper {
     String configFile = getFullFilePath("signing-config.json");
     try {
       ObjectMapper objectMapper = new ObjectMapper();
-      byte[] jsonData = Files.readAllBytes(normalizePath(configFile));
+      Path path = normalizePath(configFile).toAbsolutePath();
+      byte[] jsonData = Files.readAllBytes(path);
       tmp = objectMapper.readValue(jsonData, SigningConfig.class);
     } catch (IOException ex) {
       throw new IllegalStateException("Failed to load the config file " + configFile, ex);
