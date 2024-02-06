@@ -15,7 +15,7 @@ object BuildSettings {
     description := "MAuth clients",
     scalaVersion := scala213,
     resolvers += Resolver.mavenLocal,
-    resolvers += Resolver.sonatypeOssRepos("releases"),
+    resolvers ++= Resolver.sonatypeOssRepos("releases"),
     javacOptions ++= Seq("-encoding", "UTF-8"),
     // Avoid issues such as java.lang.IllegalAccessError: tried to access method org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey
     // By running tests in a separate JVM
@@ -32,7 +32,7 @@ object BuildSettings {
         Seq.empty
       else
         Seq("-Xfatal-warnings")
-    },
+    }
   )
 
   lazy val noPublishSettings = Seq(
