@@ -5,7 +5,7 @@ object Dependencies extends DependencyUtils {
   private object Version {
     val akka = "2.6.20"
     val akkaHttp = "10.2.10"
-    val logback = "1.4.7"
+    val logback = "1.4.14"
     val sttp = "3.8.13"
     val http4s = "0.23.25"
     val enumeratum = "1.7.2"
