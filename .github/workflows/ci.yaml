@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          submodules: recursive
       - uses: coursier/cache-action@v6
       - uses: coursier/setup-action@v1
         with:
@@ -26,7 +26,10 @@ jobs:
       - name: Lint
         run: sbt "scalafmtSbtCheck;scalafmtCheckAll"
       - name: Test
-        run: sbt "test"
+        run: sbt "+test"
+        env:
+          APP_MAUTH_UUID: 398ea708-50eb-499f-98d3-14cc7692668c
+          APP_MAUTH_PRIVATE_KEY: ${{ secrets.FAKE_PRIVATE_KEY }}
       - name: Release
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: sbt ci-release
