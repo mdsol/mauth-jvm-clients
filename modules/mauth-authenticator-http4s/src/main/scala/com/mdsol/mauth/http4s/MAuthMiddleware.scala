@@ -78,32 +78,32 @@ object MAuthMiddleware {
         else
           extractAll(V2) orElse extractAll(V1)
 
-      fk(request.as[Array[Byte]].flatMap { byteArray =>
-        authHeaderTimeHeader.flatMap { authCtx: MAuthContext =>
-          val mAuthRequest: MAuthRequest = new MAuthRequest(
-            authCtx.authHeader,
-            byteArray,
-            request.method.name,
-            authCtx.timeHeader.toString,
-            request.uri.path.renderString,
-            request.uri.query.renderString
-          )
-
-          // this mimics MAuthDirectives in the akka package - really needed?
-          val req = if (!authenticator.isV2OnlyAuthenticate) {
-            mAuthRequest.setXmwsSignature(getHeaderValOrEmpty(V1.authHeaderName)) // dreadful mutating type
-            mAuthRequest.setXmwsTime(getHeaderValOrEmpty(V1.timeHeaderName))
-            mAuthRequest
-          } else mAuthRequest
-
-          authenticator.authenticate(req)(requestValidationTimeout).map(res => (res, authCtx))
+      fk(for {
+        strictBody <- request.toStrict(none)
+        byteArray <- strictBody.as[Array[Byte]]
+        authCtx <- authHeaderTimeHeader
+        mAuthRequest = new MAuthRequest(
+                         authCtx.authHeader,
+                         byteArray,
+                         request.method.name,
+                         authCtx.timeHeader.toString,
+                         request.uri.path.renderString,
+                         request.uri.query.renderString
+                       )
+        req = if (!authenticator.isV2OnlyAuthenticate) {
+                mAuthRequest.setXmwsSignature(getHeaderValOrEmpty(V1.authHeaderName)) // dreadful mutating type
+                mAuthRequest.setXmwsTime(getHeaderValOrEmpty(V1.timeHeaderName))
+                mAuthRequest
+              } else mAuthRequest
+        res <- authenticator.authenticate(req)(requestValidationTimeout).map(res => (res, authCtx))
+      } yield res)
+        .flatMap { case (b, ctx) =>
+          if (b) http(AuthedRequest(ctx, request))
+          else logAndReturnDefaultUnauthorizedReq(s"Rejecting request as authentication failed")
         }
-      }).flatMap { case (b, ctx) =>
-        if (b) http(AuthedRequest(ctx, request))
-        else logAndReturnDefaultUnauthorizedReq(s"Rejecting request as authentication failed")
-      }.recoverWith { case MdsolAuthMissingHeaderRejection(hn) =>
-        logAndReturnDefaultUnauthorizedReq(s"Rejecting request as header $hn missing")
-      }
+        .recoverWith { case MdsolAuthMissingHeaderRejection(hn) =>
+          logAndReturnDefaultUnauthorizedReq(s"Rejecting request as header $hn missing")
+        }
     }
 
   def httpRoutes[F[_]: Async](requestValidationTimeout: Duration, authenticator: Authenticator[F])(
