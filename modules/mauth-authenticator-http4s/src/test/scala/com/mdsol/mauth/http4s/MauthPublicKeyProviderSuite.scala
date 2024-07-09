@@ -16,12 +16,13 @@ import scalacache.{Cache, Entry}
 
 import java.security.PublicKey
 import cats.implicits._
+import org.typelevel.log4cats.Logger
 
 import java.util.UUID
 
 class MauthPublicKeyProviderSuite extends CatsEffectSuite {
 
-  implicit val logger = NoOpLogger[IO]
+  implicit val logger: Logger[IO] = NoOpLogger[IO]
   private val MAUTH_PORT = PortFinder.findFreePort()
   private val MAUTH_BASE_URL = s"http://localhost:$MAUTH_PORT"
   private val MAUTH_URL_PATH = "/mauth/v1"

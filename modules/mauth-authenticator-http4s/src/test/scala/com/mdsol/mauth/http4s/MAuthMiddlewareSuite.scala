@@ -14,6 +14,7 @@ import org.http4s._
 import org.http4s.{HttpRoutes, Request, Response}
 import org.http4s.syntax.literals._
 import org.http4s.Method._
+import org.typelevel.log4cats._
 
 import java.security.{PublicKey, Security}
 import java.util.UUID
@@ -22,7 +23,7 @@ import org.typelevel.log4cats.noop.NoOpLogger
 
 class MAuthMiddlewareSuite extends CatsEffectSuite {
 
-  implicit val logger = NoOpLogger[IO]
+  implicit val logger: Logger[IO] = NoOpLogger[IO]
   private val route: HttpRoutes[IO] =
     HttpRoutes.of {
       case req if req.uri.path === path"/" =>
