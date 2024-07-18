@@ -1,0 +1,32 @@
+apiVersion: backstage.io/v1alpha1  # This is a constant, just leave as is.
+kind: Component
+spec:
+  type: library
+  lifecycle: production
+metadata:
+  json_schema:
+    # This is a constant, just leave as is.
+    "https://github.com/mdsol/platform-standards/tree/master/schemas/v1alpha1.schema.json"
+  name: mauth-jvm-clients
+  description: MAuth Clients for JVM based applications.
+  teams:
+    - name: "Team 73 - Navy Seals"
+      number: 73
+    - name: Team 259
+      number: 259
+    - name: Team 55
+      number: 55
+    - name: Team 58
+      number: 58
+  people:
+    - role: engineer
+      email: tmilner
+    - role: engineer
+      email: digeorgiev
+    - role: engineer
+      email: fserra
+    - role: engineer
+      email: bgong
+  pipelines:
+    - url: https://app.travis-ci.com/github/mdsol/mauth-jvm-clients/
+      role: Integration
