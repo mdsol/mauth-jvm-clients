@@ -13,6 +13,7 @@ object Dependencies extends DependencyUtils {
     val log4cats = "2.7.0"
     val circe = "0.14.9"
     val circeGenericExtras = "0.14.3"
+    val http4s022 = "0.22.15"
   }
 
   val akkaHttp: ModuleID = "com.typesafe.akka"                        %% "akka-http"               % Version.akkaHttp
@@ -36,7 +37,9 @@ object Dependencies extends DependencyUtils {
   val scalaLibCompat: ModuleID = "org.scala-lang.modules"             %% "scala-collection-compat" % "2.12.0"
   val caffeine: ModuleID = "com.github.ben-manes.caffeine"             % "caffeine"                % "3.1.8"
   val http4sDsl: ModuleID = "org.http4s"                              %% "http4s-dsl"              % Version.http4s
+  val http4sDsl022: ModuleID = "org.http4s"                           %% "http4s-dsl"              % Version.http4s022
   val http4sClient: ModuleID = "org.http4s"                           %% "http4s-client"           % Version.http4s
+  val http4sClient022: ModuleID = "org.http4s"                        %% "http4s-client"           % Version.http4s022
   val enumeratum: ModuleID = "com.beachape"                           %% "enumeratum"              % Version.enumeratum
   val log4cats: ModuleID = "org.typelevel"                            %% "log4cats-slf4j"          % Version.log4cats
 
@@ -58,6 +61,7 @@ object Dependencies extends DependencyUtils {
   val scalaTest: ModuleID = "org.scalatest"             %% "scalatest"           % "3.2.19"
   val wiremock: ModuleID = "com.github.tomakehurst"      % "wiremock"            % "2.27.2"
   val munitCatsEffect: ModuleID = "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"
+  val munitCatsEffect2: ModuleID = "org.typelevel"      %% "munit-cats-effect-2" % "1.0.7"
   val log4catsNoop: ModuleID = "org.typelevel"          %% "log4cats-noop"       % Version.log4cats
   val scalaCacheCaffeine: ModuleID = "com.github.cb372" %% "scalacache-caffeine" % "1.0.0-M6"
 

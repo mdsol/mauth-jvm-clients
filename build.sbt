@@ -106,7 +106,7 @@ lazy val `mauth-signer-sttp` = scalaModuleProject("mauth-signer-sttp")
         Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions)
   )
 
-lazy val `mauth-signer-http4s` = scalaModuleProject("mauth-signer-http4s")
+lazy val `mauth-signer-http4s-023` = scalaModuleProject("mauth-signer-http4s-023")
   .dependsOn(`mauth-signer`, `mauth-signer-scala-core`, `mauth-test-utils` % "test")
   .settings(
     basicSettings,
@@ -117,6 +117,18 @@ lazy val `mauth-signer-http4s` = scalaModuleProject("mauth-signer-http4s")
         Dependencies.compile(enumeratum) ++
         Dependencies.compile(log4cats) ++
         Dependencies.test(munitCatsEffect, http4sDsl)
+  )
+
+lazy val `mauth-signer-http4s-022` = scalaModuleProject("mauth-signer-http4s-022")
+  .dependsOn(`mauth-signer`, `mauth-signer-scala-core`, `mauth-test-utils` % "test")
+  .settings(
+    basicSettings,
+    publishSettings,
+    testFrameworks += new TestFramework("munit.Framework"),
+    libraryDependencies ++=
+      Dependencies.provided(http4sClient022) ++
+        Dependencies.compile(enumeratum) ++
+        Dependencies.test(munitCatsEffect2, http4sDsl022)
   )
 
 // A separate module to sign and send sttp request using akka-http backend
@@ -167,7 +179,7 @@ lazy val `mauth-authenticator-akka-http` = scalaModuleProject("mauth-authenticat
   )
 
 lazy val `mauth-authenticator-http4s` = (project in file("modules/mauth-authenticator-http4s")) // don't need to cross-compile
-  .dependsOn(`mauth-signer-http4s`, `mauth-authenticator-scala` % "test->test;compile->compile", `mauth-test-utils` % "test")
+  .dependsOn(`mauth-signer-http4s-023`, `mauth-authenticator-scala` % "test->test;compile->compile", `mauth-test-utils` % "test")
   .settings(
     basicSettings,
     moduleName := "mauth-authenticator-http4s",
@@ -195,7 +207,8 @@ lazy val `mauth-jvm-clients` = (project in file("."))
     `mauth-signer`,
     `mauth-signer-akka-http`,
     `mauth-signer-scala-core`,
-    `mauth-signer-http4s`,
+    `mauth-signer-http4s-023`,
+    `mauth-signer-http4s-022`,
     `mauth-signer-sttp`,
     `mauth-signer-apachehttp`,
     `mauth-sender-sttp-akka-http`,

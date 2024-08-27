@@ -9,9 +9,9 @@ object BuildSettings {
   val scala213 = "2.13.14"
 
   lazy val basicSettings = Seq(
-    homepage := Some(new URL("https://github.com/mdsol/mauth-jvm-clients")),
+    homepage := Some(new URI("https://github.com/mdsol/mauth-jvm-clients").toURL),
     organization := "com.mdsol",
-    organizationHomepage := Some(new URL("http://mdsol.com")),
+    organizationHomepage := Some(new URI("http://mdsol.com").toURL),
     description := "MAuth clients",
     scalaVersion := scala213,
     resolvers += Resolver.mavenLocal,
