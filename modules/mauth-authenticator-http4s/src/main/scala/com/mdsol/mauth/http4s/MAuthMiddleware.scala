@@ -49,7 +49,7 @@ object MAuthMiddleware {
         logger.warn(errorLogMsg) *>
           Response[F](status = Status.Unauthorized).pure[G]
 
-      def extractHeader[A](headerName: CIString)(f: String => F[A]) =
+      def extractHeader[A](request: Request[F], headerName: CIString)(f: String => F[A]) =
         request.headers
           .get(headerName)
           .map(_.head)
@@ -57,48 +57,48 @@ object MAuthMiddleware {
             f(header.value)
           }
 
-      def extractAll(headerVersion: HeaderVersion) = {
+      def extractAll(request: Request[F], headerVersion: HeaderVersion) = {
         val (ahn, thn) = headerVersion match {
           case V1 => (V1.authHeaderName, V1.timeHeaderName)
           case V2 => (V2.authHeaderName, V2.timeHeaderName)
         }
         for {
-          authHeadValue <- extractHeader(ahn)(s => s.pure[F])
-          timeHeadValue <- extractHeader(thn)(s => Try(s.toLong).liftTo[F])
+          authHeadValue <- extractHeader(request, ahn)(s => s.pure[F])
+          timeHeadValue <- extractHeader(request, thn)(s => Try(s.toLong).liftTo[F])
         } yield MAuthContext(authHeadValue, timeHeadValue)
 
       }
 
-      def getHeaderValOrEmpty(headerName: CIString) =
+      def getHeaderValOrEmpty(request: Request[F], headerName: CIString) =
         request.headers.get(headerName).map(_.head).fold("")(h => h.value)
 
-      val authHeaderTimeHeader =
+      def authHeaderTimeHeader(request: Request[F]) =
         if (authenticator.isV2OnlyAuthenticate)
-          extractAll(V2)
+          extractAll(request, V2)
         else
-          extractAll(V2) orElse extractAll(V1)
+          extractAll(request, V2) orElse extractAll(request, V1)
 
       fk(for {
-        strictBody <- request.toStrict(none)
-        byteArray <- strictBody.as[Array[Byte]]
-        authCtx <- authHeaderTimeHeader
+        strictRequest <- request.toStrict(none)
+        byteArray <- strictRequest.as[Array[Byte]]
+        authCtx <- authHeaderTimeHeader(strictRequest)
         mAuthRequest = new MAuthRequest(
                          authCtx.authHeader,
                          byteArray,
-                         request.method.name,
+                         strictRequest.method.name,
                          authCtx.timeHeader.toString,
-                         request.uri.path.renderString,
-                         request.uri.query.renderString
+                         strictRequest.uri.path.renderString,
+                         strictRequest.uri.query.renderString
                        )
         req = if (!authenticator.isV2OnlyAuthenticate) {
-                mAuthRequest.setXmwsSignature(getHeaderValOrEmpty(V1.authHeaderName)) // dreadful mutating type
-                mAuthRequest.setXmwsTime(getHeaderValOrEmpty(V1.timeHeaderName))
+                mAuthRequest.setXmwsSignature(getHeaderValOrEmpty(strictRequest, V1.authHeaderName)) // dreadful mutating type
+                mAuthRequest.setXmwsTime(getHeaderValOrEmpty(strictRequest, V1.timeHeaderName))
                 mAuthRequest
               } else mAuthRequest
-        res <- authenticator.authenticate(req)(requestValidationTimeout).map(res => (res, authCtx))
-      } yield res)
-        .flatMap { case (b, ctx) =>
-          if (b) http(AuthedRequest(ctx, request))
+        res <- authenticator.authenticate(req)(requestValidationTimeout)
+      } yield (res, authCtx, strictRequest))
+        .flatMap { case (b, ctx, strictRequest) =>
+          if (b) http(AuthedRequest(ctx, strictRequest))
           else logAndReturnDefaultUnauthorizedReq(s"Rejecting request as authentication failed")
         }
         .recoverWith { case MdsolAuthMissingHeaderRejection(hn) =>
