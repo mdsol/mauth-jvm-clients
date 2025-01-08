@@ -143,6 +143,15 @@ lazy val `mauth-sender-sttp-akka-http` = scalaModuleProject("mauth-sender-sttp-a
         Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions)
   )
 
+lazy val `mauth-sender-sttp-http4s-http` = scalaModuleProject("mauth-sender-sttp-http4s-http")
+  .dependsOn(`mauth-signer-sttp`, `mauth-test-utils` % "test")
+  .settings(
+    publishSettings,
+    libraryDependencies ++=
+      Dependencies.compile(catsEffect, scalaLibCompat, sttp, sttpFs2, scalaLogging).map(withExclusions) ++
+        Dependencies.test(scalaMock, http4sEmberClient, scalaTest, wiremock, sttpHttp4sHttpBackend).map(withExclusions)
+  )
+
 lazy val `mauth-authenticator` = javaModuleProject("mauth-authenticator")
   .dependsOn(`mauth-common`)
   .settings(
@@ -212,6 +221,7 @@ lazy val `mauth-jvm-clients` = (project in file("."))
     `mauth-signer-sttp`,
     `mauth-signer-apachehttp`,
     `mauth-sender-sttp-akka-http`,
+    `mauth-sender-sttp-http4s-http`,
     `mauth-test-utils`,
     `mauth-authenticator-http4s`
   )

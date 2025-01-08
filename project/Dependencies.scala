@@ -7,8 +7,8 @@ object Dependencies extends DependencyUtils {
     val akka: String = "2.6.20" // Do not update beyond 2.6.* due to license changes
     val akkaHttp: String = "10.2.10" // Do not update beyond 10.2.* due to license changes
     val logback = "1.5.6"
-    val sttp = "3.9.7"
-    val http4s = "0.23.25"
+    val sttp = "3.10.2"
+    val http4s = "0.23.29"
     val enumeratum = "1.7.4"
     val log4cats = "2.7.0"
     val circe = "0.14.9"
@@ -34,12 +34,15 @@ object Dependencies extends DependencyUtils {
   val catsEffect: ModuleID = "org.typelevel"                          %% "cats-effect"             % "3.4.8"
   val sttp: ModuleID = "com.softwaremill.sttp.client3"                %% "core"                    % Version.sttp
   val sttpAkkaHttpBackend: ModuleID = "com.softwaremill.sttp.client3" %% "akka-http-backend"       % Version.sttp
+  val sttpHttp4sHttpBackend: ModuleID = "com.softwaremill.sttp.client3" %% "http4s-backend"       % Version.sttp
+  val sttpFs2: ModuleID = "com.softwaremill.sttp.shared"              %% "fs2"                     % "1.4.2"
   val scalaLibCompat: ModuleID = "org.scala-lang.modules"             %% "scala-collection-compat" % "2.12.0"
   val caffeine: ModuleID = "com.github.ben-manes.caffeine"             % "caffeine"                % "3.1.8"
   val http4sDsl: ModuleID = "org.http4s"                              %% "http4s-dsl"              % Version.http4s
   val http4sDsl022: ModuleID = "org.http4s"                           %% "http4s-dsl"              % Version.http4s022
   val http4sClient: ModuleID = "org.http4s"                           %% "http4s-client"           % Version.http4s
   val http4sClient022: ModuleID = "org.http4s"                        %% "http4s-client"           % Version.http4s022
+  val http4sEmberClient: ModuleID = "org.http4s"                      %% "http4s-ember-client"     % Version.http4s
   val enumeratum: ModuleID = "com.beachape"                           %% "enumeratum"              % Version.enumeratum
   val log4cats: ModuleID = "org.typelevel"                            %% "log4cats-slf4j"          % Version.log4cats
 
