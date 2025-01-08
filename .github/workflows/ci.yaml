@@ -14,7 +14,7 @@ env:
 
 jobs:
   test_and_release:
-    runs-on: [self-hosted, ubuntu-latest-highcpu]
+    runs-on: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,6 +26,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: 'sbt'
+      - uses: sbt/setup-sbt@v1
       - name: Lint
         run: sbt "scalafmtSbtCheck;scalafmtCheckAll"
       - name: Test
