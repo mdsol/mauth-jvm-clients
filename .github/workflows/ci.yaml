@@ -14,15 +14,19 @@ env:
 
 jobs:
   test_and_release:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: coursier/cache-action@v6
-      - uses: coursier/setup-action@v1
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
         with:
-          jvm: temurin:11
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'sbt'
+      - uses: sbt/setup-sbt@v1
       - name: Lint
         run: sbt "scalafmtSbtCheck;scalafmtCheckAll"
       - name: Test
