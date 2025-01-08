@@ -14,7 +14,7 @@ env:
 
 jobs:
   test_and_release:
-    runs-on: [self-hosted, ubuntu-latest]
+    runs-on: [self-hosted, ubuntu-latest-highcpu]
     steps:
       - uses: actions/checkout@v4
         with:
