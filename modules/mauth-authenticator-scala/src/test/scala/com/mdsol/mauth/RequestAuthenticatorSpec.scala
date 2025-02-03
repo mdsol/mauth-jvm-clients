@@ -52,7 +52,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
       authenticator.authenticate(getRequestWithUnicodeCharactersInBody)
     }
 
-    expectedException.getMessage shouldBe "MAuth request validation failed because of timeout 300s"
+    expectedException.getMessage shouldBe "MAuth request validation failed because request time was older than300s"
   }
 
   it should "fail validating invalid request" in {
