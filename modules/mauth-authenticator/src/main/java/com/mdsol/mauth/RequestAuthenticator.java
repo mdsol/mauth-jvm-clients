@@ -93,7 +93,7 @@ public class RequestAuthenticator implements Authenticator {
   public boolean authenticate(MAuthRequest mAuthRequest) {
 
     if (!(validateTime(mAuthRequest.getRequestTime()))) {
-      final String message = "MAuth request validation failed because of timeout " + requestValidationTimeoutSeconds + "s";
+      final String message = "MAuth request validation failed because request time was older than" + requestValidationTimeoutSeconds + "s";
       logger.error(message);
       throw new MAuthValidationException(message);
     }
