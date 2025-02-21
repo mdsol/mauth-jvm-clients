@@ -1,7 +1,7 @@
 import java.util
 
-import sbt.Keys._
-import sbt._
+import sbt.Keys.*
+import sbt.*
 
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
