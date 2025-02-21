@@ -37,6 +37,12 @@ object BuildSettings {
       "-Wconf:cat=deprecation:s"
     ), // Stop these being errors, they are fine.
     Test / scalacOptions -= "-Wnonunit-statement",
+    scalacOptions --= {
+      if (sys.env.contains("CI"))
+        Seq.empty
+      else
+        Seq("-Xfatal-warnings", "-Xlint:unused")
+    },
   )
 
   lazy val noPublishSettings = Seq(
