@@ -45,7 +45,7 @@ object BuildSettings {
         )
     }), // Stop these being errors, they are fine.
     Test / scalacOptions --=
-      List("-Wnonunit-statement"),
+      List("-Wnonunit-statement", "-Xlint:unused"),
     scalacOptions --= {
       if (sys.env.contains("CI"))
         Seq.empty
