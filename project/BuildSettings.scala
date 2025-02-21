@@ -17,7 +17,7 @@ import scala.util.Try
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
   val scala212 = "2.12.10"
-  val scala213 = "2.13.1"
+  val scala213 = "2.13.15"
 
   lazy val basicSettings = Seq(
     homepage := Some(new URL("https://github.com/mdsol/mauth-jvm-clients")),
