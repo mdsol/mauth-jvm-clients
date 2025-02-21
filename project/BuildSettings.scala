@@ -20,19 +20,23 @@ object BuildSettings {
     // Avoid issues such as java.lang.IllegalAccessError: tried to access method org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey
     // By running tests in a separate JVM
     Test / fork := true,
-    scalacOptions ++= Seq(
+    Compile / scalacOptions ++= List(
       // We deprecated many MAuth v1 methods, and we want to the deprecation warnings
       // for existing tests
       "-Wconf:msg=.*(Uns|S)ignedRequest|signRequest|(decrypt|encrypt)Signature|" +
         "generateRequestHeaders|extract(MwsTime|MAuth)Header|" +
-        "generateDigestedMessageV1|generateUnencryptedSignature:s"
-    ),
-    scalacOptions --= {
-      if (sys.env.contains("CI"))
-        Seq.empty
-      else
-        Seq("-Xfatal-warnings")
-    }
+        "generateDigestedMessageV1|generateUnencryptedSignature:s",
+      "-Wnonunit-statement",
+      "-Wconf:msg=type Seq in package scala has changed semantics:s",
+      "-Wconf:msg=type IndexedSeq in package scala has changed semantics:s",
+      "-Wconf:msg=constructor modifiers are assumed by synthetic:s",
+      "-Wconf:msg=access modifiers for `copy` method are copied from the case class constructor under:s",
+      "-Wconf:msg=access modifiers for `apply` method are copied from the case class constructor under:s",
+      "-Wconf:msg=which is not part of the implicit scope in Scala 3:s",
+      "-Wconf:msg=Synthetic case companion used as a function.:s",
+      "-Wconf:cat=deprecation:s"
+    ), // Stop these being errors, they are fine.
+    Test / scalacOptions -= "-Wnonunit-statement",
   )
 
   lazy val noPublishSettings = Seq(
