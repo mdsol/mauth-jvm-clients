@@ -11,10 +11,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.Security;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,7 +29,7 @@ public class DefaultSigner implements Signer {
   private final UUID appUUID;
   private final PrivateKey privateKey;
   private final EpochTimeProvider epochTimeProvider;
-  private boolean v2OnlySignRequests = false;
+  private List<MAuthVersion> signVersions;
 
   static {
     Security.addProvider(new BouncyCastleProvider());
@@ -34,7 +37,7 @@ public class DefaultSigner implements Signer {
 
   public DefaultSigner(SignerConfiguration configuration) {
     this(configuration.getAppUUID(), getPrivateKeyFromString(configuration.getPrivateKey()),
-        new CurrentEpochTimeProvider(), configuration.isV2OnlySignRequests());
+        new CurrentEpochTimeProvider(), configuration.getSignVersions());
   }
 
   public DefaultSigner(UUID appUUID, String privateKey) {
@@ -50,24 +53,24 @@ public class DefaultSigner implements Signer {
   }
 
   public DefaultSigner(UUID appUUID, PrivateKey privateKey, EpochTimeProvider epochTimeProvider) {
-    this(appUUID, privateKey, epochTimeProvider, false);
+    this(appUUID, privateKey, epochTimeProvider, SignerConfiguration.DEFAULT_SIGN_VERSION);
   }
 
-  public DefaultSigner(UUID appUUID, String privateKey, EpochTimeProvider epochTimeProvider, boolean v2OnlySignRequests) {
-    this(appUUID, getPrivateKeyFromString(privateKey), epochTimeProvider, v2OnlySignRequests);
+  public DefaultSigner(UUID appUUID, String privateKey, EpochTimeProvider epochTimeProvider, List<MAuthVersion> signVersions) {
+    this(appUUID, getPrivateKeyFromString(privateKey), epochTimeProvider, signVersions);
   }
 
-  public DefaultSigner(UUID appUUID, PrivateKey privateKey, EpochTimeProvider epochTimeProvider, boolean v2OnlySignRequests) {
+  public DefaultSigner(UUID appUUID, PrivateKey privateKey, EpochTimeProvider epochTimeProvider, List<MAuthVersion> signVersions) {
     this.appUUID = appUUID;
     this.privateKey = privateKey;
     this.epochTimeProvider = epochTimeProvider;
-    this.v2OnlySignRequests = v2OnlySignRequests;
+    this.signVersions = signVersions == null || signVersions.isEmpty() ? SignerConfiguration.DEFAULT_SIGN_VERSION : signVersions;
   }
 
   @Override
   @Deprecated
-  public Map<String, String> generateRequestHeaders(String httpVerb,
-                                                    String requestPath, String requestPayload) throws MAuthSigningException {
+  public Map<String, String> generateRequestHeaders(
+      String httpVerb, String requestPath, String requestPayload) throws MAuthSigningException {
     if (null == requestPayload) {
       requestPayload = "";
     }
@@ -78,8 +81,8 @@ public class DefaultSigner implements Signer {
   }
 
   @Override
-  public Map<String, String> generateRequestHeaders(String httpVerb,
-      String requestPath, byte[] requestPayload, String queryParameters) throws MAuthSigningException {
+  public Map<String, String> generateRequestHeaders(
+      String httpVerb, String requestPath, byte[] requestPayload, String queryParameters) throws MAuthSigningException {
 
     if (null == requestPayload) {
       requestPayload = "".getBytes(StandardCharsets.UTF_8);
@@ -92,22 +95,58 @@ public class DefaultSigner implements Signer {
     long currentTime = epochTimeProvider.inSeconds();
 
     HashMap<String, String> headers = new HashMap<>();
-    if (!v2OnlySignRequests) {
-      // Add v1 headers if not V2 only sign requests
+    if (signVersions.contains(MAuthVersion.MWS)) {
+      // Add v1 headers if v1 is in sign version list
       Map<String, String> headersV1 = generateRequestHeadersV1(httpVerb, requestPath, requestPayload, currentTime);
       if (!headersV1.isEmpty()) {
         headers.putAll(headersV1);
       }
     }
 
-    Map<String, String> headersV2 = generateRequestHeadersV2(httpVerb, requestPath, queryParameters, requestPayload, currentTime);
-    if (!headersV2.isEmpty()) {
-      headers.putAll(headersV2);
+    if (signVersions.contains(MAuthVersion.MWSV2)) {
+      // Add v2 headers if v2 is in sign version list
+      Map<String, String> headersV2 = generateRequestHeadersV2(httpVerb, requestPath, queryParameters, requestPayload, currentTime);
+      if (!headersV2.isEmpty()) {
+        headers.putAll(headersV2);
+      }
     }
     return headers;
   }
 
-  private Map<String, String> generateRequestHeadersV1(String httpVerb, String requestPath, byte[] requestPayload, long currentTime) throws MAuthSigningException {
+  @Override
+  public Map<String, String> generateRequestHeaders(
+      String httpVerb, String requestPath, InputStream requestPayload, String queryParameters) throws MAuthSigningException {
+    if (null == requestPayload) {
+      return generateRequestHeaders(httpVerb, requestPath, "".getBytes(StandardCharsets.UTF_8), queryParameters);
+    }
+
+    if (null == queryParameters) {
+      queryParameters = "";
+    }
+
+    // mAuth uses an epoch time measured in seconds
+    long currentTime = epochTimeProvider.inSeconds();
+
+    HashMap<String, String> headers = new HashMap<>();
+    if (signVersions.contains(MAuthVersion.MWSV2)) {
+      // Add v2 headers if v2 is in sign version list
+      Map<String, String> headersV2 = generateRequestHeadersV2(httpVerb, requestPath, queryParameters, requestPayload, currentTime);
+      if (!headersV2.isEmpty()) {
+        headers.putAll(headersV2);
+      }
+    } else {
+      // Add v1 headers
+      Map<String, String> headersV1 = generateRequestHeadersV1(httpVerb, requestPath, requestPayload, currentTime);
+      if (!headersV1.isEmpty()) {
+        headers.putAll(headersV1);
+      }
+    }
+
+    return headers;
+  }
+
+  private Map<String, String> generateRequestHeadersV1(
+      String httpVerb, String requestPath, byte[] requestPayload, long currentTime) throws MAuthSigningException {
 
     String encryptedSignature;
     try {
@@ -120,24 +159,54 @@ public class DefaultSigner implements Signer {
       throw new MAuthSigningException(e);
     }
 
+    return generateRequestHeadersV1(encryptedSignature, currentTime);
+  }
+
+  private Map<String, String> generateRequestHeadersV1(
+      String httpVerb, String requestPath, InputStream requestPayload, long currentTime) throws MAuthSigningException {
+
+    String encryptedSignature;
+    try {
+      SequenceInputStream stream = MAuthSignatureHelper.createSequenceInputStreamV1(
+          appUUID, httpVerb, requestPath, requestPayload, String.valueOf(currentTime));
+
+      encryptedSignature = MAuthSignatureHelper.encryptSignature(privateKey, stream);
+    } catch (IOException | CryptoException e) {
+      logger.error("Error generating request headers", e);
+      throw new MAuthSigningException(e);
+    }
+
+    return generateRequestHeadersV1(encryptedSignature, currentTime);
+  }
+
+  private Map<String, String> generateRequestHeadersV1(String encryptedSignature, long currentTime) {
     HashMap<String, String> headers = new HashMap<>();
     headers.put(
         MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME,
         MAuthHeadersHelper.createAuthenticationHeaderValue(appUUID, encryptedSignature)
     );
     headers.put(MAuthRequest.X_MWS_TIME_HEADER_NAME, MAuthHeadersHelper.createTimeHeaderValue(currentTime));
-
     return headers;
   }
 
   private Map<String, String> generateRequestHeadersV2(String httpVerb, String requestPath, String queryParameters,
       byte[] requestPayload, long currentTime) throws MAuthSigningException {
-     String stringTosign = MAuthSignatureHelper.generateStringToSignV2(
+     String stringToSign = MAuthSignatureHelper.generateStringToSignV2(
         appUUID, httpVerb, requestPath, queryParameters, requestPayload, String.valueOf(currentTime));
+    return generateRequestHeadersV2(stringToSign, currentTime);
+  }
 
+  private Map<String, String> generateRequestHeadersV2(String httpVerb, String requestPath, String queryParameters,
+      InputStream requestPayload, long currentTime) throws MAuthSigningException {
+    String stringToSign = MAuthSignatureHelper.generateStringToSignV2(
+        appUUID, httpVerb, requestPath, queryParameters, requestPayload, String.valueOf(currentTime));
+    return generateRequestHeadersV2(stringToSign, currentTime);
+  }
+
+  private Map<String, String> generateRequestHeadersV2(String stringToSign, long currentTime) throws MAuthSigningException {
     String encryptedSignature;
     try {
-      encryptedSignature = MAuthSignatureHelper.encryptSignatureRSA(privateKey, stringTosign);
+      encryptedSignature = MAuthSignatureHelper.encryptSignatureRSA(privateKey, stringToSign);
     } catch (Exception e) {
       logger.error("Error generating request headers for V2", e);
       throw new MAuthSigningException(e);

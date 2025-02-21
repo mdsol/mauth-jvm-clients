@@ -4,6 +4,6 @@ target/
 .settings
 .idea
 *.iml
-littleproxy_*
 *.log
 *.asc
+.bsp/

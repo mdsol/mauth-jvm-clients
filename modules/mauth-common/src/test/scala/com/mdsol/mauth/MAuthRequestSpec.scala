@@ -282,4 +282,19 @@ class MAuthRequestSpec extends AnyFlatSpec with Matchers {
     request.getMauthVersion shouldBe MAuthVersion.MWSV2
   }
 
+  it should "not allow to both messagePayload and bodyInputStream are not null" in {
+    val expectedException = intercept[IllegalArgumentException] {
+      MAuthRequest.Builder
+        .get()
+        .withHttpMethod(CLIENT_REQUEST_METHOD)
+        .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_HEADER)
+        .withTimeHeaderValue(CLIENT_REQUEST_TIME_HEADER)
+        .withMessagePayload(CLIENT_REQUEST_PAYLOAD)
+        .withBodyInputStream(new java.io.ByteArrayInputStream(CLIENT_REQUEST_PAYLOAD))
+        .withResourcePath(CLIENT_REQUEST_PATH)
+        .build()
+    }
+    expectedException.getMessage shouldBe "Only one of bodyInputStream and messagePayload should be provided."
+  }
+
 }

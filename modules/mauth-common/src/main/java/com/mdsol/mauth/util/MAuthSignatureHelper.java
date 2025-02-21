@@ -1,8 +1,10 @@
 package com.mdsol.mauth.util;
 
+import com.mdsol.mauth.MAuthRequest;
 import com.mdsol.mauth.exceptions.MAuthSigningException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.tuple.Pair;
 import org.bouncycastle.crypto.CryptoException;
 
 import org.bouncycastle.crypto.InvalidCipherTextException;
@@ -13,18 +15,26 @@ import org.bouncycastle.crypto.util.PublicKeyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.security.*;
 import java.util.Arrays;
+import java.util.regex.*;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class MAuthSignatureHelper {
 
   private static final Logger logger = LoggerFactory.getLogger(MAuthSignatureHelper.class);
+  private static final Pattern PATTERN_HEX_LOWCASE = Pattern.compile("%[a-f0-9]{2}");
 
   /**
    * Generate string_to_sign for Mauth V1 protocol
@@ -79,6 +89,24 @@ public class MAuthSignatureHelper {
     return baos.toByteArray();
   }
 
+  @Deprecated
+  public static String generateDigestedMessageV1(MAuthRequest mAuthRequest) throws IOException {
+    logger.debug("Digest unencryptedSignature for V1");
+    SequenceInputStream stream = createSequenceInputStreamV1(mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(),
+          mAuthRequest.getResourcePath(), mAuthRequest.getBodyInputStream(), String.valueOf(mAuthRequest.getRequestTime()));
+    return MAuthSignatureHelper.getHexEncodedDigestedString(stream);
+  }
+
+  @Deprecated
+  public static SequenceInputStream createSequenceInputStreamV1(UUID appUUID, String httpMethod, String resourceUrl, InputStream requestBody, String epochTime) {
+    String part1 = httpMethod + "\n" + resourceUrl + "\n";
+    InputStream part2 = requestBody;
+    String part3 = "\n" + appUUID.toString() + "\n" + epochTime;
+    SequenceInputStream stream = new SequenceInputStream(new ByteArrayInputStream(part1.getBytes(StandardCharsets.ISO_8859_1)),
+        new SequenceInputStream(part2, new ByteArrayInputStream(part3.getBytes(StandardCharsets.ISO_8859_1))));
+    return stream;
+  }
+
   /**
    * Generate string_to_sign for Mauth V2 protocol
    * @param appUUID: application uuid
@@ -88,24 +116,58 @@ public class MAuthSignatureHelper {
    * @param requestBody: request body byte[]
    * @param epochTime: current seconds since Epoch
    * @return String
-   *   httpMethod + "\n" + resourcePath + "\n" + requestBody_digest + "\n" + app_uuid + "\n" + epochTime + "\n" + encoded_queryParameters
+   *   httpMethod + "\n" + normalized_resourcePath + "\n" + requestBody_digest + "\n" + app_uuid + "\n" + epochTime + "\n" + encoded_queryParameters
    *
    * @throws MAuthSigningException when generating Unencrypted Signature errors
    */
   public static String generateStringToSignV2(UUID appUUID, String httpMethod, String resourcePath,
-      String queryParameters, byte[] requestBody, String epochTime) throws MAuthSigningException{
+                                              String queryParameters, byte[] requestBody, String epochTime) throws MAuthSigningException{
     logger.debug("Generating String to sign for V2");
+    String bodyDigest = getHexEncodedDigestedString(requestBody);
+    return stringToSignV2(appUUID, httpMethod, resourcePath, queryParameters, bodyDigest, epochTime);
+  }
 
-    String bodyDigest;
-    String encryptedQueryParams;
-    try {
-      bodyDigest = getHexEncodedDigestedString(requestBody);
-      encryptedQueryParams = generateEncryptedQueryParams(queryParameters);
-    } catch (IOException e) {
-      logger.error("Error generating Unencrypted Signature", e);
-      throw new MAuthSigningException(e);
-    }
-    return httpMethod.toUpperCase() + "\n" + resourcePath + "\n" + bodyDigest + "\n"
+  /**
+   * Generate string_to_sign for Mauth V2 protocol
+   * @param appUUID: application uuid
+   * @param httpMethod: Http_Verb
+   * @param resourcePath: resource_path (Only the path segment of the URL; first "/" is included)
+   * @param queryParameters: request parameters string
+   * @param requestBody: request InputStream
+   * @param epochTime: current seconds since Epoch
+   * @return String
+   *   httpMethod + "\n" + normalized_resourcePath + "\n" + requestBody_digest + "\n" + app_uuid + "\n" + epochTime + "\n" + encoded_queryParameters
+   *
+   * @throws MAuthSigningException when generating Unencrypted Signature errors
+   */
+  public static String generateStringToSignV2(UUID appUUID, String httpMethod, String resourcePath,
+                                              String queryParameters, InputStream requestBody, String epochTime) throws MAuthSigningException{
+    logger.debug("Generating String to sign for V2");
+    String bodyDigest = getHexEncodedDigestedString(requestBody);
+    return stringToSignV2(appUUID, httpMethod, resourcePath, queryParameters, bodyDigest, epochTime);
+  }
+
+  /**
+   * Generate string_to_sign for Mauth V2 protocol
+   * @param mAuthRequest: Data from the incoming HTTP request
+   * @return String
+   *   httpMethod + "\n" + normalized_resourcePath + "\n" + requestBody_digest + "\n" + app_uuid + "\n" + epochTime + "\n" + encoded_queryParameters
+   *
+   * @throws MAuthSigningException when generating Unencrypted Signature errors
+   */
+  public static String generateStringToSignV2(MAuthRequest mAuthRequest) throws MAuthSigningException{
+    logger.debug("Generating String to sign for V2");
+    String epochTime = String.valueOf(mAuthRequest.getRequestTime());
+    String bodyDigest = getHexEncodedDigestedString(mAuthRequest.getBodyInputStream());
+    return stringToSignV2(mAuthRequest.getAppUUID(), mAuthRequest.getHttpMethod(),
+        mAuthRequest.getResourcePath(), mAuthRequest.getQueryParameters(), bodyDigest, epochTime);
+   }
+
+  private static String stringToSignV2(UUID appUUID, String httpMethod,
+      String resourcePath, String queryParameters, String bodyDigest, String epochTime) {
+    logger.debug("Generating String to sign for V2");
+    String encryptedQueryParams = generateEncryptedQueryParams(queryParameters);
+    return httpMethod.toUpperCase() + "\n" + normalizePath(resourcePath) + "\n" + bodyDigest + "\n"
         + appUUID.toString() + "\n" + epochTime + "\n" + encryptedQueryParams;
   }
 
@@ -144,6 +206,25 @@ public class MAuthSignatureHelper {
   @Deprecated
   public static String encryptSignature(PrivateKey privateKey, byte[] unencryptedData) throws IOException, CryptoException {
     String hexEncodedString = getHexEncodedDigestedString(unencryptedData);
+    return encryptSignaturePKCS1(privateKey, hexEncodedString);
+  }
+
+  /**
+   * Generate base64 encoded signature for Mauth V1 protocol
+   *
+   * @deprecated
+   *   This is used for Mauth V1 protocol,
+   *   replaced by {@link #encryptSignatureRSA(PrivateKey privateKey, String unencryptedString)} for Mauth V2 protocol
+   *
+   * @param privateKey the private key of the identity whose signature is going to be generated.
+   * @param inputStream the input stream be signed
+   * @return String of Base64 decode the digital signature
+   * @throws IOException
+   * @throws CryptoException
+   */
+  @Deprecated
+  public static String encryptSignature(PrivateKey privateKey, InputStream inputStream) throws IOException, CryptoException {
+    String hexEncodedString = getHexEncodedDigestedString(inputStream);
     return encryptSignaturePKCS1(privateKey, hexEncodedString);
   }
 
@@ -206,37 +287,58 @@ public class MAuthSignatureHelper {
     }
   }
 
-  public static String generateEncryptedQueryParams(String query) throws IOException {
-
-    if (query == null || query.isEmpty())
-      return "";
-
-    StringBuilder encryptedQueryParams = new StringBuilder();
-
-    String[] params = query.split("&");
-    Arrays.sort(params);
-    for (String param : params)
-    {
-      String [] keyPair = param.split("=");
-      if (keyPair.length > 0) {
-        String name = param.split("=")[0];
-        String value = keyPair.length > 1 ? param.split("=")[1] : "";
-        if (encryptedQueryParams.length() > 0) {
-          encryptedQueryParams.append('&');
+  public static String getHexEncodedDigestedString(InputStream inputStream) {
+    try {
+      // Get digest
+      MessageDigest md = MessageDigest.getInstance("SHA-512");
+      try (DigestInputStream dis = new DigestInputStream(inputStream, md)) {
+        while (dis.read() != -1) {
         }
-        encryptedQueryParams.append(urlEncodeValue(name)).append('=').append(urlEncodeValue(value));
+        byte[] digestedBytes = md.digest();
+        return Hex.encodeHexString(digestedBytes);
+      } catch (IOException e) {
+        final String message = "Invalid MessageDigestInputStream.";
+        logger.error(message, e);
+        throw new MAuthSigningException(message, e);
       }
+    } catch (NoSuchAlgorithmException ex) {
+      final String message = "Invalid algorithm or security provider.";
+      logger.error(message, ex);
+      throw new MAuthSigningException(message, ex);
     }
-
-    return encryptedQueryParams.toString();
   }
 
   /**
-   * encode a string value using `UTF-8` encoding scheme
-   * @param value
-   * @return encoded String
+   * generate the query parameters for Mauth V2
+   * @param encodedQuery the encoded query string
+   * @return the sorted-encoded string
    *
-   * See https://stackoverflow.com/questions/10786042/java-url-encoding-of-query-string-parameters
+   * See https://learn.mdsol.com/display/CA/Building+an+mAuth-Authenticated+API
+   */
+  public static String generateEncryptedQueryParams(String encodedQuery) {
+
+    if (encodedQuery == null || encodedQuery.isEmpty())
+      return "";
+
+    return Arrays.stream(encodedQuery.split("&"))
+        .filter(s -> !s.isEmpty())
+        .map(keyValStr -> {
+          String[] split = keyValStr.split("=");
+          String key = split[0];
+          String value = split.length > 1 ? split[1] : "";
+          return Pair.of(urlDecodeValue(key), urlDecodeValue(value));
+        })
+        .sorted()
+        .map(keyVal -> urlEncodeValue(keyVal.getKey()) + "=" + urlEncodeValue(keyVal.getValue()))
+        .collect(Collectors.joining("&"));
+  }
+
+  /**
+   * encode a string using `UTF-8` encoding scheme
+   * @param value
+   * @return the encoded String
+   *
+   * See https://stackoverflow.com/questions/13060034/what-is-correct-oauth-percent-encoding
    */
   private static String urlEncodeValue(String value) {
     if (value == null ||  value.isEmpty())
@@ -244,13 +346,56 @@ public class MAuthSignatureHelper {
 
     try {
       String encodedValue = URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
-      encodedValue = encodedValue.replace("+", "%20");
-      encodedValue = encodedValue.replace("%7E", "~");
-      encodedValue = encodedValue.replace("*", "%2A");
+      // OAuth encodes some characters differently
+      encodedValue = encodedValue.replace("+", "%20").replace("%7E", "~").replace("*", "%2A");
       return encodedValue;
     } catch (UnsupportedEncodingException ex) {
       throw new RuntimeException(ex.getCause());
     }
+  }
+
+  /**
+   * decode a string using `UTF-8` scheme
+   * @param encodedValue
+   * @return the decoded String
+   *
+   * See https://docs.oracle.com/javase/8/docs/api/java/net/URLDecoder.html
+   */
+  private static String urlDecodeValue(String encodedValue) {
+    if (encodedValue == null || encodedValue.isEmpty())
+      return encodedValue;
+
+    try {
+      String data = encodedValue.replaceAll("%(?![0-9a-fA-F]{2})", "%25").replaceAll("\\+", " ");
+      return URLDecoder.decode(data, StandardCharsets.UTF_8.toString());
+    } catch (UnsupportedEncodingException ex) {
+      throw new RuntimeException(ex.getCause());
+    }
+  }
+
+  /**
+   * normalize  url-encoded path string
+   * @param encodedPath
+   * @return the normalized string of path
+   */
+  public static String normalizePath(String encodedPath) {
+    if (encodedPath == null || encodedPath.isEmpty())
+      return "";
+
+    //Normalize percent encoding to uppercase i.e. %cf%80 => %CF%80
+    Matcher matcher = PATTERN_HEX_LOWCASE.matcher(encodedPath);
+    StringBuffer result = new StringBuffer();
+    while (matcher.find()) {
+      matcher.appendReplacement(result, matcher.group().toUpperCase());
+    }
+    matcher.appendTail(result);
+
+    String normalizedPath = Paths.get(result.toString()).normalize().toString();
+    if(!normalizedPath.endsWith("/") &&
+        (encodedPath.endsWith("/") || encodedPath.endsWith("/.")|| encodedPath.endsWith("/.."))) {
+      normalizedPath = normalizedPath.concat("/");
+    }
+    return normalizedPath;
   }
 
   /**

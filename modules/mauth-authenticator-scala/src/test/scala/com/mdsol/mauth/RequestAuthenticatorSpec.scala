@@ -1,16 +1,17 @@
 package com.mdsol.mauth
 
 import java.util.UUID
-
 import com.mdsol.mauth.exception.MAuthValidationException
 import com.mdsol.mauth.test.utils.FakeMAuthServer.EXISTING_CLIENT_APP_UUID
-import com.mdsol.mauth.util.MAuthKeysHelper
+import com.mdsol.mauth.util.{EpochTimeProvider, MAuthKeysHelper}
 import com.mdsol.mauth.utils.ClientPublicKeyProvider
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBaseSpec with Matchers with MockFactory {
+
+  val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
 
   val mockClientPublicKeyProvider: ClientPublicKeyProvider = mock[ClientPublicKeyProvider]
   val authenticator: RequestAuthenticator = new RequestAuthenticator(mockClientPublicKeyProvider, REQUEST_VALIDATION_TIMEOUT_SECONDS, mockEpochTimeProvider)
@@ -91,11 +92,20 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
 
   it should "validate a valid request with binary body for V1" in {
     //noinspection ConvertibleToMethodValue
-    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_BINARY_VALUE.toLong + 3)
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE.toLong + 3)
     (mockClientPublicKeyProvider.getPublicKey _)
       .expects(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID))
       .returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY2))
     authenticator.authenticate(getRequestWithBinaryBodyV1) shouldBe true
+  }
+
+  it should "validate a valid request with binary body for V2" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE.toLong + 5)
+    (mockClientPublicKeyProvider.getPublicKey _)
+      .expects(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID))
+      .returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY2))
+    authenticator.authenticate(getRequestWithBinaryBodyV2) shouldBe true
   }
 
   it should "validate the request with the validated V1 headers and wrong V2 signature" in {
@@ -110,6 +120,31 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_MCC_TIME_HEADER_VALUE.toLong + 3)
     (mockClientPublicKeyProvider.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))
     authenticatorV2.authenticate(getRequestWithWrongV2Signature) shouldBe false
+  }
+
+  "When payload is inputstream" should "authenticate a valid request for V1" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE.toLong + 3)
+    (mockClientPublicKeyProvider.getPublicKey _)
+      .expects(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID))
+      .returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY2))
+    authenticator.authenticate(getRequestWithStreamBodyV1) shouldBe true
+  }
+
+  it should "authenticate a valid request for V2" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE.toLong + 5)
+    (mockClientPublicKeyProvider.getPublicKey _)
+      .expects(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID))
+      .returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY2))
+    authenticator.authenticate(getRequestWithStreamBodyV2) shouldBe true
+  }
+
+  it should "fail validating request with validated V1 headers and wrong V2 signature" in {
+    //noinspection ConvertibleToMethodValue
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_MCC_TIME_HEADER_VALUE.toLong + 3)
+    (mockClientPublicKeyProvider.getPublicKey _).expects(EXISTING_CLIENT_APP_UUID).returns(MAuthKeysHelper.getPublicKeyFromString(PUBLIC_KEY))
+    authenticator.authenticate(getRequestWithStreamBodyAndWrongV2Signature) shouldBe false
   }
 
 }

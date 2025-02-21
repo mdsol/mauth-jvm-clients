@@ -24,7 +24,6 @@ class HttpClientPublicKeyProviderSpec extends AnyFlatSpec with Matchers with Moc
   private val MAUTH_BASE_URL: String = s"http://localhost:$port"
   private val MAUTH_URL_PATH: String = "/mauth/v1"
   private val SECURITY_TOKENS_PATH: String = "/security_tokens/%s.json"
-  private val timeToLive = 300L
 
   override protected def beforeAll(): Unit = {
     FakeMAuthServer.start(port)
@@ -46,14 +45,14 @@ class HttpClientPublicKeyProviderSpec extends AnyFlatSpec with Matchers with Moc
     mockedHeaders.put(X_MWS_TIME_HEADER_NAME, EXPECTED_TIME_HEADER_VALUE)
     mockedHeaders.put(MCC_AUTHENTICATION_HEADER_NAME, EXPECTED_AUTHENTICATION_HEADER_VALUE_V2)
     mockedHeaders.put(MCC_TIME_HEADER_NAME, EXPECTED_TIME_HEADER_VALUE)
-    (mockedSigner.generateRequestHeaders(_: String, _: String, _: Array[Byte], _: String)).expects("GET", *, null, "").returns(mockedHeaders)
+    (mockedSigner.generateRequestHeaders(_: String, _: String, _: Array[Byte], _: String)).expects("GET", *, *, "").returns(mockedHeaders)
     new HttpClientPublicKeyProvider(configuration, mockedSigner)
   }
 
   private def getRequestUrlPath(clientAppId: String): String = String.format(MAUTH_URL_PATH + SECURITY_TOKENS_PATH, clientAppId)
 
   private def getMAuthConfiguration: AuthenticatorConfiguration =
-    new AuthenticatorConfiguration(MAUTH_BASE_URL, MAUTH_URL_PATH, SECURITY_TOKENS_PATH, timeToLive, false)
+    new AuthenticatorConfiguration(MAUTH_BASE_URL, MAUTH_URL_PATH, SECURITY_TOKENS_PATH, false)
 
   it should "send correct request for public key to MAuth server" in {
     FakeMAuthServer.return200()

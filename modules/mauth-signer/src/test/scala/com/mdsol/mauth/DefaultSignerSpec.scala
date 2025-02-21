@@ -2,16 +2,17 @@ package com.mdsol.mauth
 
 import java.security.Security
 import java.util.UUID
+import java.util.NoSuchElementException
 
 import com.mdsol.mauth.exceptions.MAuthKeyException
-import com.mdsol.mauth.test.utils.FixturesLoader
+import com.mdsol.mauth.test.utils.TestFixtures
 import com.mdsol.mauth.util.EpochTimeProvider
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
   private val TEST_EPOCH_TIME = 1424700000L
@@ -21,12 +22,12 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
   private val AUTHENTICATION_HEADER_PATTERN_V2: String = s"MWSV2 $testUUID:[^;]*;"
 
   private val mockEpochTimeProvider = mock[EpochTimeProvider]
-  private val mAuthRequestSigner = new DefaultSigner(testUUID, FixturesLoader.getPrivateKey, mockEpochTimeProvider)
-  private val mAuthRequestSignerV2 = new DefaultSigner(testUUID, FixturesLoader.getPrivateKey, mockEpochTimeProvider, true)
+  private val mAuthRequestSigner = new DefaultSigner(testUUID, TestFixtures.PRIVATE_KEY_1, mockEpochTimeProvider, SignerConfiguration.ALL_SIGN_VERSIONS)
+  private val mAuthRequestSignerV2 = new DefaultSigner(testUUID, TestFixtures.PRIVATE_KEY_1, mockEpochTimeProvider, java.util.Arrays.asList(MAuthVersion.MWSV2))
 
   Security.addProvider(new BouncyCastleProvider)
 
-  it should "constructor with invalid key string throws an exception" in {
+  "DefaultSigner" should "constructor with invalid key string throws an exception" in {
     val expectedException = intercept[MAuthKeyException] {
       new DefaultSigner(testUUID, "This is not a valid key", mockEpochTimeProvider)
     }
@@ -73,14 +74,58 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
     headers(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_POST_AUTHENTICATION_HEADER
   }
 
-  it should "generated headers includes time header with correct time for V2" in {
+  "When v1 only is set" should "add mauth headers to a request for V1 only" in {
+    val CLIENT_REQUEST_BINARY_APP_UUID = TestFixtures.APP_UUID_V2
+    val CLIENT_REQUEST_BINARY_EPOCH_TIME: Long = TestFixtures.EPOCH_TIME.toLong
+    val CLIENT_REQUEST_BINARY_PATH = TestFixtures.REQUEST_PATH_V2
+    val CLIENT_REQUEST_QUERY_PARAMETERS = TestFixtures.REQUEST_QUERY_PARAMETERS_V2
+    val uuid = UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID)
+    val mAuthSigner = new DefaultSigner(uuid, TestFixtures.PRIVATE_KEY_2, mockEpochTimeProvider, java.util.Arrays.asList(MAuthVersion.MWS))
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_REQUEST_BINARY_EPOCH_TIME)
+    val EXPECTED_AUTHENTICATION_HEADER_V1: String = s"""MWS $CLIENT_REQUEST_BINARY_APP_UUID:${TestFixtures.SIGNATURE_V1_BINARY}"""
+    val headers: Map[String, String] =
+      mAuthSigner.generateRequestHeaders("PUT", CLIENT_REQUEST_BINARY_PATH, TestFixtures.BINARY_FILE_BODY, CLIENT_REQUEST_QUERY_PARAMETERS).asScala.toMap
+    headers.size shouldEqual 2
+    headers(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTHENTICATION_HEADER_V1
+    headers(MAuthRequest.X_MWS_TIME_HEADER_NAME) shouldBe String.valueOf(CLIENT_REQUEST_BINARY_EPOCH_TIME)
+
+    val expectedException = intercept[NoSuchElementException] {
+      headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME)
+    }
+    expectedException.getMessage shouldBe "key not found: " + MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
+  }
+
+  it should "add mauth headers to a request with inputstream payload for V1 only" in {
+    val uuid = UUID.fromString(TestFixtures.APP_UUID_V2)
+    val inputStream = new java.io.ByteArrayInputStream(TestFixtures.BINARY_FILE_BODY)
+    val mAuthSigner = new DefaultSigner(uuid, TestFixtures.PRIVATE_KEY_2, mockEpochTimeProvider, java.util.Arrays.asList(MAuthVersion.MWS))
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TestFixtures.EPOCH_TIME.toLong)
+
+    val EXPECTED_AUTHENTICATION_HEADER_V1: String = s"""MWS ${TestFixtures.APP_UUID_V2}:${TestFixtures.SIGNATURE_V1_BINARY}"""
+    val headers: Map[String, String] =
+      mAuthSigner.generateRequestHeaders("PUT", TestFixtures.REQUEST_PATH_V2, inputStream, TestFixtures.REQUEST_QUERY_PARAMETERS_V2).asScala.toMap
+    headers.size shouldEqual 2
+    headers(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTHENTICATION_HEADER_V1
+    headers(MAuthRequest.X_MWS_TIME_HEADER_NAME) shouldBe TestFixtures.EPOCH_TIME
+
+    val expectedException = intercept[NoSuchElementException] {
+      headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME)
+    }
+    expectedException.getMessage shouldBe "key not found: " + MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME
+  }
+
+  "When v2 only is set" should "generated headers includes time header with correct time for V2" in {
     //noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeaders("GET", "/", "".getBytes, "").asScala.toMap
     headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe String.valueOf(TEST_EPOCH_TIME)
+    val expectedException = intercept[NoSuchElementException] {
+      headers(MAuthRequest.X_MWS_TIME_HEADER_NAME)
+    }
+    expectedException.getMessage shouldBe "key not found: " + MAuthRequest.X_MWS_TIME_HEADER_NAME
   }
 
-  it should "generated headers with body includes expected authentication header for V2 only if V2 only enabled" in {
+  it should "generated headers with body includes expected authentication header for V2 only" in {
     //noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val EXPECTED_POST_AUTHENTICATION_HEADER: String =
@@ -92,11 +137,13 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
          |tKVsZ29Qu3ZktDThdUeQnD4qt6LoGVkzru/ynJddeLinQB0m0ixjYRFiTr3
          |YOGg==;""".stripMargin.replaceAll("\n", "")
     val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeaders("POST", "/", TEST_REQUEST_BODY.getBytes, "").asScala.toMap
+    headers.size shouldEqual 2
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches AUTHENTICATION_HEADER_PATTERN_V2
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_POST_AUTHENTICATION_HEADER
+    headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe String.valueOf(TEST_EPOCH_TIME)
   }
 
-  it should "generated headers with parameters includes expected authentication header for V2 only if V2 only enabled" in {
+  it should "generated headers with parameters includes expected authentication header for V2 only" in {
     //noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val EXPECTED_GET_AUTHENTICATION_HEADER: String =
@@ -108,13 +155,33 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
          |Hqu5G+5/6DiTt4W2iTEkC9BUV/OObdNNbr72hN1Z5qHo/X8qZ7NMSRPyZPA
          |xe6A==;""".stripMargin.replaceAll("\n", "")
     val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeaders("GET", "/", "".getBytes, TEST_REQUEST_PARAMS).asScala.toMap
+    headers.size shouldEqual 2
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches AUTHENTICATION_HEADER_PATTERN_V2
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_GET_AUTHENTICATION_HEADER
+
+    val expectedException = intercept[NoSuchElementException] {
+      headers(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME)
+    }
+    expectedException.getMessage shouldBe "key not found: " + MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME
   }
 
-  it should "generated headers for both V1 and V2 if V2 only is disabled" in {
+  it should "generated headers with inputstream payload for V2 only" in {
+    val uuid = UUID.fromString(TestFixtures.APP_UUID_V2)
+    val inputStream = new java.io.ByteArrayInputStream(TestFixtures.BINARY_FILE_BODY)
+    val mAuthSigner = new DefaultSigner(uuid, TestFixtures.PRIVATE_KEY_2, mockEpochTimeProvider, java.util.Arrays.asList(MAuthVersion.MWSV2))
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TestFixtures.EPOCH_TIME.toLong)
+
+    val EXPECTED_AUTHENTICATION_HEADER: String = s"""MWSV2 ${TestFixtures.APP_UUID_V2}:${TestFixtures.SIGNATURE_V2_BINARY};"""
+    val headers: Map[String, String] =
+      mAuthSigner.generateRequestHeaders("PUT", TestFixtures.REQUEST_PATH_V2, inputStream, TestFixtures.REQUEST_QUERY_PARAMETERS_V2).asScala.toMap
+    headers.size shouldEqual 2
+    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTHENTICATION_HEADER
+    headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe TestFixtures.EPOCH_TIME
+  }
+
+  "When v1 and v2 are set" should "generated headers with body for both V1 and V2" in {
     //noinspection ConvertibleToMethodValue
-    val mAuthSigner = new DefaultSigner(testUUID, FixturesLoader.getPrivateKey, mockEpochTimeProvider, false)
+    val mAuthSigner = new DefaultSigner(testUUID, TestFixtures.PRIVATE_KEY_1, mockEpochTimeProvider, SignerConfiguration.ALL_SIGN_VERSIONS)
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val EXPECTED_POST_AUTHENTICATION_HEADER_V1: String =
       s"""MWS $testUUID:aDItoM9IOknNhPKH9a
@@ -139,36 +206,64 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
     headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe String.valueOf(TEST_EPOCH_TIME)
   }
 
-  it should "generated headers for binary payload for both V1 and V2 if V2 only is disabled" in {
+  it should "generated headers with binary payload for both V1 and V2" in {
     //noinspection ConvertibleToMethodValue
-    val CLIENT_REQUEST_BINARY_APP_UUID = "5ff4257e-9c16-11e0-b048-0026bbfffe5e"
-    val CLIENT_REQUEST_BINARY_EPOCH_TIME: Long = 1309891855L
-    val CLIENT_REQUEST_BINARY_PATH = "/v1/pictures"
-    val CLIENT_REQUEST_QUERY_PARAMETERS = "key=-_.~ !@#$%^*()+{}|:\"'`<>?&∞=v&キ=v&0=v&a=v&a=b&a=c&a=a&k=&k=v"
-    val mAuthSigner = new DefaultSigner(UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID), FixturesLoader.getPrivateKey2, mockEpochTimeProvider, false)
+    val CLIENT_REQUEST_BINARY_APP_UUID = TestFixtures.APP_UUID_V2
+    val CLIENT_REQUEST_BINARY_EPOCH_TIME: Long = TestFixtures.EPOCH_TIME.toLong
+    val CLIENT_REQUEST_BINARY_PATH = TestFixtures.REQUEST_PATH_V2
+    val CLIENT_REQUEST_QUERY_PARAMETERS = TestFixtures.REQUEST_QUERY_PARAMETERS_V2
+    val uuid = UUID.fromString(CLIENT_REQUEST_BINARY_APP_UUID)
+    val mAuthSigner = new DefaultSigner(uuid, TestFixtures.PRIVATE_KEY_2, mockEpochTimeProvider, SignerConfiguration.ALL_SIGN_VERSIONS)
+
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_REQUEST_BINARY_EPOCH_TIME)
-    val EXPECTED_AUTHENTICATION_HEADER_V1: String =
-      s"""MWS $CLIENT_REQUEST_BINARY_APP_UUID:hDKYDRnzPFL2gzsru4zn7c7E7
-         |KpEvexeF4F5IR+puDxYXrMmuT2/fETZty5NkGGTZQ1nI6BTYGQGsU/73TkEAm
-         |7SvbJZcB2duLSCn8H5D0S1cafory1gnL1TpMPBlY8J/lq/Mht2E17eYw+P87F
-         |cpvDShINzy8GxWHqfquBqO8ml4XtirVEtAlI0xlkAsKkVq4nj7rKZUMS85mzo
-         |gjUAJn3WgpGCNXVU+EK+qElW5QXk3I9uozByZhwBcYt5Cnlg15o99+53wKzMM
-         |mdvFmVjA1DeUaSO7LMIuw4ZNLVdDcHJx7ZSpAKZ/EA34u1fYNECFcw5CSKOjd
-         |lU7JFr4o8Phw==""".stripMargin.replaceAll("\n", "")
-    val EXPECTED_AUTHENTICATION_HEADER_V2: String =
-      s"""MWSV2 $CLIENT_REQUEST_BINARY_APP_UUID:GpZIRB8RIxlfsjcROBElMEw
-         |a0r7jr632GkBe+R8lOv72vVV7bFMbJwQUHYm6vL/NKC7g4lJwvWcF60lllIUG
-         |wv/KWUOQwerqo5yCNoNumxjgDKjq7ILl8iFxsrV9LdvxwGyEBEwAPKzoTmW9x
-         |radxmjn4ZZVMnQKEMns6iViBkwaAW2alp4ZtVfJIZHRRyiuFnITWH1PniyG0k
-         |I4Li16kY25VfmzfNkdAi0Cnl27Cy1+DtAl1zVnz6ObMAdtmsEtplvlqsRCRsd
-         |d37VfuUxUlolNpr5brjzTwXksScUjX80/HMnui5ZlFORGjHebeZG5QVCouZPK
-         |BWTWsELGx1iyaw==;""".stripMargin.replaceAll("\n", "")
+    val EXPECTED_AUTHENTICATION_HEADER_V1: String = s"""MWS $CLIENT_REQUEST_BINARY_APP_UUID:${TestFixtures.SIGNATURE_V1_BINARY}"""
+    val EXPECTED_AUTHENTICATION_HEADER_V2: String = s"""MWSV2 $CLIENT_REQUEST_BINARY_APP_UUID:${TestFixtures.SIGNATURE_V2_BINARY};"""
     val headers: Map[String, String] =
-      mAuthSigner.generateRequestHeaders("PUT", CLIENT_REQUEST_BINARY_PATH, FixturesLoader.getBinaryFileBody, CLIENT_REQUEST_QUERY_PARAMETERS).asScala.toMap
+      mAuthSigner.generateRequestHeaders("PUT", CLIENT_REQUEST_BINARY_PATH, TestFixtures.BINARY_FILE_BODY, CLIENT_REQUEST_QUERY_PARAMETERS).asScala.toMap
     headers(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTHENTICATION_HEADER_V1
     headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTHENTICATION_HEADER_V2
     headers(MAuthRequest.X_MWS_TIME_HEADER_NAME) shouldBe String.valueOf(CLIENT_REQUEST_BINARY_EPOCH_TIME)
     headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe String.valueOf(CLIENT_REQUEST_BINARY_EPOCH_TIME)
+  }
+
+  it should "generated headers with inputstream payload for V2 only" in {
+    val uuid = UUID.fromString(TestFixtures.APP_UUID_V2)
+    val inputStream = new java.io.ByteArrayInputStream(TestFixtures.BINARY_FILE_BODY)
+    val mAuthSigner = new DefaultSigner(uuid, TestFixtures.PRIVATE_KEY_2, mockEpochTimeProvider, SignerConfiguration.ALL_SIGN_VERSIONS)
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TestFixtures.EPOCH_TIME.toLong)
+
+    val EXPECTED_AUTHENTICATION_HEADER_V2: String = s"""MWSV2 ${TestFixtures.APP_UUID_V2}:${TestFixtures.SIGNATURE_V2_BINARY};"""
+    val headers: Map[String, String] =
+      mAuthSigner.generateRequestHeaders("PUT", TestFixtures.REQUEST_PATH_V2, inputStream, TestFixtures.REQUEST_QUERY_PARAMETERS_V2).asScala.toMap
+    headers.size shouldEqual 2
+    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTHENTICATION_HEADER_V2
+    headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe TestFixtures.EPOCH_TIME
+  }
+
+  "SignerConfiguration" should "correctly get sign versions" in {
+    val expected_sign_versions = SignerConfiguration.ALL_SIGN_VERSIONS
+    var signerConfig = new SignerConfiguration(testUUID, TestFixtures.PRIVATE_KEY_1, "v1,v2")
+    signerConfig.getSignVersions shouldBe expected_sign_versions
+    signerConfig = new SignerConfiguration(testUUID, TestFixtures.PRIVATE_KEY_1, " V1 , V2 ")
+    signerConfig.getSignVersions shouldBe expected_sign_versions
+  }
+
+  it should "get the supported sign versions only" in {
+    val signerConfig = new SignerConfiguration(testUUID, TestFixtures.PRIVATE_KEY_1, "dummy, v2, v20")
+    signerConfig.getSignVersions shouldBe java.util.Arrays.asList(MAuthVersion.MWSV2)
+
+    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
+    val mAuthSigner = new DefaultSigner(signerConfig.getAppUUID, signerConfig.getPrivateKey, mockEpochTimeProvider, signerConfig.getSignVersions)
+    val headers: Map[String, String] = mAuthSigner.generateRequestHeaders("GET", "/", "".getBytes, "").asScala.toMap
+    headers(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) matches AUTHENTICATION_HEADER_PATTERN_V2
+    headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe String.valueOf(TEST_EPOCH_TIME)
+  }
+
+  it should "be default sign version" in {
+    val expected_sign_versions = SignerConfiguration.DEFAULT_SIGN_VERSION
+    SignerConfiguration.getSignVersions(null) shouldBe expected_sign_versions
+    SignerConfiguration.getSignVersions("") shouldBe expected_sign_versions
+    SignerConfiguration.getSignVersions("v10, v20, v30") shouldBe expected_sign_versions
   }
 
 }

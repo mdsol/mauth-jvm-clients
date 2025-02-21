@@ -1,23 +1,17 @@
 package com.mdsol.mauth
 
 import java.nio.charset.StandardCharsets
-import java.security.Security
 
 import com.mdsol.mauth.test.utils.FakeMAuthServer.EXISTING_CLIENT_APP_UUID
-import com.mdsol.mauth.test.utils.FixturesLoader
-import com.mdsol.mauth.util.EpochTimeProvider
-import org.apache.http.client.methods.{HttpGet, HttpPost, HttpPut}
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.flatspec.AnyFlatSpec
+import com.mdsol.mauth.test.utils.TestFixtures
+import org.apache.http.client.methods.{HttpGet, HttpPost}
 
-trait RequestAuthenticatorBaseSpec extends AnyFlatSpec with BeforeAndAfterAll with MockFactory {
+trait RequestAuthenticatorBaseSpec {
 
   val CLIENT_X_MWS_TIME_HEADER_VALUE = "1444672122"
   val CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE = "1444748974"
   val CLIENT_NO_BODY_X_MWS_TIME_HEADER_VALUE = "1424700000"
-  val PUBLIC_KEY: String = FixturesLoader.getPublicKey
+  val PUBLIC_KEY: String = TestFixtures.PUBLIC_KEY_1
   val REQUEST_VALIDATION_TIMEOUT_SECONDS = 300L
   val CLIENT_REQUEST_SIGNATURE: String =
     """fFQzIOo4S1MxxmEDB9v7v0IYNytnS3I5aHNeJfEfFe1v1gTE/cH36BfLG/zp
@@ -62,18 +56,11 @@ trait RequestAuthenticatorBaseSpec extends AnyFlatSpec with BeforeAndAfterAll wi
       |2rBY2KRNJmPBaAV5ss30FC146jfyg7b8I9fenyauaw==""".stripMargin
   val CLIENT_REQUEST_AUTHENTICATION_HEADER_V2: String = "MWSV2 " + EXISTING_CLIENT_APP_UUID.toString + ":" + CLIENT_REQUEST_SIGNATURE_V2 + ";"
 
-  val mockEpochTimeProvider: EpochTimeProvider = mock[EpochTimeProvider]
-
   private val CLIENT_REQUEST_HEADERS = new java.util.HashMap[String, String]()
   CLIENT_REQUEST_HEADERS.put(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, CLIENT_REQUEST_AUTHENTICATION_HEADER)
   CLIENT_REQUEST_HEADERS.put(MAuthRequest.X_MWS_TIME_HEADER_NAME, CLIENT_X_MWS_TIME_HEADER_VALUE)
   CLIENT_REQUEST_HEADERS.put(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME, CLIENT_REQUEST_AUTHENTICATION_HEADER_V2)
   CLIENT_REQUEST_HEADERS.put(MAuthRequest.MCC_TIME_HEADER_NAME, CLIENT_MCC_TIME_HEADER_VALUE)
-
-  override protected def beforeAll(): Unit = {
-    Security.addProvider(new BouncyCastleProvider)
-    ()
-  }
 
   def getSimpleRequest: MAuthRequest = {
     MAuthRequest.Builder.get
@@ -138,25 +125,30 @@ trait RequestAuthenticatorBaseSpec extends AnyFlatSpec with BeforeAndAfterAll wi
       .build
   }
 
-  val CLIENT_REQUEST_BINARY_APP_UUID = "5ff4257e-9c16-11e0-b048-0026bbfffe5e"
-  val CLIENT_X_MWS_TIME_HEADER_BINARY_VALUE = "1309891855"
-  val CLIENT_REQUEST_BINARY_PATH = "/v1/pictures"
-  val PUBLIC_KEY2: String = FixturesLoader.getPublicKey2
-  val CLIENT_REQUEST_SIGNATURE_BINARY_V1: String =
-    ("hDKYDRnzPFL2gzsru4zn7c7E7KpEvexeF4F5IR+puDxYXrMmuT2/fETZty5NkG" +
-      "GTZQ1nI6BTYGQGsU/73TkEAm7SvbJZcB2duLSCn8H5D0S1cafory1gnL1TpMP" +
-      "BlY8J/lq/Mht2E17eYw+P87FcpvDShINzy8GxWHqfquBqO8ml4XtirVEtAlI0" +
-      "xlkAsKkVq4nj7rKZUMS85mzogjUAJn3WgpGCNXVU+EK+qElW5QXk3I9uozByZ" +
-      "hwBcYt5Cnlg15o99+53wKzMMmdvFmVjA1DeUaSO7LMIuw4ZNLVdDcHJx7ZSpA" +
-      "KZ/EA34u1fYNECFcw5CSKOjdlU7JFr4o8Phw==").stripMargin
-  val CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER: String = "MWS " + CLIENT_REQUEST_BINARY_APP_UUID + ":" + CLIENT_REQUEST_SIGNATURE_BINARY_V1
+  val CLIENT_REQUEST_BINARY_APP_UUID = TestFixtures.APP_UUID_V2
+  val CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE = TestFixtures.EPOCH_TIME
+  val PUBLIC_KEY2: String = TestFixtures.PUBLIC_KEY_2
+  val CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER_V1: String = "MWS " + TestFixtures.APP_UUID_V2 + ":" + TestFixtures.SIGNATURE_V1_BINARY
   def getRequestWithBinaryBodyV1: MAuthRequest = {
     MAuthRequest.Builder.get
-      .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER)
-      .withTimeHeaderValue(CLIENT_X_MWS_TIME_HEADER_BINARY_VALUE)
-      .withHttpMethod(HttpPut.METHOD_NAME)
-      .withMessagePayload(FixturesLoader.getBinaryFileBody)
-      .withResourcePath(CLIENT_REQUEST_BINARY_PATH)
+      .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER_V1)
+      .withTimeHeaderValue(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE)
+      .withHttpMethod(TestFixtures.REQUEST_METHOD_V2)
+      .withMessagePayload(TestFixtures.BINARY_FILE_BODY)
+      .withResourcePath(TestFixtures.REQUEST_PATH_V2)
+      .withQueryParameters(TestFixtures.REQUEST_QUERY_PARAMETERS_V2)
+      .build
+  }
+
+  val CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER_V2: String = "MWSV2 " + CLIENT_REQUEST_BINARY_APP_UUID + ":" + TestFixtures.SIGNATURE_V2_BINARY
+  def getRequestWithBinaryBodyV2: MAuthRequest = {
+    MAuthRequest.Builder.get
+      .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER_V2)
+      .withTimeHeaderValue(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE)
+      .withHttpMethod(TestFixtures.REQUEST_METHOD_V2)
+      .withMessagePayload(TestFixtures.BINARY_FILE_BODY)
+      .withResourcePath(TestFixtures.REQUEST_PATH_V2)
+      .withQueryParameters(TestFixtures.REQUEST_QUERY_PARAMETERS_V2)
       .build
   }
 
@@ -178,6 +170,38 @@ trait RequestAuthenticatorBaseSpec extends AnyFlatSpec with BeforeAndAfterAll wi
       .withHttpMethod(CLIENT_REQUEST_METHOD)
       .withMauthHeaders(CLIENT_REQUEST_HEADERS2)
       .withMessagePayload(CLIENT_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))
+      .withResourcePath(CLIENT_REQUEST_PATH)
+      .withQueryParameters("")
+      .build
+  }
+
+  def getRequestWithStreamBodyV1: MAuthRequest = {
+    MAuthRequest.Builder.get
+      .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER_V1)
+      .withTimeHeaderValue(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE)
+      .withHttpMethod(TestFixtures.REQUEST_METHOD_V2)
+      .withBodyInputStream(new java.io.ByteArrayInputStream(TestFixtures.BINARY_FILE_BODY))
+      .withResourcePath(TestFixtures.REQUEST_PATH_V2)
+      .withQueryParameters(TestFixtures.REQUEST_QUERY_PARAMETERS_V2)
+      .build
+  }
+
+  def getRequestWithStreamBodyV2: MAuthRequest = {
+    MAuthRequest.Builder.get
+      .withAuthenticationHeaderValue(CLIENT_REQUEST_AUTHENTICATION_BINARY_HEADER_V2)
+      .withTimeHeaderValue(CLIENT_REQUEST_BINARY_TIME_HEADER_VALUE)
+      .withHttpMethod(TestFixtures.REQUEST_METHOD_V2)
+      .withBodyInputStream(new java.io.ByteArrayInputStream(TestFixtures.BINARY_FILE_BODY))
+      .withResourcePath(TestFixtures.REQUEST_PATH_V2)
+      .withQueryParameters(TestFixtures.REQUEST_QUERY_PARAMETERS_V2)
+      .build
+  }
+
+  def getRequestWithStreamBodyAndWrongV2Signature: MAuthRequest = {
+    MAuthRequest.Builder.get
+      .withHttpMethod(CLIENT_REQUEST_METHOD)
+      .withMauthHeaders(CLIENT_REQUEST_HEADERS2)
+      .withBodyInputStream(new java.io.ByteArrayInputStream(CLIENT_REQUEST_BODY.getBytes(StandardCharsets.UTF_8)))
       .withResourcePath(CLIENT_REQUEST_PATH)
       .withQueryParameters("")
       .build
