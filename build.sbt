@@ -128,7 +128,7 @@ lazy val `mauth-signer-http4s-022` = scalaModuleProject("mauth-signer-http4s-022
     libraryDependencies ++=
       Dependencies.provided(http4sClient022) ++
         Dependencies.compile(enumeratum) ++
-        Dependencies.test(munitCatsEffect2, http4sDsl022)
+        Dependencies.test(munitCatsEffect, http4sDsl022)
   )
 
 // A separate module to sign and send sttp request using akka-http backend

@@ -6,11 +6,11 @@ import com.mdsol.mauth.RequestSigner
 import com.mdsol.mauth.models.UnsignedRequest
 import org.http4s.Request
 import org.http4s.client.Client
-
+import org.http4s.EntityDecoder.byteArrayDecoder
 import java.net.URI
 
 object MAuthSigner {
-  def apply[F[_]: Sync](signer: RequestSigner)(client: Client[F]): Client[F] =
+  def apply[F[_]: Concurrent](signer: RequestSigner)(client: Client[F]): Client[F] =
     Client { req =>
       for {
         req <- Resource.eval(req.as[Array[Byte]].flatMap { byteArray =>

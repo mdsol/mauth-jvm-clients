@@ -24,7 +24,7 @@ class MauthProtocolSuiteSpec extends AnyFlatSpec with BeforeAndAfterAll with Mat
 
   behavior of "MauthProtocolSuiteSpec"
 
-  val signingConfig = ProtocolTestSuiteHelper.SIGNING_CONFIG
+  lazy val signingConfig: SigningConfig = ProtocolTestSuiteHelper.SIGNING_CONFIG
   if (signingConfig == null) {
     fail("Signing Configuration is not available.")
   }
@@ -33,13 +33,13 @@ class MauthProtocolSuiteSpec extends AnyFlatSpec with BeforeAndAfterAll with Mat
     fail("Public Key is not available.")
   }
 
-  val publicKey = MAuthKeysHelper.getPublicKeyFromString(ProtocolTestSuiteHelper.PUBLIC_KEY)
-  val uuid = UUID.fromString(signingConfig.getAppUuid)
-  val privateKey = getPrivateKeyFromString(signingConfig.getPrivateKey)
+  private val publicKey = MAuthKeysHelper.getPublicKeyFromString(ProtocolTestSuiteHelper.PUBLIC_KEY)
+  private val uuid = UUID.fromString(signingConfig.getAppUuid)
+  private val privateKey = getPrivateKeyFromString(signingConfig.getPrivateKey)
   val mAuthSigner = new DefaultSigner(uuid, privateKey, mockEpochTimeProvider, java.util.Arrays.asList(MAuthVersion.MWSV2))
 
   // run the tests
-  val testSpecifications = ProtocolTestSuiteHelper.TEST_SPECIFICATIONS
+  private val testSpecifications = ProtocolTestSuiteHelper.TEST_SPECIFICATIONS
   testSpecifications.foreach { testSpec =>
     testSpec.getType match {
       case CaseType.AUTHENTICATION_ONLY =>

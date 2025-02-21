@@ -26,7 +26,6 @@ object BuildSettings {
       "-Wconf:msg=.*(Uns|S)ignedRequest|signRequest|(decrypt|encrypt)Signature|" +
         "generateRequestHeaders|extract(MwsTime|MAuth)Header|" +
         "generateDigestedMessageV1|generateUnencryptedSignature:s",
-      "-Wnonunit-statement",
       "-Wconf:msg=type Seq in package scala has changed semantics:s",
       "-Wconf:msg=type IndexedSeq in package scala has changed semantics:s",
       "-Wconf:msg=constructor modifiers are assumed by synthetic:s",
@@ -35,8 +34,26 @@ object BuildSettings {
       "-Wconf:msg=which is not part of the implicit scope in Scala 3:s",
       "-Wconf:msg=Synthetic case companion used as a function.:s",
       "-Wconf:cat=deprecation:s"
-    ), // Stop these being errors, they are fine.
-    Test / scalacOptions -= "-Wnonunit-statement",
+    ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, n)) if n >= 13 =>
+        List(
+          "-Wnonunit-statement",
+          // other scalac options for 2.13+
+        )
+      case _ =>
+        List(
+        )
+    }), // Stop these being errors, they are fine.
+    Test / scalacOptions --= (CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, n)) if n >= 13 =>
+        List(
+          "-Wnonunit-statement",
+          // other scalac options for 2.13+
+        )
+      case _ =>
+        List(
+        )
+    }),
     scalacOptions --= {
       if (sys.env.contains("CI"))
         Seq.empty
