@@ -42,7 +42,7 @@ object BuildSettings {
         Seq.empty
       else
         Seq("-Xfatal-warnings", "-Xlint:unused")
-    },
+    }
   )
 
   lazy val noPublishSettings = Seq(
