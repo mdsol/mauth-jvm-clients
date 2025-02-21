@@ -6,7 +6,7 @@ import sbt._
 object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
   val scala212 = "2.12.20"
-  val scala213 = "2.13.15"
+  val scala213 = "2.13.16"
 
   lazy val basicSettings = Seq(
     homepage := Some(new URI("https://github.com/mdsol/mauth-jvm-clients").toURL),
