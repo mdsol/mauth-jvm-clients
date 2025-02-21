@@ -37,7 +37,7 @@ object BuildSettings {
     ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, n)) if n >= 13 =>
         List(
-          "-Wnonunit-statement",
+          "-Wnonunit-statement"
           // other scalac options for 2.13+
         )
       case _ =>
@@ -47,7 +47,7 @@ object BuildSettings {
     Test / scalacOptions --= (CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, n)) if n >= 13 =>
         List(
-          "-Wnonunit-statement",
+          "-Wnonunit-statement"
           // other scalac options for 2.13+
         )
       case _ =>
