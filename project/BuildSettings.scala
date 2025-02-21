@@ -46,11 +46,19 @@ object BuildSettings {
     }), // Stop these being errors, they are fine.
     Test / scalacOptions ++=
       List(
-        "-Wnonunit-statement",
         "-Xlint:unused",
         "-Wconf:msg=unused value of type.*:s",
         "-Wconf:cat=unused:s"
-      ),
+      ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, n)) if n >= 13 =>
+          List(
+            "-Wnonunit-statement"
+            // other scalac options for 2.13+
+          )
+        case _ =>
+          List(
+          )
+      }),
     scalacOptions --= {
       if (sys.env.contains("CI"))
         Seq.empty
