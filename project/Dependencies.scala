@@ -13,7 +13,7 @@ object Dependencies extends DependencyUtils {
     val log4cats = "2.7.0"
     val circe = "0.14.10"
     val circeGenericExtras = "0.14.4"
-    val http4s022 = "0.23.30"
+    val http4s022 = "0.22.15"
   }
 
   val akkaHttp: ModuleID = "com.typesafe.akka"                          %% "akka-http"               % Version.akkaHttp
