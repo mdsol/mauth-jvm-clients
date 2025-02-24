@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets
 
 import com.mdsol.mauth.test.utils.FakeMAuthServer.EXISTING_CLIENT_APP_UUID
 import com.mdsol.mauth.test.utils.TestFixtures
-import org.apache.http.client.methods.{HttpGet, HttpPost}
+import org.apache.hc.client5.http.classic.methods.{HttpGet, HttpPost}
 
 trait RequestAuthenticatorBaseSpec {
 

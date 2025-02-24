@@ -14,7 +14,7 @@ import com.mdsol.mauth.http.Implicits._
 import com.mdsol.mauth.models.{UnsignedRequest => NewUnsignedRequest}
 import com.mdsol.mauth.test.utils.TestFixtures._
 import com.mdsol.mauth.util.EpochTimeProvider
-import org.apache.http.HttpStatus
+import org.apache.hc.core5.http.HttpStatus
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.PatienceConfiguration.Timeout
