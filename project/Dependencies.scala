@@ -64,6 +64,7 @@ object Dependencies extends DependencyUtils {
   val scalaTest: ModuleID = "org.scalatest"             %% "scalatest"           % "3.2.19"
   val wiremock: ModuleID = "com.github.tomakehurst"      % "wiremock"            % "3.0.1"
   val munitCatsEffect: ModuleID = "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"
+  val munitCatsEffect2: ModuleID = "org.typelevel"      %% "munit-cats-effect-2" % "1.0.7"
   val log4catsNoop: ModuleID = "org.typelevel"          %% "log4cats-noop"       % Version.log4cats
   val scalaCacheCaffeine: ModuleID = "com.github.cb372" %% "scalacache-caffeine" % "1.0.0-M6"
 
