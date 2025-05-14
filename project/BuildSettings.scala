@@ -67,10 +67,6 @@ object BuildSettings {
     }
   )
 
-  lazy val noPublishSettings = Seq(
-    publish / skip := true
-  )
-
   lazy val publishSettings = Seq(
     licenses := Seq("MDSOL" -> url("https://github.com/mdsol/mauth-jvm-clients/blob/master/LICENSE.txt")),
     scmInfo := Some(

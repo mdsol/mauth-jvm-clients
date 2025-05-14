@@ -49,7 +49,7 @@ lazy val `mauth-common` = javaModuleProject("mauth-common")
 
 lazy val `mauth-test-utils` = javaModuleProject("mauth-test-utils")
   .settings(
-    noPublishSettings,
+    publishSettings,
     libraryDependencies ++=
       Dependencies.compile(commonsIO, logbackClassic, wiremock).map(withExclusions)
   )
