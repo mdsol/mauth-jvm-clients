@@ -6,7 +6,7 @@ import java.util.UUID
 
 import org.scalatest.wordspec.AnyWordSpec
 import sttp.model.Uri
-import sttp.client3._
+        import sttp.client4._
 import com.mdsol.mauth.test.utils.TestFixtures._
 import org.scalatest.matchers.should.Matchers
 import MAuthSttpSignerSpec._
@@ -64,7 +64,7 @@ class MAuthSttpSignerSpec extends AnyWordSpec with Matchers {
       }
 
       "add authentication header to a request for V2 with the encoded-normalize path" in {
-        import sttp.client3._
+import sttp.client4._
 
         val epochTimeProvider: EpochTimeProvider = () => EPOCH_TIME.toLong
 
@@ -122,7 +122,7 @@ class MAuthSttpSignerSpec extends AnyWordSpec with Matchers {
 }
 
 object MAuthSttpSignerSpec {
-  implicit class SttpRequestExtensions[T](val req: Request[T, Any]) extends AnyVal {
+  implicit class SttpRequestExtensions[T](val req: Request[T]) extends AnyVal {
     def getHeaderValue(str: String): Option[String] =
       req.headers.find(_.is(str)).map(_.value)
 

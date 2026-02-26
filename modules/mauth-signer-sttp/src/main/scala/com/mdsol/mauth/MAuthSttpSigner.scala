@@ -7,11 +7,11 @@ import java.util.UUID
 import com.mdsol.mauth.util.EpochTimeProvider
 
 import scala.jdk.CollectionConverters._
-import sttp.client3.{BasicRequestBody, ByteArrayBody, ByteBufferBody, FileBody, InputStreamBody, MultipartBody, NoBody, Request, StreamBody, StringBody}
+import sttp.client4.{BasicMultipartBody, ByteArrayBody, ByteBufferBody, FileBody, InputStreamBody, NoBody, Request, StringBody}
 import sttp.model.Header
 
 trait MAuthSttpSigner {
-  def signSttpRequest[T](request: Request[T, Any]): Request[T, Any]
+  def signSttpRequest[T](request: Request[T]): Request[T]
 }
 
 /** Sign an sttp request by adding MAuth headers to the request */
@@ -21,23 +21,18 @@ class MAuthSttpSignerImpl(signer: Signer) extends MAuthSttpSigner {
     this(new DefaultSigner(appUuid, privateKey, epochTimeProvider, signVersions))
   }
 
-  def signSttpRequest[T](request: Request[T, Any]): Request[T, Any] = {
+  def signSttpRequest[T](request: Request[T]): Request[T] = {
     val bodyBytes: Array[Byte] = request.body match {
       case NoBody => Array.empty[Byte]
-      case body: BasicRequestBody =>
-        body match {
-          case strBody: StringBody           => strBody.s.getBytes(StandardCharsets.UTF_8)
-          case ByteArrayBody(bytes, _)       => bytes
-          case ByteBufferBody(byteBuffer, _) => byteBuffer.array()
-          // $COVERAGE-OFF$
-          case _: InputStreamBody =>
-            throw new IllegalArgumentException("Request with InputStream body not supported for mauth signing")
-          case _: FileBody =>
-            throw new IllegalArgumentException("MAuth signing not yet implemented for request with multipart body")
-        }
-      case StreamBody(_) =>
-        throw new IllegalArgumentException("Request with stream body not supported for mauth signing")
-      case MultipartBody(_) =>
+      case strBody: StringBody           => strBody.s.getBytes(StandardCharsets.UTF_8)
+      case ByteArrayBody(bytes, _)       => bytes
+      case ByteBufferBody(byteBuffer, _) => byteBuffer.array()
+      // $COVERAGE-OFF$
+      case _: InputStreamBody =>
+        throw new IllegalArgumentException("Request with InputStream body not supported for mauth signing")
+      case _: FileBody =>
+        throw new IllegalArgumentException("MAuth signing not yet implemented for request with file body")
+      case _: BasicMultipartBody =>
         throw new IllegalArgumentException("MAuth signing not yet implemented for request with multipart body")
       // $COVERAGE-ON$
     }

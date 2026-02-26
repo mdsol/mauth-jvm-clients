@@ -14,10 +14,9 @@ import org.scalatest.Inside._
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.wordspec.AsyncWordSpec
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
-import sttp.capabilities.WebSockets
 import sttp.capabilities.akka.AkkaStreams
-import sttp.client3.akkahttp.AkkaHttpBackend
-import sttp.client3.{basicRequest, SttpBackend}
+import sttp.client4.akkahttp.AkkaHttpBackend
+import sttp.client4.{basicRequest, WebSocketStreamBackend}
 import sttp.model.{MediaType, Uri}
 
 import java.net.URI
@@ -34,7 +33,7 @@ class SttpAkkaMAuthRequestSenderSpec extends AsyncWordSpec with BeforeAndAfter w
   val wiremockServer: WireMockServer = new WireMockServer(wireMockConfig.dynamicPort())
 
   val actorSystem = ActorSystem(this.getClass.getSimpleName)
-  val sttpBackend: SttpBackend[Future, AkkaStreams with WebSockets] = AkkaHttpBackend.usingActorSystem(actorSystem)
+  val sttpBackend: WebSocketStreamBackend[Future, AkkaStreams] = AkkaHttpBackend.usingActorSystem(actorSystem)
 
   "correctly send auth signatures and content-type header" in {
     val req = basicRequest

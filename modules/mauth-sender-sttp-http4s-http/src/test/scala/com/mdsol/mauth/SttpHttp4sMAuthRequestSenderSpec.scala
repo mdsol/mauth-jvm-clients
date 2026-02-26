@@ -16,8 +16,8 @@ import org.scalatest.Inside._
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.wordspec.AsyncWordSpec
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
-import sttp.client3.basicRequest
-import sttp.client3.http4s.Http4sBackend
+import sttp.client4.basicRequest
+import sttp.client4.http4s.Http4sBackend
 import sttp.model.{MediaType, Uri}
 
 import java.net.URI
