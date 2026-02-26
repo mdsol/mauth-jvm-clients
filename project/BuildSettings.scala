@@ -33,7 +33,8 @@ object BuildSettings {
       "-Wconf:msg=access modifiers for `apply` method are copied from the case class constructor under:s",
       "-Wconf:msg=which is not part of the implicit scope in Scala 3:s",
       "-Wconf:msg=Synthetic case companion used as a function.:s",
-      "-Wconf:cat=deprecation:s"
+      "-Wconf:cat=deprecation:s",
+      "-Wconf:origin=scala\\.collection\\.compat\\..*&cat=unused:s"
     ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, n)) if n >= 13 =>
         List(
