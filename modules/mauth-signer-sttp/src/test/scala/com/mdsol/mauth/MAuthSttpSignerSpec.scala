@@ -6,7 +6,7 @@ import java.util.UUID
 
 import org.scalatest.wordspec.AnyWordSpec
 import sttp.model.Uri
-        import sttp.client4._
+import sttp.client4._
 import com.mdsol.mauth.test.utils.TestFixtures._
 import org.scalatest.matchers.should.Matchers
 import MAuthSttpSignerSpec._
@@ -64,7 +64,7 @@ class MAuthSttpSignerSpec extends AnyWordSpec with Matchers {
       }
 
       "add authentication header to a request for V2 with the encoded-normalize path" in {
-import sttp.client4._
+        import sttp.client4._
 
         val epochTimeProvider: EpochTimeProvider = () => EPOCH_TIME.toLong
 

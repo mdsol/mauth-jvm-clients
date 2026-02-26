@@ -57,8 +57,7 @@ class MauthPublicKeyProvider[F[_]: Async: Logger](configuration: AuthenticatorCo
             (map, existing.get.rethrow)
           case None =>
             // We are the first — register our deferred and do the fetch
-            val action = doFetch(appUUID)
-              .attempt
+            val action = doFetch(appUUID).attempt
               .flatTap(result => newDeferred.complete(result))
               .flatTap(_ => inFlight.update(_ - appUUID))
               .rethrow

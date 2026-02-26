@@ -23,7 +23,7 @@ class MAuthSttpSignerImpl(signer: Signer) extends MAuthSttpSigner {
 
   def signSttpRequest[T](request: Request[T]): Request[T] = {
     val bodyBytes: Array[Byte] = request.body match {
-      case NoBody => Array.empty[Byte]
+      case NoBody                        => Array.empty[Byte]
       case strBody: StringBody           => strBody.s.getBytes(StandardCharsets.UTF_8)
       case ByteArrayBody(bytes, _)       => bytes
       case ByteBufferBody(byteBuffer, _) => byteBuffer.array()
