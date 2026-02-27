@@ -23,6 +23,7 @@ import io.circe.{Decoder, HCursor}
 import org.http4s.circe.CirceEntityDecoder._
 import org.typelevel.log4cats.Logger
 import cats.effect.implicits._
+import scala.concurrent.CancellationException
 
 class MauthPublicKeyProvider[F[_]: Async: Logger](configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, val client: Client[F])(implicit
   val cache: Cache[F, UUID, F[Option[PublicKey]]]
@@ -59,6 +60,10 @@ class MauthPublicKeyProvider[F[_]: Async: Logger](configuration: AuthenticatorCo
             // We are the first — register our deferred and do the fetch
             val action = doFetch(appUUID).attempt
               .flatTap(result => newDeferred.complete(result))
+              .onCancel(
+                newDeferred.complete(Left(new CancellationException("Fetch cancelled"))).void *>
+                  inFlight.update(_ - appUUID)
+              )
               .flatTap(_ => inFlight.update(_ - appUUID))
               .rethrow
             (map + (appUUID -> newDeferred), action)
