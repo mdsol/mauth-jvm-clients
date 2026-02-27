@@ -7,7 +7,6 @@ import org.http4s.{headers, Header, Headers, Method, Request, Uri}
 import org.typelevel.ci.CIString
 import cats.syntax.all._
 
-import scala.annotation.nowarn
 import scala.collection.immutable
 
 object Implicits {
@@ -41,7 +40,6 @@ object Implicits {
         .get(headers.`Content-Type`.toString)
         .flatMap(str => `Content-Type`.parse(str).toOption)
 
-    @nowarn("msg=.*Unused import.*") // compat import only needed for 2.12
     private def removeContentTypeFromHeaders(requestHeaders: Map[String, String]): Map[String, String] = {
       import scala.collection.compat._
       requestHeaders.view.filterKeys(_ != headers.`Content-Type`.toString).toMap

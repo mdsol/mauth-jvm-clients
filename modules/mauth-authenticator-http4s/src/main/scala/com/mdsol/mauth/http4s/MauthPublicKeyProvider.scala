@@ -1,7 +1,7 @@
 package com.mdsol.mauth.http4s
 
 import cats.ApplicativeThrow
-import cats.effect.{Async, Outcome, Sync}
+import cats.effect.{Async, Deferred, Outcome, Ref, Sync}
 import com.mdsol.mauth.http4s.client.Implicits.NewSignedRequestOps
 import com.mdsol.mauth.models.UnsignedRequest
 import com.mdsol.mauth.scaladsl.utils.ClientPublicKeyProvider
@@ -23,37 +23,77 @@ import io.circe.{Decoder, HCursor}
 import org.http4s.circe.CirceEntityDecoder._
 import org.typelevel.log4cats.Logger
 import cats.effect.implicits._
+import scala.concurrent.CancellationException
 
 class MauthPublicKeyProvider[F[_]: Async: Logger](configuration: AuthenticatorConfiguration, signer: MAuthRequestSigner, val client: Client[F])(implicit
   val cache: Cache[F, UUID, F[Option[PublicKey]]]
 ) extends ClientPublicKeyProvider[F] {
+
+  // In-flight request map: ensures only one HTTP request per UUID is executing at a time.
+  // This guards against the race in scalacache's non-atomic cachingF where concurrent callers
+  // can all see a cache miss and independently trigger HTTP requests.
+  private val inFlight: Ref[F, Map[UUID, Deferred[F, Either[Throwable, Option[PublicKey]]]]] =
+    Ref.unsafe(Map.empty)
 
   /** Returns the associated public key for a given application UUID.
     *
     * @param appUUID , UUID of the application for which we want to retrieve its public key.
     * @return { @link PublicKey} registered in MAuth for the application with given appUUID.
     */
-  override def getPublicKey(appUUID: UUID): F[Option[PublicKey]] = cache
-    .cachingF(appUUID)(Some(configuration.getTimeToLive.seconds)) {
-      Sync[F]
-        .defer {
-          val uri = new URI(configuration.getBaseUrl + getRequestUrlPath(appUUID))
-          val signedRequest = signer.signRequest(UnsignedRequest.noBody("GET", uri, headers = Map.empty))
-          signedRequest
-            .toHttp4sRequest[F]
-            .flatMap(req => client.run(req).use(retrievePublicKey))
-        }
-        .guaranteeCase {
-          case Outcome.Succeeded(res) =>
-            res.flatMap {
-              case Some(_) => Async[F].unit
-              case None    => cache.remove(appUUID)
-            }
-          case _ => cache.remove(appUUID)
-        }
-        .memoize
+  override def getPublicKey(appUUID: UUID): F[Option[PublicKey]] =
+    cache.get(appUUID).flatMap {
+      case Some(cachedEffect) => cachedEffect
+      case None               => singleFlightFetch(appUUID)
     }
-    .flatten
+
+  /** Ensures only one in-flight request per UUID. Concurrent callers for the same UUID
+    * will wait on the same Deferred rather than making duplicate HTTP requests.
+    */
+  private def singleFlightFetch(appUUID: UUID): F[Option[PublicKey]] =
+    Deferred[F, Either[Throwable, Option[PublicKey]]].flatMap { newDeferred =>
+      inFlight.modify { map =>
+        map.get(appUUID) match {
+          case Some(existing) =>
+            // Another fiber is already fetching this key — wait on it
+            (map, existing.get.rethrow)
+          case None =>
+            // We are the first — register our deferred and do the fetch
+            val action = doFetch(appUUID).attempt
+              .flatTap(result => newDeferred.complete(result))
+              .onCancel(
+                newDeferred.complete(Left(new CancellationException("Fetch cancelled"))).void *>
+                  inFlight.update(_ - appUUID)
+              )
+              .flatTap(_ => inFlight.update(_ - appUUID))
+              .rethrow
+            (map + (appUUID -> newDeferred), action)
+        }
+      }.flatten
+    }
+
+  /** Performs the actual HTTP fetch and stores the result in the cache. */
+  private def doFetch(appUUID: UUID): F[Option[PublicKey]] =
+    cache
+      .cachingF(appUUID)(Some(configuration.getTimeToLive.seconds)) {
+        Sync[F]
+          .defer {
+            val uri = new URI(configuration.getBaseUrl + getRequestUrlPath(appUUID))
+            val signedRequest = signer.signRequest(UnsignedRequest.noBody("GET", uri, headers = Map.empty))
+            signedRequest
+              .toHttp4sRequest[F]
+              .flatMap(req => client.run(req).use(retrievePublicKey))
+          }
+          .guaranteeCase {
+            case Outcome.Succeeded(res) =>
+              res.flatMap {
+                case Some(_) => Async[F].unit
+                case None    => cache.remove(appUUID)
+              }
+            case _ => cache.remove(appUUID)
+          }
+          .memoize
+      }
+      .flatten
 
   private def retrievePublicKey(mauthPublicKeyFetcher: Response[F]): F[Option[PublicKey]] = {
     mauthPublicKeyFetcher.status match {

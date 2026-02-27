@@ -7,11 +7,11 @@ object Dependencies extends DependencyUtils {
     val akka: String = "2.6.20" // Do not update beyond 2.6.* due to license changes
     val akkaHttp: String = "10.2.10" // Do not update beyond 10.2.* due to license changes
     val logback = "1.5.16"
-    val sttp = "3.10.3"
-    val http4s = "0.23.30"
-    val enumeratum = "1.7.5"
-    val log4cats = "2.7.0"
-    val circe = "0.14.10"
+    val sttp = "4.0.19"
+    val http4s = "0.23.33"
+    val enumeratum = "1.9.5"
+    val log4cats = "2.7.1"
+    val circe = "0.14.15"
     val circeGenericExtras = "0.14.4"
     val http4s022 = "0.22.15"
   }
@@ -31,12 +31,12 @@ object Dependencies extends DependencyUtils {
   val typeSafeConfig: ModuleID = "com.typesafe"                          % "config"                  % "1.4.3"
   val scalaCacheCore: ModuleID = "com.github.cb372"                     %% "scalacache-core"         % "1.0.0-M6"
   val scalaLogging: ModuleID = "com.typesafe.scala-logging"             %% "scala-logging"           % "3.9.5"
-  val catsEffect: ModuleID = "org.typelevel"                            %% "cats-effect"             % "3.5.7"
-  val sttp: ModuleID = "com.softwaremill.sttp.client3"                  %% "core"                    % Version.sttp
-  val sttpAkkaHttpBackend: ModuleID = "com.softwaremill.sttp.client3"   %% "akka-http-backend"       % Version.sttp
-  val sttpHttp4sHttpBackend: ModuleID = "com.softwaremill.sttp.client3" %% "http4s-backend"          % Version.sttp
-  val sttpFs2: ModuleID = "com.softwaremill.sttp.shared"                %% "fs2"                     % "1.4.2"
-  val scalaLibCompat: ModuleID = "org.scala-lang.modules"               %% "scala-collection-compat" % "2.13.0"
+  val catsEffect: ModuleID = "org.typelevel"                            %% "cats-effect"             % "3.6.3"
+  val sttp: ModuleID = "com.softwaremill.sttp.client4"                  %% "core"                    % Version.sttp
+  val sttpAkkaHttpBackend: ModuleID = "com.softwaremill.sttp.client4"   %% "akka-http-backend"       % Version.sttp
+  val sttpHttp4sHttpBackend: ModuleID = "com.softwaremill.sttp.client4" %% "http4s-backend"          % Version.sttp
+  val sttpFs2: ModuleID = "com.softwaremill.sttp.shared"                %% "fs2"                     % "1.5.0"
+  val scalaLibCompat: ModuleID = "org.scala-lang.modules"               %% "scala-collection-compat" % "2.14.0"
   val caffeine: ModuleID = "com.github.ben-manes.caffeine"               % "caffeine"                % "3.2.0"
   val http4sDsl: ModuleID = "org.http4s"                                %% "http4s-dsl"              % Version.http4s
   val http4sDsl022: ModuleID = "org.http4s"                             %% "http4s-dsl"              % Version.http4s022
@@ -60,10 +60,10 @@ object Dependencies extends DependencyUtils {
     "com.typesafe.akka" %% "akka-stream-testkit" % Version.akka
   )
   val commonsIO: ModuleID = "commons-io"                 % "commons-io"          % "2.18.0"
-  val scalaMock: ModuleID = "org.scalamock"             %% "scalamock"           % "6.2.0"
+  val scalaMock: ModuleID = "org.scalamock"             %% "scalamock"           % "7.5.5"
   val scalaTest: ModuleID = "org.scalatest"             %% "scalatest"           % "3.2.19"
   val wiremock: ModuleID = "com.github.tomakehurst"      % "wiremock"            % "3.0.1"
-  val munitCatsEffect: ModuleID = "org.typelevel"       %% "munit-cats-effect-3" % "1.0.7"
+  val munitCatsEffect: ModuleID = "org.typelevel"       %% "munit-cats-effect"   % "2.1.0"
   val munitCatsEffect2: ModuleID = "org.typelevel"      %% "munit-cats-effect-2" % "1.0.7"
   val log4catsNoop: ModuleID = "org.typelevel"          %% "log4cats-noop"       % Version.log4cats
   val scalaCacheCaffeine: ModuleID = "com.github.cb372" %% "scalacache-caffeine" % "1.0.0-M6"
