@@ -152,15 +152,17 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
     lazy val route =
       extractMwsTimeHeader(x => complete(x.toString))
 
-    "extract time from request" in
+    "extract time from request" in {
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, "1234567")) ~> route ~> check {
         responseAs[String] shouldBe "1234567"
       }
+    }
 
-    "reject with a MdsolAuthMalformedHeaderRejection if supplied with bad format" in
+    "reject with a MdsolAuthMalformedHeaderRejection if supplied with bad format" in {
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_TIME_HEADER_NAME, "xyz")) ~> route ~> check {
         inside(rejection) { case MdsolAuthMalformedHeaderRejection("x-mws-time", "x-mws-time header supplied with bad format: [xyz]", None) => }
       }
+    }
 
     "reject with a MdsolAuthMissingHeaderRejection if header is missing" in {
       Get() ~> route ~> check {
@@ -177,10 +179,11 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
     lazy val route =
       extractMAuthHeader(x => complete(x.toString))
 
-    "extract Authentication Signature from request" in
+    "extract Authentication Signature from request" in {
       Get().withHeaders(RawHeader(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME, authHeader)) ~> route ~> check {
         responseAs[String] shouldBe AuthHeaderDetail(appUuid, signature).toString
       }
+    }
 
     "reject with a MdsolAuthMalformedHeaderRejection if Authentication is missing the Prefix MWS" in {
       val wrongHeader = s" $appUuid:$signature"

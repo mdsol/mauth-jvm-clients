@@ -7,7 +7,7 @@ object BuildSettings {
   val env: util.Map[String, String] = System.getenv()
   val scala212 = "2.12.20"
   val scala213 = "2.13.18"
-  val scala3 = "3.6.3"
+  val scala3 = "3.3.7"
 
   lazy val basicSettings = Seq(
     homepage := Some(new URI("https://github.com/mdsol/mauth-jvm-clients").toURL),
@@ -46,9 +46,7 @@ object BuildSettings {
         case Some((3, _)) =>
           List(
             "-source:3.3",
-            "-Wunused:all",
-            // Suppress deprecation warnings from legacy MAuth v1 API usage in tests
-            "-Wconf:msg=.*is deprecated.*:s"
+            "-Wunused:all"
           )
         case _ =>
           List()
@@ -69,7 +67,9 @@ object BuildSettings {
             // Note: -Wunused:all is already added in Compile / scalacOptions for Scala 3;
             // do NOT repeat it here or Scala 3 will warn about "redundant setting" which
             // becomes a fatal error under -Werror / -Xfatal-warnings
-            "-Wconf:msg=unused value of type.*:s"
+            "-Wconf:msg=unused value of type.*:s",
+            // Suppress deprecation warnings from legacy MAuth v1 API usage in tests
+            "-Wconf:msg=.*is deprecated.*:s"
           )
         case _ =>
           List()

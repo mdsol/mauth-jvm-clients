@@ -39,9 +39,11 @@ class MauthPublicKeyProvider[F[_]: Async: Logger](configuration: AuthenticatorCo
    * Returns the associated public key for a given application UUID.
    *
    * @param appUUID
-   *   , UUID of the application for which we want to retrieve its public key.
+   *   UUID of the application for which we want to retrieve its public key.
    * @return
-   *   {@link PublicKey} registered in MAuth for the application with given appUUID.
+   *   An effect `F` that, when evaluated, yields an [[scala.Option]] containing the
+   *   [[java.security.PublicKey]] registered in MAuth for the application with the
+   *   given `appUUID`, if present.
    */
   override def getPublicKey(appUUID: UUID): F[Option[PublicKey]] =
     cache.get(appUUID).flatMap {
