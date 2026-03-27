@@ -42,8 +42,8 @@ class MauthPublicKeyProvider(configuration: AuthenticatorConfiguration, signer: 
    * @param appUUID
    *   UUID of the application for which we want to retrieve its public key.
    * @return
-   *   A `Future` containing an [[scala.Option]] with the [[java.security.PublicKey]] registered in MAuth
-   *   for the application with the given `appUUID`, if present.
+   *   A `Future` containing an [[scala.Option]] with the [[java.security.PublicKey]] registered in MAuth for the application with the given `appUUID`, if
+   *   present.
    */
   override def getPublicKey(appUUID: UUID): Future[Option[PublicKey]] =
     cache.getOrLoad(
