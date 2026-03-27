@@ -13,37 +13,49 @@ import org.bouncycastle.crypto.encodings.PKCS1Encoding
 import org.bouncycastle.crypto.engines.RSAEngine
 import org.bouncycastle.crypto.util.PublicKeyFactory
 
-/** Signature engine for MAuth Specification. Currently only String
-  * bodies (entities) are supported in MAuth
-  */
+/**
+ * Signature engine for MAuth Specification. Currently only String bodies (entities) are supported in MAuth
+ */
 private[mauth] object MAuthSignatureEngine extends StrictLogging {
 
-  /** Get the timestamp in MAuth standard format
-    *
-    * @return Whole seconds since the epoch
-    */
+  /**
+   * Get the timestamp in MAuth standard format
+   *
+   * @return
+   *   Whole seconds since the epoch
+   */
   def getEpochTime: String = (System.currentTimeMillis() / 1000).toString
 
-  /** Create a signature based on the supplied request parameters
-    *
-    * @param appUUID     The UUID of the application (client) using the API
-    * @param httpMethod  The HTTP verb of the request
-    * @param resourceUrl The URI path of the request
-    * @param body        The Payload of the entity as a String
-    * @param epochTime   The current epoch time (whole seconds) in String form
-    * @return The signature of this request
-    */
+  /**
+   * Create a signature based on the supplied request parameters
+   *
+   * @param appUUID
+   *   The UUID of the application (client) using the API
+   * @param httpMethod
+   *   The HTTP verb of the request
+   * @param resourceUrl
+   *   The URI path of the request
+   * @param body
+   *   The Payload of the entity as a String
+   * @param epochTime
+   *   The current epoch time (whole seconds) in String form
+   * @return
+   *   The signature of this request
+   */
   def buildSignature(appUUID: UUID, httpMethod: String, resourceUrl: String, body: String, epochTime: String): String = {
     val signature = httpMethod + "\n" + resourceUrl + "\n" + body + "\n" + appUUID.toString + "\n" + epochTime
     signature
   }
 
-  /** Decrypt a message digest using the public key of the third party
-    *
-    * @param encDigestBase64 Base 64 encoded encrypted digest
-    * @param publicKey       The public key used to decrypt the digest
-    * @return
-    */
+  /**
+   * Decrypt a message digest using the public key of the third party
+   *
+   * @param encDigestBase64
+   *   Base 64 encoded encrypted digest
+   * @param publicKey
+   *   The public key used to decrypt the digest
+   * @return
+   */
   def decryptFromBase64(encDigestBase64: String, publicKey: PublicKey): Either[CryptoError, Array[Byte]] = {
     try {
       val encryptedDigest: Array[Byte] = Base64.decodeBase64(encDigestBase64)
@@ -61,12 +73,16 @@ private[mauth] object MAuthSignatureEngine extends StrictLogging {
     }
   }
 
-  /** Convenience method for server side digest authentication
-    *
-    * @param base64Header    Base 64 value taken directly from the authentication header (minus prefix and UUID)
-    * @param signatureString The signature String from the buildSignature method
-    * @return Boolean true if there is a match, false if not
-    */
+  /**
+   * Convenience method for server side digest authentication
+   *
+   * @param base64Header
+   *   Base 64 value taken directly from the authentication header (minus prefix and UUID)
+   * @param signatureString
+   *   The signature String from the buildSignature method
+   * @return
+   *   Boolean true if there is a match, false if not
+   */
   def compareDigests(base64Header: String, key: PublicKey, signatureString: String): Boolean = {
     decryptFromBase64(base64Header, key) match {
       case Left(CryptoError(msg, Some(e))) => logger.debug(msg + " : " + e.getMessage, e); false
@@ -77,29 +93,36 @@ private[mauth] object MAuthSignatureEngine extends StrictLogging {
     }
   }
 
-  /** Convert a plaintext request signature into a hex encoded digest String
-    *
-    * @param signature String to be digested
-    * @return Hex encoded digest string
-    */
+  /**
+   * Convert a plaintext request signature into a hex encoded digest String
+   *
+   * @param signature
+   *   String to be digested
+   * @return
+   *   Hex encoded digest string
+   */
   def getDigest(signature: String): Array[Byte] = {
     val messageDigest = MessageDigest.getInstance("SHA-512", "BC")
     messageDigest.digest(signature.getBytes(StandardCharsets.UTF_8))
   }
 
-  /** Convenience method
-    *
-    * @param array bytes to be converted to hex
-    * @return
-    */
+  /**
+   * Convenience method
+   *
+   * @param array
+   *   bytes to be converted to hex
+   * @return
+   */
   def asHex(array: Array[Byte]): String =
     Hex.encodeHexString(array)
 
-  /** Convenience method
-    *
-    * @param array characters to be converted to bytes
-    * @return
-    */
+  /**
+   * Convenience method
+   *
+   * @param array
+   *   characters to be converted to bytes
+   * @return
+   */
   def fromHex(array: Array[Char]): Array[Byte] =
     Hex.decodeHex(array)
 }

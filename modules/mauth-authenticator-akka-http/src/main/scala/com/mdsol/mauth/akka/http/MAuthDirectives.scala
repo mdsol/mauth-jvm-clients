@@ -34,15 +34,19 @@ final case class MdsolAuthMissingHeaderRejection(headerName: String) extends Aut
 
 trait MAuthDirectives extends StrictLogging {
 
-  /** Directive to wrap all routes that require MAuth authentication check.
-    * Should only be used once per route branch, as any HttpEntity is forced
-    * to be strict, and serialised into the request.
-    *
-    * @param authenticator            MAuth Public Key Provider
-    * @param timeout                  request timeout duration, defaults to 10 seconds
-    * @param requestValidationTimeout request validation timeout duration, defaults to 10 seconds
-    * @return Directive to authenticate the request
-    */
+  /**
+   * Directive to wrap all routes that require MAuth authentication check. Should only be used once per route branch, as any HttpEntity is forced to be strict,
+   * and serialised into the request.
+   *
+   * @param authenticator
+   *   MAuth Public Key Provider
+   * @param timeout
+   *   request timeout duration, defaults to 10 seconds
+   * @param requestValidationTimeout
+   *   request validation timeout duration, defaults to 10 seconds
+   * @return
+   *   Directive to authenticate the request
+   */
   def authenticate(implicit authenticator: Authenticator[Future], timeout: FiniteDuration, requestValidationTimeout: Duration): Directive0 = {
     extractLatestAuthenticationHeaders(authenticator.isV2OnlyAuthenticate).flatMap { mauthHeaderValues: MauthHeaderValues =>
       toStrictEntity(timeout) &
@@ -89,11 +93,12 @@ trait MAuthDirectives extends StrictLogging {
   def headerValueByTypeMdsol[T](magnet: HeaderMagnet[T]): Directive1[T] =
     headerValuePF(magnet.extractPF) | reject(MdsolAuthMissingHeaderRejection(magnet.headerName))
 
-  /** Extracts the detail information of the HTTP request header X-MWS-Authentication
-    *
-    * @return Directive1[AuthHeaderDetail] of Mauth V1 protocol
-    *         If invalidated, the request is rejected with a MalformedHeaderRejection.
-    */
+  /**
+   * Extracts the detail information of the HTTP request header X-MWS-Authentication
+   *
+   * @return
+   *   Directive1[AuthHeaderDetail] of Mauth V1 protocol If invalidated, the request is rejected with a MalformedHeaderRejection.
+   */
   @deprecated("This method is for Mauth V1 protocol only", "3.0.0")
   val extractMAuthHeader: Directive1[AuthHeaderDetail] =
     headerValueByTypeMdsol[`X-MWS-Authentication`]((): Unit).flatMap { hdr =>
@@ -107,11 +112,12 @@ trait MAuthDirectives extends StrictLogging {
       }
     }
 
-  /** Extracts the validated value of the HTTP request header X-MWS-Time
-    *
-    * @return Directive1[Long] of Mauth V1 protocol
-    *         If invalidated, the request is rejected with a MalformedHeaderRejection.
-    */
+  /**
+   * Extracts the validated value of the HTTP request header X-MWS-Time
+   *
+   * @return
+   *   Directive1[Long] of Mauth V1 protocol If invalidated, the request is rejected with a MalformedHeaderRejection.
+   */
   @deprecated("This method is for Mauth V1 protocol only", "3.0.0")
   val extractMwsTimeHeader: Directive1[Long] =
     headerValueByTypeMdsol[`X-MWS-Time`]((): Unit).flatMap { time =>
@@ -156,16 +162,17 @@ trait MAuthDirectives extends StrictLogging {
     request.getHeader(headerName).map[String](f).orElse("")
   }
 
-  /** Extracts the authentication header value of the HTTP request header for latest version of Mauth
-    *
-    * @param v2OnlyAuthenticate
-    *        the flag to specify if Mauth V2 only authenticate or not.
-    *        If Mauth v2 only authenticate is enabled, extracts the authentication header of MCC-Authentication only.
-    *        Otherwise, extracts the authentication header of X-MWS-Authentication if MCC-Authentication header is not found.
-    *
-    * @return Directive1[MauthHeaderValues] of Mauth authentication header values for V1 or V2
-    *         the request is rejected with a MdsolAuthMissingHeaderRejection if the expected header is not present
-    */
+  /**
+   * Extracts the authentication header value of the HTTP request header for latest version of Mauth
+   *
+   * @param v2OnlyAuthenticate
+   *   the flag to specify if Mauth V2 only authenticate or not. If Mauth v2 only authenticate is enabled, extracts the authentication header of
+   *   MCC-Authentication only. Otherwise, extracts the authentication header of X-MWS-Authentication if MCC-Authentication header is not found.
+   *
+   * @return
+   *   Directive1[MauthHeaderValues] of Mauth authentication header values for V1 or V2 the request is rejected with a MdsolAuthMissingHeaderRejection if the
+   *   expected header is not present
+   */
   def extractLatestAuthenticationHeaders(v2OnlyAuthenticate: Boolean): Directive1[MauthHeaderValues] = {
     extractRequest.flatMap { request: HttpRequest =>
       // Try to extract and verify V2 headers

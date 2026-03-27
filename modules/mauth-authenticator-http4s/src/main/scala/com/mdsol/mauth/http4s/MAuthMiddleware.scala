@@ -10,10 +10,10 @@ import com.mdsol.mauth.MAuthRequest
 import com.mdsol.mauth.scaladsl.Authenticator
 import org.http4s._
 import org.http4s.EntityDecoder._
-import org.typelevel.ci.CIString
 import enumeratum._
 import org.typelevel.ci._
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import scala.collection.immutable.IndexedSeq
 
 import scala.concurrent.duration.Duration
 import scala.util.Try

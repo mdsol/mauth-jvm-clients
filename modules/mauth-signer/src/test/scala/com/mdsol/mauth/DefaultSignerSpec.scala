@@ -35,7 +35,7 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
   }
 
   it should "generated headers includes time header with correct time" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
 
     val headers: Map[String, String] = mAuthRequestSigner.generateRequestHeaders("GET", "/", "").asScala.toMap
@@ -43,7 +43,7 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
   }
 
   it should "generated headers includes expected authentication header" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
 
     val headers: Map[String, String] = mAuthRequestSigner.generateRequestHeaders("GET", "/", "").asScala.toMap
@@ -59,7 +59,7 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
   }
 
   it should "generated headers with body includes expected authentication header" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
 
     val headers: Map[String, String] = mAuthRequestSigner.generateRequestHeaders("POST", "/", TEST_REQUEST_BODY).asScala.toMap
@@ -115,7 +115,7 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
   }
 
   "When v2 only is set" should "generated headers includes time header with correct time for V2" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val headers: Map[String, String] = mAuthRequestSignerV2.generateRequestHeaders("GET", "/", "".getBytes, "").asScala.toMap
     headers(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe String.valueOf(TEST_EPOCH_TIME)
@@ -126,7 +126,7 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
   }
 
   it should "generated headers with body includes expected authentication header for V2 only" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val EXPECTED_POST_AUTHENTICATION_HEADER: String =
       s"""MWSV2 $testUUID:2+fhdgr8qtZ3hrY1q8x6cLCpWs4Zry1DWfu+CFKlMKE
@@ -144,7 +144,7 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
   }
 
   it should "generated headers with parameters includes expected authentication header for V2 only" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val EXPECTED_GET_AUTHENTICATION_HEADER: String =
       s"""MWSV2 $testUUID:ps23lxYX9Yl9TTg6vgsETwA+SzBeXyczRVn7wcGxtxA
@@ -180,7 +180,7 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
   }
 
   "When v1 and v2 are set" should "generated headers with body for both V1 and V2" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     val mAuthSigner = new DefaultSigner(testUUID, TestFixtures.PRIVATE_KEY_1, mockEpochTimeProvider, SignerConfiguration.ALL_SIGN_VERSIONS)
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val EXPECTED_POST_AUTHENTICATION_HEADER_V1: String =
@@ -207,7 +207,7 @@ class DefaultSignerSpec extends AnyFlatSpec with Matchers with MockFactory {
   }
 
   it should "generated headers with binary payload for both V1 and V2" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     val CLIENT_REQUEST_BINARY_APP_UUID = TestFixtures.APP_UUID_V2
     val CLIENT_REQUEST_BINARY_EPOCH_TIME: Long = TestFixtures.EPOCH_TIME.toLong
     val CLIENT_REQUEST_BINARY_PATH = TestFixtures.REQUEST_PATH_V2

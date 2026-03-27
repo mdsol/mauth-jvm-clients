@@ -12,7 +12,6 @@ object Dependencies extends DependencyUtils {
     val enumeratum = "1.9.5"
     val log4cats = "2.7.1"
     val circe = "0.14.15"
-    val circeGenericExtras = "0.14.4"
     val http4s022 = "0.22.15"
   }
 
@@ -47,10 +46,9 @@ object Dependencies extends DependencyUtils {
   val log4cats: ModuleID = "org.typelevel"                              %% "log4cats-slf4j"          % Version.log4cats
 
   lazy val circeBasic: Seq[ModuleID] = Seq(
-    "io.circe"   %% "circe-core"           % Version.circe,
-    "io.circe"   %% "circe-parser"         % Version.circe,
-    "io.circe"   %% "circe-generic-extras" % Version.circeGenericExtras,
-    "org.http4s" %% "http4s-circe"         % Version.http4s
+    "io.circe"   %% "circe-core"   % Version.circe,
+    "io.circe"   %% "circe-parser" % Version.circe,
+    "org.http4s" %% "http4s-circe" % Version.http4s
   )
 
   // TEST DEPENDENCIES
