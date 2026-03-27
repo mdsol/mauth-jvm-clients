@@ -13,6 +13,7 @@ import org.typelevel.log4cats.Logger
 import java.nio.charset.StandardCharsets
 import java.security.PublicKey
 import java.util
+import scala.annotation.nowarn
 import scala.concurrent.duration._
 
 class RequestAuthenticator[F[_]: MonadThrow: Logger](
@@ -90,6 +91,7 @@ object RequestAuthenticator {
     (!v2OnlyAuthenticate || mAuthRequest.getMauthVersion == MAuthVersion.MWSV2).pure[F]
 
   // check signature for V1
+  @nowarn("cat=deprecation")
   private def validateSignatureV1[F[_]: MonadThrow: Logger](mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): F[Boolean] = {
     logAuthenticationRequest(mAuthRequest) *>
       // Recreate the plain text signature, based on the incoming request parameters, and hash it.

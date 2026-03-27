@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, Sink}
 import akka.util.ByteString
-import com.mdsol.mauth.SignedRequest
+import com.mdsol.mauth.models.SignedRequest
 import com.mdsol.mauth.http.Implicits._
 import com.typesafe.scalalogging.LazyLogging
 

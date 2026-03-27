@@ -4,7 +4,7 @@ import java.net.URI
 import java.security.Security
 import java.util.UUID
 
-import com.mdsol.mauth.models.{UnsignedRequest => NewUnsignedRequest}
+import com.mdsol.mauth.models.UnsignedRequest
 import com.mdsol.mauth.test.utils.TestFixtures._
 import com.mdsol.mauth.util.EpochTimeProvider
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -38,36 +38,21 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers {
     java.util.Arrays.asList[MAuthVersion](MAuthVersion.MWS)
   )
 
-  val simpleUnsignedRequest: UnsignedRequest = UnsignedRequest(uri = URI_EMPTY_PATH)
-  val simpleNewUnsignedRequest: NewUnsignedRequest =
-    NewUnsignedRequest.fromStringBodyUtf8(httpMethod = "GET", uri = URI_EMPTY_PATH, body = "", headers = Map.empty)
+  val simpleUnsignedRequest: UnsignedRequest =
+    UnsignedRequest.fromStringBodyUtf8(httpMethod = "GET", uri = URI_EMPTY_PATH, body = "", headers = Map.empty)
 
-  val unsignedRequest: NewUnsignedRequest =
-    NewUnsignedRequest.fromStringBodyUtf8(httpMethod = "GET", uri = URI_EMPTY_PATH_WITH_PARAM, body = SIMPLE_REQUEST_BODY, headers = Map.empty)
-  "MAuthRequestSigner" should "add time header to a request for V1" in {
-    signer.signRequest(simpleUnsignedRequest).getOrElse(fail("signRequest unexpectedly failed")).timeHeader shouldBe EXPECTED_TIME_HEADER_1
-  }
-
-  it should "add authentication header to a request for V1" in {
-    signer.signRequest(simpleUnsignedRequest).getOrElse(fail("signRequest unexpectedly failed")).authHeader shouldBe EXPECTED_AUTH_NO_BODY_V1
-  }
-
-  it should "add authentication header to a request with body for V1" in {
-    signer
-      .signRequest(UnsignedRequest(uri = URI_EMPTY_PATH, body = Some(SIMPLE_REQUEST_BODY)))
-      .getOrElse(fail("signRequest unexpectedly failed"))
-      .authHeader shouldBe EXPECTED_AUTH_SIMPLE_BODY_V1
-  }
+  val unsignedRequest: UnsignedRequest =
+    UnsignedRequest.fromStringBodyUtf8(httpMethod = "GET", uri = URI_EMPTY_PATH_WITH_PARAM, body = SIMPLE_REQUEST_BODY, headers = Map.empty)
 
   it should "add authentication header to a request" in {
-    val authHeaders = signer.signRequest(simpleNewUnsignedRequest).mauthHeaders
+    val authHeaders = signer.signRequest(simpleUnsignedRequest).mauthHeaders
     authHeaders(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTH_NO_BODY_V1
     authHeaders(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTH_NO_BODY_V2
   }
 
   it should "add authentication header to a request with body" in {
     signer
-      .signRequest(NewUnsignedRequest.fromStringBodyUtf8(httpMethod = "GET", uri = URI_EMPTY_PATH, body = SIMPLE_REQUEST_BODY, headers = Map.empty))
+      .signRequest(UnsignedRequest.fromStringBodyUtf8(httpMethod = "GET", uri = URI_EMPTY_PATH, body = SIMPLE_REQUEST_BODY, headers = Map.empty))
       .mauthHeaders(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTH_SIMPLE_BODY_V1
   }
 
@@ -78,13 +63,13 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers {
   }
 
   "MAuthRequestSigner with V2 only enabled" should "add time header to a request for V2 only " in {
-    val authHeaders = signerV2.signRequest(simpleNewUnsignedRequest).mauthHeaders
+    val authHeaders = signerV2.signRequest(simpleUnsignedRequest).mauthHeaders
     authHeaders.get(MAuthRequest.X_MWS_TIME_HEADER_NAME) shouldBe None
     authHeaders(MAuthRequest.MCC_TIME_HEADER_NAME) shouldBe EXPECTED_TIME_HEADER_1
   }
 
   it should "add authentication header to a request for V2 only" in {
-    val authHeaders = signerV2.signRequest(simpleNewUnsignedRequest).mauthHeaders
+    val authHeaders = signerV2.signRequest(simpleUnsignedRequest).mauthHeaders
     authHeaders.get(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe None
     authHeaders(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTH_NO_BODY_V2
   }
@@ -105,13 +90,13 @@ class MAuthRequestSignerSpec extends AnyFlatSpec with Matchers {
 
     newSigner
       .signRequest(
-        NewUnsignedRequest.fromStringBodyUtf8(httpMethod = "GET", uri = new URI(REQUEST_NORMALIZE_PATH), body = "", headers = Map.empty)
+        UnsignedRequest.fromStringBodyUtf8(httpMethod = "GET", uri = new URI(REQUEST_NORMALIZE_PATH), body = "", headers = Map.empty)
       )
       .mauthHeaders(MAuthRequest.MCC_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTHENTICATION_HEADER
   }
 
   "MAuthRequestSigner with V1 only required" should "add mauth headers to a request for V1 only " in {
-    val authHeaders = signerV1.signRequest(simpleNewUnsignedRequest).mauthHeaders
+    val authHeaders = signerV1.signRequest(simpleUnsignedRequest).mauthHeaders
     authHeaders.size shouldEqual 2
     authHeaders(MAuthRequest.X_MWS_TIME_HEADER_NAME) shouldBe EXPECTED_TIME_HEADER_1
     authHeaders(MAuthRequest.X_MWS_AUTHENTICATION_HEADER_NAME) shouldBe EXPECTED_AUTH_NO_BODY_V1
