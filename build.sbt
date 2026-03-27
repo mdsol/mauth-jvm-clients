@@ -27,6 +27,15 @@ def scalaModuleProject(modName: String): Project = {
     )
 }
 
+def http4sModuleProject(modName: String): Project = {
+  Project(modName, file(s"modules/$modName"))
+    .settings(
+      basicSettings,
+      moduleName := modName,
+      crossScalaVersions := Seq(scala212, scala213, scala3)
+    )
+}
+
 val currentBranch = Def.setting {
   git.gitCurrentBranch.value.replaceAll("/", "_")
 }
@@ -74,13 +83,12 @@ lazy val `mauth-signer-apachehttp` = javaModuleProject("mauth-signer-apachehttp"
         Dependencies.test(scalaMock, scalaTest).map(withExclusions)
   )
 
-lazy val `mauth-signer-scala-core` = scalaModuleProject("mauth-signer-scala-core")
+lazy val `mauth-signer-scala-core` = http4sModuleProject("mauth-signer-scala-core")
   .dependsOn(`mauth-signer`, `mauth-test-utils` % "test")
   .settings(
     publishSettings,
     libraryDependencies ++=
-      Dependencies.compile(akkaHttp, akkaStream).map(withExclusions) ++
-        Dependencies.compile(scalaLogging, scalaLibCompat).map(withExclusions) ++
+      Dependencies.compile(scalaLogging, scalaLibCompat).map(withExclusions) ++
         Dependencies.test(scalaMock, scalaTest, wiremock).map(withExclusions)
   )
 
@@ -106,10 +114,9 @@ lazy val `mauth-signer-sttp` = scalaModuleProject("mauth-signer-sttp")
         Dependencies.test(scalaMock, scalaTest, wiremock, sttpAkkaHttpBackend).map(withExclusions)
   )
 
-lazy val `mauth-signer-http4s-023` = scalaModuleProject("mauth-signer-http4s-023")
+lazy val `mauth-signer-http4s-023` = http4sModuleProject("mauth-signer-http4s-023")
   .dependsOn(`mauth-signer`, `mauth-signer-scala-core`, `mauth-test-utils` % "test")
   .settings(
-    basicSettings,
     publishSettings,
     testFrameworks += new TestFramework("munit.Framework"),
     libraryDependencies ++=
@@ -122,7 +129,6 @@ lazy val `mauth-signer-http4s-023` = scalaModuleProject("mauth-signer-http4s-023
 lazy val `mauth-signer-http4s-022` = scalaModuleProject("mauth-signer-http4s-022")
   .dependsOn(`mauth-signer`, `mauth-signer-scala-core`, `mauth-test-utils` % "test")
   .settings(
-    basicSettings,
     publishSettings,
     testFrameworks += new TestFramework("munit.Framework"),
     libraryDependencies ++=
@@ -158,7 +164,7 @@ lazy val `mauth-authenticator` = javaModuleProject("mauth-authenticator")
     publishSettings
   )
 
-lazy val `mauth-authenticator-scala` = scalaModuleProject("mauth-authenticator-scala")
+lazy val `mauth-authenticator-scala` = http4sModuleProject("mauth-authenticator-scala")
   .dependsOn(`mauth-authenticator`, `mauth-signer` % "test", `mauth-test-utils` % "test")
   .settings(
     publishSettings,
@@ -187,11 +193,9 @@ lazy val `mauth-authenticator-akka-http` = scalaModuleProject("mauth-authenticat
         Dependencies.test(akkaHttpTestKit *).map(withExclusions)
   )
 
-lazy val `mauth-authenticator-http4s` = (project in file("modules/mauth-authenticator-http4s")) // don't need to cross-compile
+lazy val `mauth-authenticator-http4s` = http4sModuleProject("mauth-authenticator-http4s")
   .dependsOn(`mauth-signer-http4s-023`, `mauth-authenticator-scala` % "test->test;compile->compile", `mauth-test-utils` % "test")
   .settings(
-    basicSettings,
-    moduleName := "mauth-authenticator-http4s",
     publishSettings,
     testFrameworks += new TestFramework("munit.Framework"),
     libraryDependencies ++=
