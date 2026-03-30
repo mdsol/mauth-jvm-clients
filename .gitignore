@@ -7,3 +7,9 @@ target/
 *.log
 *.asc
 .bsp/
+/.metals
+/project/.bloop
+/project/project/.bloop
+/project/project/project/metals.sbt
+/project/project/metals.sbt
+/project/metals.sbt
