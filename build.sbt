@@ -23,7 +23,8 @@ def scala2ModuleProject(modName: String): Project = {
     .settings(
       basicSettings,
       moduleName := modName,
-      crossScalaVersions := Seq(scala212, scala213)
+      crossScalaVersions := Seq(scala212, scala213),
+      Compile / doc / scalacOptions -= "-Werror"
     )
 }
 
@@ -33,7 +34,8 @@ def scalaModuleProject(modName: String): Project = {
     .settings(
       basicSettings,
       moduleName := modName,
-      crossScalaVersions := Seq(scala212, scala213, scala3)
+      crossScalaVersions := Seq(scala212, scala213, scala3),
+      Compile / doc / scalacOptions -= "-Werror"
     )
 }
 
