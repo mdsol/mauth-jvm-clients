@@ -1,7 +1,6 @@
 import BuildSettings._
 import Dependencies._
 import ExampleTesting._
-import com.amazonaws.regions.{Region, Regions}
 
 conflictManager := ConflictManager.strict
 

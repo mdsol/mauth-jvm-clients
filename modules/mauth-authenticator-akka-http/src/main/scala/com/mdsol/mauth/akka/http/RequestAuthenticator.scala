@@ -8,6 +8,8 @@ import com.mdsol.mauth.util.{EpochTimeProvider, MAuthSignatureHelper}
 import org.slf4j.{Logger, LoggerFactory}
 
 import java.nio.charset.StandardCharsets
+
+import scala.annotation.nowarn
 import java.security.PublicKey
 import java.util
 import scala.concurrent.duration._
@@ -94,6 +96,7 @@ class RequestAuthenticator(
     !v2OnlyAuthenticate || mAuthRequest.getMauthVersion == MAuthVersion.MWSV2
 
   // check signature for V1
+  @nowarn("cat=deprecation")
   private def validateSignatureV1(mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): Boolean = {
     logAuthenticationRequest(mAuthRequest)
     val decryptedSignature = MAuthSignatureHelper.decryptSignature(clientPublicKey, mAuthRequest.getRequestSignature)

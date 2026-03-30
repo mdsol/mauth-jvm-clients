@@ -2,7 +2,6 @@ package com.mdsol.mauth.akka.http
 
 import java.security.Security
 import java.util.UUID
-
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server._
@@ -18,6 +17,7 @@ import org.scalatest.Inside
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
+import scala.annotation.nowarn
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
@@ -149,6 +149,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
   }
 
   "extractMwsTimeHeader" should {
+    @nowarn("cat=deprecation")
     lazy val route =
       extractMwsTimeHeader(x => complete(x.toString))
 
@@ -176,6 +177,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
   }
 
   "extractMAuthHeader" should {
+    @nowarn("cat=deprecation")
     lazy val route =
       extractMAuthHeader(x => complete(x.toString))
 
