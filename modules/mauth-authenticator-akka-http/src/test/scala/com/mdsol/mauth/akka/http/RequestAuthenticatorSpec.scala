@@ -30,7 +30,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
   behavior of "RequestAuthenticator Scala"
 
   it should "authenticate a valid request" in clientContext { client =>
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
@@ -38,7 +38,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
   }
 
   it should "authenticate a request with unicode chars in body" in clientContext { client =>
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
@@ -46,7 +46,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
   }
 
   it should "authenticate a request without any body" in clientContext { client =>
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_NO_BODY_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
@@ -54,7 +54,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
   }
 
   it should "not authenticate an invalid request" in clientContext { client =>
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
     val invalidRequest = getSimpleRequestWithWrongSignature
@@ -63,7 +63,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
   }
 
   it should "not authenticate a request after timeout period passed" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_UNICODE_X_MWS_TIME_HEADER_VALUE.toLong + 600)
     val authenticator = new RequestAuthenticator(mock[ClientPublicKeyProvider[Future]], mockEpochTimeProvider)
 
@@ -74,7 +74,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
   }
 
   it should "authenticate a valid request with V2 headers" in clientContext { client =>
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
@@ -82,7 +82,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
   }
 
   it should "authenticate a valid request with V2 headers only if V2 only enabled" in clientContext { client =>
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider, true)
 
@@ -91,7 +91,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
   }
 
   it should "authenticate a valid request with the both V1 and V2 headers provided" in clientContext { client =>
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
@@ -99,7 +99,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
   }
 
   it should "reject a request with V1 headers when V2 only is enabled" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(mock[ClientPublicKeyProvider[Future]], mockEpochTimeProvider, true)
 
@@ -128,7 +128,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
   }
 
   it should "validate the request with the validated V1 headers and wrong V2 signature" in clientContext { client =>
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 
@@ -136,7 +136,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
   }
 
   it should "fail validating request with validated V1 headers and wrong V2 signature if V2 only is enabled" in clientContext { client =>
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider, true)
 
@@ -162,7 +162,7 @@ class RequestAuthenticatorSpec extends AnyFlatSpec with RequestAuthenticatorBase
   }
 
   it should "fail validating the request with the validated V1 headers and wrong V2 signature" in clientContext { client =>
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3)
     val authenticator = new RequestAuthenticator(client, mockEpochTimeProvider)
 

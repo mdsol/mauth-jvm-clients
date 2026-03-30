@@ -48,7 +48,7 @@ class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFac
   behavior of "#signRequest"
 
   "HttpClientRequestSigner" should "adds expected time header" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val get = new HttpGet("http://mauth.imedidata.com/")
     mAuthRequestSigner.signRequest(get)
@@ -57,7 +57,7 @@ class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFac
   }
 
   it should "adds expected authentication header" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val get = new HttpGet("http://mauth.imedidata.com/")
     mAuthRequestSigner.signRequest(get)
@@ -65,7 +65,7 @@ class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFac
   }
 
   it should "sign requests with body adds expected authentication header" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val post = new HttpPost("http://mauth.imedidata.com/")
     post.setEntity(new StringEntity(TEST_REQUEST_BODY))
@@ -74,7 +74,7 @@ class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFac
   }
 
   "When V1 and V2 are set" should "sign requests adds expected headers for V1 and V2" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val mAuthSigner = new HttpClientRequestSigner(testUUID, privateKeyString, mockEpochTimeProvider, SignerConfiguration.ALL_SIGN_VERSIONS)
 
@@ -87,7 +87,7 @@ class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFac
   }
 
   "When V2 only is set" should "adds expected time header for V2 only" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val get = new HttpGet("http://mauth.imedidata.com/")
     mAuthRequestSignerV2.signRequest(get)
@@ -96,7 +96,7 @@ class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFac
   }
 
   it should "sign requests with parameters adds expected authentication header for V2 only" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val get = new HttpGet("http://mauth.imedidata.com/query?k1=v1&k2=v2")
     mAuthRequestSignerV2.signRequest(get)
@@ -105,7 +105,7 @@ class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFac
   }
 
   it should "sign requests with body adds expected authentication header for V2" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val post = new HttpPost("http://mauth.imedidata.com/")
     post.setEntity(new StringEntity(TEST_REQUEST_BODY))
@@ -114,7 +114,7 @@ class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFac
   }
 
   it should "sign requests with stream-body adds expected authentication header for V2" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val post = new HttpPost("http://mauth.imedidata.com/")
     val stream = new ByteArrayInputStream(TEST_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))
@@ -124,7 +124,7 @@ class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFac
   }
 
   it should "sign requests adds expected headers for V2 with the encoded-normalize path" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     val TEST_UUID = TestFixtures.APP_UUID_V2
     val request_time = TestFixtures.EPOCH_TIME.toLong
     val EXPECTED_SIGNATURE_V2 = TestFixtures.SIGNATURE_NORMALIZE_PATH_V2
@@ -152,7 +152,7 @@ class HttpClientRequestSignerSpec extends AnyFlatSpec with Matchers with MockFac
   }
 
   it should "sign requests with stream-body adds expected authentication header" in {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(TEST_EPOCH_TIME)
     val post = new HttpPost("http://mauth.imedidata.com/")
     val stream = new ByteArrayInputStream(TEST_REQUEST_BODY.getBytes(StandardCharsets.UTF_8))

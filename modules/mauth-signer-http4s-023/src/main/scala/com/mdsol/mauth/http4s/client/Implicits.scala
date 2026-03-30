@@ -12,8 +12,9 @@ object Implicits {
 
   implicit class NewSignedRequestOps(val signedRequest: SignedRequest) extends AnyVal {
 
-    /** Create a http4s request from a [[models.SignedRequest]]
-      */
+    /**
+     * Create a http4s request from a [[models.SignedRequest]]
+     */
     def toHttp4sRequest[F[_]: MonadThrow]: F[Request[F]] = {
       val contentType: Option[`Content-Type`] = extractContentTypeFromHeaders(signedRequest.req.headers)
       val headersWithoutContentType: Map[String, String] = removeContentTypeFromHeaders(signedRequest.req.headers)
@@ -39,10 +40,8 @@ object Implicits {
         .get(headers.`Content-Type`.toString)
         .flatMap(str => `Content-Type`.parse(str).toOption)
 
-    private def removeContentTypeFromHeaders(requestHeaders: Map[String, String]): Map[String, String] = {
-      import scala.collection.compat._
-      requestHeaders.view.filterKeys(_ != headers.`Content-Type`.toString).toMap
-    }
+    private def removeContentTypeFromHeaders(requestHeaders: Map[String, String]): Map[String, String] =
+      requestHeaders.filter { case (k, _) => k != headers.`Content-Type`.toString }
   }
 
 }

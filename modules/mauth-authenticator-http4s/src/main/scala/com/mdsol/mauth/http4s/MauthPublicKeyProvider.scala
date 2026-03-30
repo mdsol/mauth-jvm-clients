@@ -35,20 +35,25 @@ class MauthPublicKeyProvider[F[_]: Async: Logger](configuration: AuthenticatorCo
   private val inFlight: Ref[F, Map[UUID, Deferred[F, Either[Throwable, Option[PublicKey]]]]] =
     Ref.unsafe(Map.empty)
 
-  /** Returns the associated public key for a given application UUID.
-    *
-    * @param appUUID , UUID of the application for which we want to retrieve its public key.
-    * @return { @link PublicKey} registered in MAuth for the application with given appUUID.
-    */
+  /**
+   * Returns the associated public key for a given application UUID.
+   *
+   * @param appUUID
+   *   UUID of the application for which we want to retrieve its public key.
+   * @return
+   *   An effect `F` that, when evaluated, yields an [[scala.Option]] containing the [[java.security.PublicKey]] registered in MAuth for the application with
+   *   the given `appUUID`, if present.
+   */
   override def getPublicKey(appUUID: UUID): F[Option[PublicKey]] =
     cache.get(appUUID).flatMap {
       case Some(cachedEffect) => cachedEffect
       case None               => singleFlightFetch(appUUID)
     }
 
-  /** Ensures only one in-flight request per UUID. Concurrent callers for the same UUID
-    * will wait on the same Deferred rather than making duplicate HTTP requests.
-    */
+  /**
+   * Ensures only one in-flight request per UUID. Concurrent callers for the same UUID will wait on the same Deferred rather than making duplicate HTTP
+   * requests.
+   */
   private def singleFlightFetch(appUUID: UUID): F[Option[PublicKey]] =
     Deferred[F, Either[Throwable, Option[PublicKey]]].flatMap { newDeferred =>
       inFlight.modify { map =>

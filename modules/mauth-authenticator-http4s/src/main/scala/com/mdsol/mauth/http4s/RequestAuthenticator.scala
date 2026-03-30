@@ -13,6 +13,7 @@ import org.typelevel.log4cats.Logger
 import java.nio.charset.StandardCharsets
 import java.security.PublicKey
 import java.util
+import scala.annotation.nowarn
 import scala.concurrent.duration._
 
 class RequestAuthenticator[F[_]: MonadThrow: Logger](
@@ -21,20 +22,25 @@ class RequestAuthenticator[F[_]: MonadThrow: Logger](
   v2OnlyAuthenticate: Boolean
 ) extends Authenticator[F] {
 
-  /** check if mauth v2 only authenticate is enabled or not
-    *
-    * @return True or false identifying if v2 only authenticate is enabled or not.
-    */
+  /**
+   * check if mauth v2 only authenticate is enabled or not
+   *
+   * @return
+   *   True or false identifying if v2 only authenticate is enabled or not.
+   */
   override val isV2OnlyAuthenticate: Boolean = v2OnlyAuthenticate
 
-  /** Performs the validation of an incoming HTTP request.
-    *
-    * The validation process consists of recreating the mAuth hashed signature from the request data
-    * and comparing it to the decrypted hash signature from the mAuth header.
-    *
-    * @param mAuthRequest Data from the incoming HTTP request necessary to perform the validation.
-    * @return True or false indicating if the request is valid or not with respect to mAuth.
-    */
+  /**
+   * Performs the validation of an incoming HTTP request.
+   *
+   * The validation process consists of recreating the mAuth hashed signature from the request data and comparing it to the decrypted hash signature from the
+   * mAuth header.
+   *
+   * @param mAuthRequest
+   *   Data from the incoming HTTP request necessary to perform the validation.
+   * @return
+   *   True or false indicating if the request is valid or not with respect to mAuth.
+   */
   override def authenticate(mAuthRequest: MAuthRequest)(implicit requestValidationTimeout: Duration): F[Boolean] = {
     validateTime[F](mAuthRequest.getRequestTime, epochTimeProvider)(requestValidationTimeout)
       .ifM(
@@ -85,6 +91,7 @@ object RequestAuthenticator {
     (!v2OnlyAuthenticate || mAuthRequest.getMauthVersion == MAuthVersion.MWSV2).pure[F]
 
   // check signature for V1
+  @nowarn("cat=deprecation")
   private def validateSignatureV1[F[_]: MonadThrow: Logger](mAuthRequest: MAuthRequest, clientPublicKey: PublicKey): F[Boolean] = {
     logAuthenticationRequest(mAuthRequest) *>
       // Recreate the plain text signature, based on the incoming request parameters, and hash it.

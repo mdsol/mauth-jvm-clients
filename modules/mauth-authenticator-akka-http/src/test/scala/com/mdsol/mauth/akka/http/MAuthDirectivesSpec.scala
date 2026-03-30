@@ -2,7 +2,6 @@ package com.mdsol.mauth.akka.http
 
 import java.security.Security
 import java.util.UUID
-
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server._
@@ -18,6 +17,7 @@ import org.scalatest.Inside
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
+import scala.annotation.nowarn
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
@@ -54,7 +54,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
     "pass successfully authenticated request" in {
       (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
-      //noinspection ConvertibleToMethodValue
+      // noinspection ConvertibleToMethodValue
       (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
       Get("/").withHeaders(
@@ -103,7 +103,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
     "reject if request validation timeout passed" in {
       (client.getPublicKey _).expects(*).never()
-      //noinspection ConvertibleToMethodValue
+      // noinspection ConvertibleToMethodValue
       (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
       Get().withHeaders(
@@ -116,7 +116,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
     "reject if public key cannot be found" in {
       (client.getPublicKey _).expects(appUuid).returns(Future(None))
-      //noinspection ConvertibleToMethodValue
+      // noinspection ConvertibleToMethodValue
       (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
       Get().withHeaders(
@@ -149,6 +149,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
   }
 
   "extractMwsTimeHeader" should {
+    @nowarn("cat=deprecation")
     lazy val route =
       extractMwsTimeHeader(x => complete(x.toString))
 
@@ -176,6 +177,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
   }
 
   "extractMAuthHeader" should {
+    @nowarn("cat=deprecation")
     lazy val route =
       extractMAuthHeader(x => complete(x.toString))
 
@@ -244,7 +246,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
     "pass successfully authenticated request with V2 headers" in {
       (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
-      //noinspection ConvertibleToMethodValue
+      // noinspection ConvertibleToMethodValue
       (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
       Get("/").withHeaders(
@@ -257,7 +259,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
     "pass successfully authenticated request with V2 headers in UpperCase " in {
       (client.getPublicKey _).expects(appUuid).returns(Future(Some(publicKey)))
-      //noinspection ConvertibleToMethodValue
+      // noinspection ConvertibleToMethodValue
       (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
       Get("/").withHeaders(
@@ -270,7 +272,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
     "reject if request validation timeout passed" in {
       (client.getPublicKey _).expects(*).never()
-      //noinspection ConvertibleToMethodValue
+      // noinspection ConvertibleToMethodValue
       (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
       Get().withHeaders(
@@ -285,7 +287,7 @@ class MAuthDirectivesSpec extends AnyWordSpec with Matchers with ScalatestRouteT
 
     "reject if public key cannot be found" in {
       (client.getPublicKey _).expects(appUuid).returns(Future(None))
-      //noinspection ConvertibleToMethodValue
+      // noinspection ConvertibleToMethodValue
       (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(timeHeader)
 
       Get().withHeaders(

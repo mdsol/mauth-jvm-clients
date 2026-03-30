@@ -93,7 +93,7 @@ class MauthPublicKeyProviderSpec
           "not_testing_signer_behaviour" -> "So any header is ok"
         )
       )
-      (mockedSigner.signRequest(_: UnsignedRequest)).expects(*).returns(mockedResponse).anyNumberOfTimes() //No?
+      (mockedSigner.signRequest(_: UnsignedRequest)).expects(*).returns(mockedResponse).anyNumberOfTimes() // No?
 
       val provider = new MauthPublicKeyProvider(getMAuthConfiguration, mockedSigner)
       FakeMAuthServer.verifyNumberOfRequests(1)

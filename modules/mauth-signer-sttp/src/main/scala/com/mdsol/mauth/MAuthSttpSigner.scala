@@ -17,9 +17,8 @@ trait MAuthSttpSigner {
 /** Sign an sttp request by adding MAuth headers to the request */
 class MAuthSttpSignerImpl(signer: Signer) extends MAuthSttpSigner {
 
-  def this(appUuid: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider, signVersions: java.util.List[MAuthVersion]) = {
+  def this(appUuid: UUID, privateKey: PrivateKey, epochTimeProvider: EpochTimeProvider, signVersions: java.util.List[MAuthVersion]) =
     this(new DefaultSigner(appUuid, privateKey, epochTimeProvider, signVersions))
-  }
 
   def signSttpRequest[T](request: Request[T]): Request[T] = {
     val bodyBytes: Array[Byte] = request.body match {
@@ -50,6 +49,6 @@ class MAuthSttpSignerImpl(signer: Signer) extends MAuthSttpSigner {
         Header(k, v)
       }
       .toList
-    request.headers(mauthHeaders: _*)
+    mauthHeaders.foldLeft(request)(_.header(_))
   }
 }

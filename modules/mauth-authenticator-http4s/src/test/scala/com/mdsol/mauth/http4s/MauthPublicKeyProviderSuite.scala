@@ -16,6 +16,7 @@ import scalacache.{Cache, Entry}
 
 import java.security.PublicKey
 import cats.implicits._
+import cats.effect.implicits._
 import org.typelevel.log4cats.Logger
 
 import java.util.UUID

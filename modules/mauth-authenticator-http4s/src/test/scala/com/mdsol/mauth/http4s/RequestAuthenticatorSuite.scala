@@ -32,7 +32,7 @@ class RequestAuthenticatorSuite extends CatsEffectSuite with RequestAuthenticato
     else IO.none
 
   test("authenticate a valid request") {
-    //noinspection ConvertibleToMethodValue
+    // noinspection ConvertibleToMethodValue
     val authenticator = RequestAuthenticator[IO](client, mockEpochTimeProvider(CLIENT_X_MWS_TIME_HEADER_VALUE.toLong + 3))
 
     authenticator.authenticate(getSimpleRequest).assert

@@ -11,7 +11,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, equalTo, post
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.mdsol.mauth.http.HttpClient
 import com.mdsol.mauth.http.Implicits._
-import com.mdsol.mauth.models.{UnsignedRequest => NewUnsignedRequest}
+import com.mdsol.mauth.models.UnsignedRequest
 import com.mdsol.mauth.test.utils.TestFixtures._
 import com.mdsol.mauth.util.EpochTimeProvider
 import org.apache.hc.core5.http.HttpStatus
@@ -60,15 +60,11 @@ class MAuthRequestAkkaSignerSpec extends AnyFlatSpec with Matchers with HttpClie
   override protected def afterAll(): Unit =
     service.stop()
 
-  val simpleUnsignedRequest: UnsignedRequest = UnsignedRequest(uri = URI_EMPTY_PATH)
-  val simpleNewUnsignedRequest: NewUnsignedRequest =
-    NewUnsignedRequest.fromStringBodyUtf8(httpMethod = "GET", uri = URI_EMPTY_PATH, body = "", headers = Map.empty)
+  val simpleUnsignedRequest: UnsignedRequest =
+    UnsignedRequest.fromStringBodyUtf8(httpMethod = "GET", uri = URI_EMPTY_PATH, body = "", headers = Map.empty)
 
-  val unsignedRequest: NewUnsignedRequest =
-    NewUnsignedRequest.fromStringBodyUtf8(httpMethod = "GET", uri = URI_EMPTY_PATH_WITH_PARAM, body = SIMPLE_REQUEST_BODY, headers = Map.empty)
-  "MAuthRequestSigner" should "add time header to a request for V1" in {
-    signer.signRequest(simpleUnsignedRequest).getOrElse(fail("signRequest unexpectedly failed")).timeHeader shouldBe EXPECTED_TIME_HEADER_1
-  }
+  val unsignedRequest: UnsignedRequest =
+    UnsignedRequest.fromStringBodyUtf8(httpMethod = "GET", uri = URI_EMPTY_PATH_WITH_PARAM, body = SIMPLE_REQUEST_BODY, headers = Map.empty)
 
   it should "correctly send a customized content-type header" in {
     service.stubFor(
@@ -77,8 +73,8 @@ class MAuthRequestAkkaSignerSpec extends AnyFlatSpec with Matchers with HttpClie
         .withHeader("Content-type", equalTo("application/json"))
     )
 
-    val simpleNewUnsignedRequest =
-      NewUnsignedRequest
+    val simpleUnsignedRequest =
+      UnsignedRequest
         .fromStringBodyUtf8(
           httpMethod = "POST",
           uri = new URI(s"${service.baseUrl()}/v1/test"),
@@ -86,7 +82,7 @@ class MAuthRequestAkkaSignerSpec extends AnyFlatSpec with Matchers with HttpClie
           headers = Map("Content-Type" -> ContentTypes.`application/json`.toString())
         )
 
-    whenReady(HttpClient.call(signerV2.signRequest(simpleNewUnsignedRequest).toAkkaHttpRequest), timeout = Timeout(5.seconds)) { response =>
+    whenReady(HttpClient.call(signerV2.signRequest(simpleUnsignedRequest).toAkkaHttpRequest), timeout = Timeout(5.seconds)) { response =>
       response.status shouldBe StatusCodes.OK
     }
   }
@@ -98,11 +94,11 @@ class MAuthRequestAkkaSignerSpec extends AnyFlatSpec with Matchers with HttpClie
         .withHeader("Content-type", equalTo(ContentTypes.`text/plain(UTF-8)`.toString()))
     )
 
-    val simpleNewUnsignedRequest =
-      NewUnsignedRequest
+    val simpleUnsignedRequest =
+      UnsignedRequest
         .fromStringBodyUtf8(httpMethod = "POST", uri = new URI(s"${service.baseUrl()}/v1/test"), body = "", headers = Map())
 
-    whenReady(HttpClient.call(signerV2.signRequest(simpleNewUnsignedRequest).toAkkaHttpRequest), timeout = Timeout(5.seconds)) { response =>
+    whenReady(HttpClient.call(signerV2.signRequest(simpleUnsignedRequest).toAkkaHttpRequest), timeout = Timeout(5.seconds)) { response =>
       response.status shouldBe StatusCodes.OK
     }
   }

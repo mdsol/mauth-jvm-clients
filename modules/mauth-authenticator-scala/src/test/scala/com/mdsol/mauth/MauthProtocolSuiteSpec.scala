@@ -79,7 +79,7 @@ class MauthProtocolSuiteSpec extends AnyFlatSpec with BeforeAndAfterAll with Mat
         }
 
         it should "correctly generate the authentication headers" in {
-          (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(signingConfig.getRequestTime.toLong)
+          (mockEpochTimeProvider.inSeconds _).expects().returns(signingConfig.getRequestTime.toLong)
           val headers: Map[String, String] =
             mAuthSigner
               .generateRequestHeaders(httpVerb, resourcePath, bodyInBytes, queryString)
@@ -105,7 +105,7 @@ class MauthProtocolSuiteSpec extends AnyFlatSpec with BeforeAndAfterAll with Mat
       .withMessagePayload(unsignedRequest.getBodyInBytes)
       .build()
 
-    (mockEpochTimeProvider.inSeconds _: () => Long).expects().returns(signingConfig.getRequestTime.toLong + 3)
+    (mockEpochTimeProvider.inSeconds _).expects().returns(signingConfig.getRequestTime.toLong + 3)
     (mockClientPublicKeyProvider.getPublicKey _)
       .expects(uuid)
       .returns(publicKey)
