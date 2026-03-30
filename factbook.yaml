@@ -3,6 +3,7 @@ kind: Component
 spec:
   type: library
   lifecycle: production
+  experience: study 
 metadata:
   json_schema:
     # This is a constant, just leave as is.
