@@ -28,7 +28,7 @@ object Implicits {
   implicit class SignedRequestOps(val signedRequest: NewSignedRequest) extends AnyVal {
 
     /**
-     * Create an akka-http request from a [[models.SignedRequest]]
+     * Create an akka-http request from a `models.SignedRequest`
      */
     def toAkkaHttpRequest: HttpRequest = {
       val contentType: Option[String] = extractContentTypeFromHeaders(signedRequest.req.headers)

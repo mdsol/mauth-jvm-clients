@@ -11,8 +11,8 @@ trait ClientPublicKeyProvider[F[_]] {
    * @param appUUID
    *   UUID of the application for which we want to retrieve its public key.
    * @return
-   *   An effectful value `F[Option[[[java.security.PublicKey]]]]` representing the public key registered in MAuth for the application with the given `appUUID`,
-   *   if one exists.
+   *   An effectful value `F[Option[java.security.PublicKey]]` representing the public key registered in MAuth for the application with the given `appUUID`, if
+   *   one exists.
    */
   def getPublicKey(appUUID: UUID): F[Option[PublicKey]]
 }
