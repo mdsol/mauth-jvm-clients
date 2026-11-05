@@ -6,12 +6,12 @@ object Dependencies extends DependencyUtils {
     // Careful with upgrading akka due to license change https://www.lightbend.com/blog/why-we-are-changing-the-license-for-akka
     val akka: String = "2.6.20" // Do not update beyond 2.6.* due to license changes
     val akkaHttp: String = "10.2.10" // Do not update beyond 10.2.* due to license changes
-    val logback = "1.5.16"
-    val sttp = "4.0.19"
-    val http4s = "0.23.33"
+    val logback = "1.6.6"
+    val sttp = "4.1.1"
+    val http4s = "0.23.38"
     val enumeratum = "1.9.5"
-    val log4cats = "2.7.1"
-    val circe = "0.14.15"
+    val log4cats = "2.8.0"
+    val circe = "0.14.17"
     val http4s022 = "0.22.15"
   }
 
@@ -19,18 +19,18 @@ object Dependencies extends DependencyUtils {
   val akkaHttpCache: ModuleID = "com.typesafe.akka"                     %% "akka-http-caching"       % Version.akkaHttp
   val akkaStream: ModuleID = "com.typesafe.akka"                        %% "akka-stream"             % Version.akka
   val apacheHttpClient: ModuleID = "org.apache.httpcomponents"           % "httpclient"              % "4.5.14"
-  val bouncyCastlePkix: ModuleID = "org.bouncycastle"                    % "bcpkix-jdk18on"          % "1.80"
+  val bouncyCastlePkix: ModuleID = "org.bouncycastle"                    % "bcpkix-jdk18on"          % "1.86"
   val commonsCodec: ModuleID = "commons-codec"                           % "commons-codec"           % "1.18.0"
-  val commonsLang3: ModuleID = "org.apache.commons"                      % "commons-lang3"           % "3.17.0"
+  val commonsLang3: ModuleID = "org.apache.commons"                      % "commons-lang3"           % "3.21.0"
   val guava: ModuleID = "com.google.guava"                               % "guava"                   % "31.1-jre"
-  val jacksonDataBind: ModuleID = "com.fasterxml.jackson.core"           % "jackson-databind"        % "2.18.2"
+  val jacksonDataBind: ModuleID = "com.fasterxml.jackson.core"           % "jackson-databind"        % "2.22.4"
   val logbackClassic: ModuleID = "ch.qos.logback"                        % "logback-classic"         % Version.logback
   val logbackCore: ModuleID = "ch.qos.logback"                           % "logback-core"            % Version.logback
   val slf4jApi: ModuleID = "org.slf4j"                                   % "slf4j-api"               % "2.0.16"
   val typeSafeConfig: ModuleID = "com.typesafe"                          % "config"                  % "1.4.3"
   val scalaCacheCore: ModuleID = "com.github.cb372"                     %% "scalacache-core"         % "1.0.0-M6"
-  val scalaLogging: ModuleID = "com.typesafe.scala-logging"             %% "scala-logging"           % "3.9.5"
-  val catsEffect: ModuleID = "org.typelevel"                            %% "cats-effect"             % "3.6.3"
+  val scalaLogging: ModuleID = "com.typesafe.scala-logging"             %% "scala-logging"           % "3.9.6"
+  val catsEffect: ModuleID = "org.typelevel"                            %% "cats-effect"             % "3.7.1"
   val sttp: ModuleID = "com.softwaremill.sttp.client4"                  %% "core"                    % Version.sttp
   val sttpAkkaHttpBackend: ModuleID = "com.softwaremill.sttp.client4"   %% "akka-http-backend"       % Version.sttp
   val sttpHttp4sHttpBackend: ModuleID = "com.softwaremill.sttp.client4" %% "http4s-backend"          % Version.sttp
@@ -57,11 +57,11 @@ object Dependencies extends DependencyUtils {
     "com.typesafe.akka" %% "akka-testkit"        % Version.akka,
     "com.typesafe.akka" %% "akka-stream-testkit" % Version.akka
   )
-  val commonsIO: ModuleID = "commons-io"                 % "commons-io"          % "2.18.0"
+  val commonsIO: ModuleID = "commons-io"                 % "commons-io"          % "2.22.0"
   val scalaMock: ModuleID = "org.scalamock"             %% "scalamock"           % "7.5.5"
-  val scalaTest: ModuleID = "org.scalatest"             %% "scalatest"           % "3.2.19"
-  val wiremock: ModuleID = "com.github.tomakehurst"      % "wiremock"            % "3.0.1"
-  val munitCatsEffect: ModuleID = "org.typelevel"       %% "munit-cats-effect"   % "2.1.0"
+  val scalaTest: ModuleID = "org.scalatest"             %% "scalatest"           % "3.2.20"
+  val wiremock: ModuleID = "org.wiremock"      % "wiremock"            % "3.13.2"
+  val munitCatsEffect: ModuleID = "org.typelevel"       %% "munit-cats-effect"   % "2.2.1"
   val munitCatsEffect2: ModuleID = "org.typelevel"      %% "munit-cats-effect-2" % "1.0.7"
   val log4catsNoop: ModuleID = "org.typelevel"          %% "log4cats-noop"       % Version.log4cats
   val scalaCacheCaffeine: ModuleID = "com.github.cb372" %% "scalacache-caffeine" % "1.0.0-M6"
