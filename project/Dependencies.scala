@@ -60,7 +60,7 @@ object Dependencies extends DependencyUtils {
   val commonsIO: ModuleID = "commons-io"                 % "commons-io"          % "2.22.0"
   val scalaMock: ModuleID = "org.scalamock"             %% "scalamock"           % "7.5.5"
   val scalaTest: ModuleID = "org.scalatest"             %% "scalatest"           % "3.2.20"
-  val wiremock: ModuleID = "org.wiremock"      % "wiremock"            % "3.13.2"
+  val wiremock: ModuleID = "org.wiremock"                % "wiremock"            % "3.13.2"
   val munitCatsEffect: ModuleID = "org.typelevel"       %% "munit-cats-effect"   % "2.2.1"
   val munitCatsEffect2: ModuleID = "org.typelevel"      %% "munit-cats-effect-2" % "1.0.7"
   val log4catsNoop: ModuleID = "org.typelevel"          %% "log4cats-noop"       % Version.log4cats
