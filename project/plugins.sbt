@@ -1,5 +1,5 @@
 addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.11.2")
 addSbtPlugin("com.mintbeans"  % "sbt-ecr"        % "0.15.0")
-addSbtPlugin("org.scalameta"  % "sbt-scalafmt"   % "2.5.6")
+addSbtPlugin("org.scalameta"  % "sbt-scalafmt"   % "2.6.2")
 addSbtPlugin("org.openmole"   % "sbt-docker"     % "1.11.1")
-addSbtPlugin("org.typelevel"  % "sbt-tpolecat"   % "0.5.3")
+addSbtPlugin("org.typelevel"  % "sbt-tpolecat"   % "0.5.7")
